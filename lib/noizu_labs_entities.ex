@@ -1,18 +1,9 @@
-defmodule NoizuLabsEntities do
-  @moduledoc """
-  Documentation for `NoizuLabsEntities`.
-  """
+#-------------------------------------------------------------------------------
+# Author: Keith Brings <keith.brings@noizu.com>
+# Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
+#-------------------------------------------------------------------------------
 
-  @doc """
-  Hello world.
+defmodule Noizu.Entities do
 
-  ## Examples
 
-      iex> NoizuLabsEntities.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
