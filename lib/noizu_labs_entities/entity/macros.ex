@@ -261,15 +261,18 @@ defmodule Noizu.Entity.Macros do
                       end)
 
     core = Enum.map(fields, fn({field, r}) ->
-      omit = case Noizu.Entity.Meta.Field.settings(r, :transient) do
-        true -> true
-        _ -> false
+      omit = cond do
+        Noizu.Entity.Meta.Field.settings(r, :transient) == true -> true
+        field == :meta -> true
+        :else -> false
       end
+
       {field, Noizu.Entity.Meta.Json.settings(template: :default, field: field, omit: omit)}
     end)
     {de, fp} = pop_in(first_pass, [:default])
+#    IO.inspect(de, label: "EXISTING DEFAULT")
     ud = Enum.map(core, fn({k,v}) ->
-      {k, Noizu.Entity.Macros.merge_json_settings([v| (de[k] || [])] |> Enum.reverse(), :default, k)}
+      {k, Noizu.Entity.Macros.merge_json_settings([v| (de[k] || [])] |> Enum.reverse() , :default, k)}
     end)
 
     Enum.map([{:default, ud} | (fp || [])], fn({k, v}) ->
@@ -351,7 +354,6 @@ defmodule Noizu.Entity.Macros do
         {t,s} = case entry do
           v when is_atom(v) -> {:default, Noizu.Entity.Macros.exact_json__settings(v)}
           [for: k, set: v] -> {k,  Noizu.Entity.Macros.exact_json__settings(v)}
-          [for: k, set: v] -> {k,  Noizu.Entity.Macros.exact_json__settings(v)}
           v = [{k,v2}] ->
             cond do
               is_list(k) -> {k,  Noizu.Entity.Macros.exact_json__settings(v2)}
@@ -380,17 +382,17 @@ defmodule Noizu.Entity.Macros do
                    end
                  end
                )
-        entries = Enum.map(templates,
-                    fn(template) ->
-                      Noizu.Entity.Meta.Json.settings(s, template: template)
-                    end)
-                  |> Enum.map(
-                       fn(json_entry) ->
-                         template = Noizu.Entity.Meta.Json.settings(json_entry, :template)
-                         #field = Noizu.Entity.Meta.Json.settings(json_entry, :field)
-                         {template, json_entry}
-                       end
-                     )
+        Enum.map(templates,
+          fn(template) ->
+            Noizu.Entity.Meta.Json.settings(s, template: template)
+          end)
+        |> Enum.map(
+             fn(json_entry) ->
+               template = Noizu.Entity.Meta.Json.settings(json_entry, :template)
+               #field = Noizu.Entity.Meta.Json.settings(json_entry, :field)
+               {template, json_entry}
+             end
+           )
       end)
     |> List.flatten()
     #|> IO.inspect(label: "EXTRACT JSON 1 (#{field})")

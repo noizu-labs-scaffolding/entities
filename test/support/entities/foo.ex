@@ -28,8 +28,10 @@ defmodule Noizu.Support.Entities.Foo do
     @transient true
     field :ephermal_three
 
+    @json brief: false
     field :title
 
+    @json :omit
     @json admin: true
     @json for: [:admin, :admin2], set: [as: :ignore]
     @json admin: [as: :apple]
@@ -44,12 +46,13 @@ defmodule Noizu.Support.Entities.Foo do
     @json for: [:admin, :api, :brief], set: true
     @json for: [:foo, :bar], set: [true, as: :fop]
     @json for: :special, set: [omit: false, as: :bop]
+    @json for: :api, set: [omit: true, as: :bop2]
     field :json_template_specific
 
     @json false
     @json for: [:admin, :api, :brief], set: true
     @json for: [:foo, :bar], set: [true, as: :fop2]
-    @json for: :special, set: [omit: false, as: :bop2]
+    @json for: :api, set: [omit: false, as: :bop2]
     field :json_template_specific2
 
 
