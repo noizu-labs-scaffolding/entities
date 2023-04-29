@@ -7,6 +7,7 @@ defmodule Noizu.Entity.Macros do
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Json
+  require Noizu.Entity.Meta.ACL
 
   #----------------------------------------
   # def_entity
@@ -23,6 +24,8 @@ defmodule Noizu.Entity.Macros do
       require Noizu.Entity.Meta.Identifier
       require Noizu.Entity.Meta.Field
       require Noizu.Entity.Meta.Json
+      require Noizu.Entity.Meta.ACL
+
 
       Noizu.Entity.Macros.register_attributes(__MODULE__)
 
@@ -54,7 +57,7 @@ defmodule Noizu.Entity.Macros do
       #--------------------------
       # Noizu.Entity Behavior
       #--------------------------
-      {vsn, nz_meta} = Noizu.Entity.Macros.inject_entity_impl(@__nz_identifiers, @__nz_fields, @__nz_json)
+      {vsn, nz_meta} = Noizu.Entity.Macros.inject_entity_impl(@__nz_identifiers, @__nz_fields, @__nz_json, @__nz_acl)
       @vsn vsn
       @nz_meta nz_meta
       def vsn(), do: @vsn
@@ -85,6 +88,8 @@ defmodule Noizu.Entity.Macros do
   defmacro field(name, default \\ nil, _opts \\ []) do
     quote bind_quoted: [name: name, default: default] do
       Noizu.Entity.Macros.extract_json(name)
+      acl = {field, field_acl} = Noizu.Entity.Macros.extract_acl(name)
+      Module.put_attribute(__MODULE__, :__nz_acl, acl)
       Module.put_attribute(
         __MODULE__,
         :__nz_fields,
@@ -94,7 +99,8 @@ defmodule Noizu.Entity.Macros do
             name: name,
             default: default,
             pii: Noizu.Entity.Macros.extract_simple(:pii, :pii_default),
-            transient: Noizu.Entity.Macros.extract_simple(:transient, :transient_default)
+            transient: Noizu.Entity.Macros.extract_simple(:transient, :transient_default),
+            acl: field_acl,
           )
         }
       )
@@ -163,7 +169,10 @@ defmodule Noizu.Entity.Macros do
     Module.register_attribute(mod, :__nz_identifiers, accumulate: true)
     Module.register_attribute(mod, :__nz_fields, accumulate: true)
     Module.register_attribute(mod, :__nz_json, accumulate: true)
+    Module.register_attribute(mod, :__nz_acl, accumulate: true)
     Module.register_attribute(mod, :json, accumulate: true)
+    Module.register_attribute(mod, :restricted, accumulate: true)
+
   end
 
   #----------------------------------------
@@ -185,7 +194,7 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   #
   #----------------------------------------
-  def inject_entity_impl(v__nz_identifiers, v__nz_fields, v__nz_json) do
+  def inject_entity_impl(v__nz_identifiers, v__nz_fields, v__nz_json, v__nz_acl) do
     #v__nz_fields = Module.get_attribute(module, :__nz_fields, [])
     Noizu.Entity.Meta.Field.settings(default: vsn) = get_in(v__nz_fields, [:vsn])
     #Module.put_attribute(module, :vsn, vsn)
@@ -200,11 +209,31 @@ defmodule Noizu.Entity.Macros do
     # (Module.get_attribute(module, :__nz_json, [])
     nz_entity__json = v__nz_json
                       |> Noizu.Entity.Macros.expand_json_settings(nz_entity__fields)
+
+
+    # todo this should be done in function close.
+    acl = Enum.map(v__nz_acl,
+      fn
+        ({field, [nz: :inherit]}) ->
+          with Noizu.Entity.Meta.Field.settings(transient: t, pii: p) <- nz_entity__fields[field] do
+            x = cond do
+              t ->
+                Noizu.Entity.Meta.ACL.acl_settings(target: :entity, type: :role, requirement: [:admin, :system])
+              p in [:sensitive, :private] ->
+                Noizu.Entity.Meta.ACL.acl_settings(target: :entity, type: :role, requirement: [:user, :admin, :system])
+              :else ->
+                Noizu.Entity.Meta.ACL.acl_settings(target: :entity, type: :unrestricted, requirement: :unrestricted)
+            end
+            {field, x}
+          end
+        ({field, x}) -> {field, x}
+    end)
+
     nz_meta = %{
       identifier: nz_entity__identifier,
       fields: nz_entity__fields,
       json: nz_entity__json,
-      acl: nil,
+      acl: acl,
     }
     #Module.put_attribute(module, :nz_meta, nz_meta)
     {vsn, nz_meta}
@@ -325,6 +354,156 @@ defmodule Noizu.Entity.Macros do
       v when is_list(v) ->
         Enum.map(v, fn(x) -> exact_json__settings(x) end)
         |> List.flatten()
+    end
+  end
+
+  # @todo implement
+  def valid_path(x), do: {:ok, x}
+
+  def valid_target(x) when x in [:entity, :field], do: {:ok, x}
+  def valid_target(x), do: {:error, {:unsupported, {:target, x}}}
+
+  @basic_types [:role, :mfa, :permission]
+
+  # Restrict By Role
+  def valid_acl(x) when is_atom(x), do: valid_acl({:role, x})
+  def valid_acl({:ref, _, _} = x), do: valid_acl({:role, x})
+  def valid_acl({:role, x}), do: valid_acl({:role, :entity, x})
+  def valid_acl({:role, target, x}) do
+    with {:ok, t} <- valid_target(target),
+         true <- is_atom(x) || Kernel.match?({:ref, _, _}, x) || {:error, {:invalid, {:role, x}}} do
+      s = Noizu.Entity.Meta.ACL.acl_settings(target: t, type: :role, requirement: [x])
+      {:ok, s}
+    end
+  end
+
+  # Restrict By Group
+  def valid_acl({:group, x}), do: valid_acl({:group, :entity, x})
+  def valid_acl({:group, target, x}) do
+    with true <- is_atom(x) || Kernel.match?({:ref, _, _}, x) || {:error, {:invalid, {:group, x}}},
+         {:ok, _} <- valid_target(target) do
+      s = Noizu.Entity.Meta.ACL.acl_settings(target: target, type: :group, requirement: [x])
+      {:ok, s}
+    end
+  end
+
+  # Restrict By Permission
+  def valid_acl({:permission, x}), do: valid_acl({:permission, :entity, x})
+  def valid_acl({:permission, target, x}) do
+    with true <- is_atom(x) || Kernel.match?({:ref, _, _}, x) || {:error, {:invalid, {:permission, x}}},
+         {:ok, _} <- valid_target(target) do
+      s = Noizu.Entity.Meta.ACL.acl_settings(target: target, type: :permission, requirement: [x])
+      {:ok, s}
+    end
+  end
+
+  # Restrict By MFA
+  def valid_acl({m,f,a} = x) when is_atom(m) and is_atom(f) and is_list(a), do: valid_acl({:mfa, x})
+  def valid_acl({:mfa, x}), do: valid_acl({:mfa, :entity, x})
+  def valid_acl({:mfa, target, x}) do
+    with {m,f,a} <- x,
+         true <- (is_atom(m) && is_atom(f) && is_list(a)) || {:error, {:mfa, {:invalid, x}}},
+         {:ok, _} <- valid_target(target) do
+      s = Noizu.Entity.Meta.ACL.acl_settings(target: target, type: :mfa, requirement: [{m,f,a}])
+      {:ok, s}
+    end
+  end
+
+  # Target Parent
+  def valid_acl({:parent, x}), do: valid_acl({:parent, 0, x})
+  def valid_acl({:parent, depth, x}) when is_integer(depth) do
+    case valid_acl(x) do
+      [_|_] -> x
+      {:ok, x} -> [{:ok, x}]
+    end
+    |> Enum.map(
+         fn({:ok, s = Noizu.Entity.Meta.ACL.acl_settings(type: t)}) when t in [:role, :group, :mfa, :permission] ->
+           s2 = Noizu.Entity.Meta.ACL.acl_settings(s, target: {:parent, depth})
+           {:ok, s2}
+         end)
+  end
+
+  # Target Path
+  def valid_acl({:path, path, x}) do
+    case valid_acl(x) do
+      [_|_] -> x
+      {:ok, x} -> [{:ok, x}]
+    end
+    |> Enum.map(
+         fn({:ok, s = Noizu.Entity.Meta.ACL.acl_settings(type: t)}) when t in [:role, :group, :mfa, :permission] ->
+           {:ok, p} = valid_path(path)
+           s2 = Noizu.Entity.Meta.ACL.acl_settings(s, target: {:path, path})
+           {:ok, s2}
+         end)
+  end
+
+  # List
+  def valid_acl(x) when is_list(x), do: Enum.map(x, &(valid_acl(&1))) |> List.flatten()
+
+  # Unsupported
+  def valid_acl(x), do: {:error, {:unsupported, x}}
+
+
+  def merge_acl__weight(target, type) do
+    target_w = case target do
+      :entity -> 10
+      :field -> 20
+      {:parent, x} -> 50 * (x + 1)
+      {:path, x} -> (50 * length(x)) + 30
+    end
+    type_w = case type do
+      :role -> 1
+      :group -> 2
+      :permission -> 3
+      :mfa -> 5
+    end
+    target_w + type_w
+  end
+
+
+  def merge_acl__inner([]), do: []
+  def merge_acl__inner([h]), do: [h]
+  def merge_acl__inner(l) when is_list(l) do
+    requirements = Enum.map(l, &(Noizu.Entity.Meta.ACL.acl_settings(&1, :requirement)))
+                   |> List.flatten()
+    template = List.first(l)
+    Noizu.Entity.Meta.ACL.acl_settings(template, requirement: requirements)
+  end
+
+  def merge_acl(x) do
+    x
+    |> Enum.group_by(fn(Noizu.Entity.Meta.ACL.acl_settings(target: x, type: y)) -> {x,y} end)
+    |> Enum.map(&({elem(&1, 0), merge_acl__inner(elem(&1, 1))}))
+    |> Enum.sort(fn({{ax,ay},_},{{bx,by},_}) ->
+      a_w = merge_acl__weight(ax,ay)
+      b_w = merge_acl__weight(bx,by)
+      cond do
+        a_w < b_w -> true
+        :else -> false
+      end
+    end)
+    |> Enum.map(&(elem(&1, 1)))
+  end
+
+  defmacro extract_acl(field) do
+    quote bind_quoted: [field: field] do
+      x = Module.get_attribute(__MODULE__, :restricted, [])
+          |> Enum.map(&(Noizu.Entity.Macros.valid_acl(&1)))
+          |> List.flatten()
+          |> Enum.map(fn({:ok, x}) -> x end)
+          |> case do
+               [] ->
+                 # if PII sensitive or than :user,
+                 # if transient then :system
+                 [{:nz, :inherit}]
+               x when is_list(x) ->
+                 x
+                 |> Noizu.Entity.Macros.merge_acl()
+             end
+          |> List.flatten()
+          |> then(&({field, &1}))
+          |> tap(fn(_) -> Module.delete_attribute(__MODULE__, :restricted) end)
+          #|> IO.inspect(label: "FINAL ACL")
     end
   end
 

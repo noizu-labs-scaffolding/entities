@@ -10,6 +10,7 @@ defmodule Noizu.EntitiesTest do
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Json
+  require Noizu.Entity.Meta.ACL
 
 #  doctest Noizu.Entities
   def ignore_key(key, keys) do
@@ -18,6 +19,15 @@ defmodule Noizu.EntitiesTest do
       key in ks -> keys[key]
       :else -> :"*ignore"
     end
+  end
+
+  #     Record.defrecord(:acl_settings, [target: nil, type: nil, requirement: nil])
+  def expected_acl(keys) do
+    Noizu.Entity.Meta.ACL.acl_settings(
+      target: ignore_key(:target, keys),
+      type: ignore_key(:type, keys),
+      requirement: ignore_key(:requirement, keys),
+    )
   end
 
   def expected_json(keys) do
@@ -36,7 +46,8 @@ defmodule Noizu.EntitiesTest do
       type: ignore_key(:type, keys),
       transient: ignore_key(:transient, keys),
       pii: ignore_key(:pii, keys),
-      default: ignore_key(:default, keys)
+      default: ignore_key(:default, keys),
+      acl: ignore_key(:acl, keys)
     )
   end
 
@@ -47,6 +58,14 @@ defmodule Noizu.EntitiesTest do
   def assert_record(actual, expected = nil) do
     assert actual == expected
   end
+
+  def assert_record(actual = {:nz, :inherit}, expected) do
+    assert actual == expected
+  end
+  def assert_record(actual, expected = {:nz, :inherit}) do
+    assert actual == expected
+  end
+
   def assert_record(actual,expected) do
     actual = Enum.zip(Tuple.to_list(actual), Tuple.to_list(expected))
              |> Enum.map(
@@ -91,37 +110,16 @@ defmodule Noizu.EntitiesTest do
       template = :default
       sut = Noizu.Entity.Meta.json(Noizu.Support.Entities.Foo, template)
       assert_record(sut[:name], expected_json([field: :name, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
-
       assert_record(sut[:passport_number], nil)
       assert_record(sut[:address], expected_json([field: :address, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
-
-      # :admin
-      #assert_record(sut[:ephermal_one], expected_json([field: :ephermal_one, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
       assert_record(sut[:ephermal_one], nil)
       assert_record(sut[:ephermal_two], nil)
       assert_record(sut[:ephermal_three], nil)
-
       assert_record(sut[:title], expected_json([field: :title, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
-
-      # :admin
-      # assert_record(sut[:title2], expected_json([field: :title2, template: template, omit: false, as: :apple, error: {:nz, :inherit}]))
-      # :admin2
-      # assert_record(sut[:title2], nil) # Error
       assert_record(sut[:title2], nil)
-
-      # :admin
-      # assert_record(sut[:description], expected_json([field: :description, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
       assert_record(sut[:description], nil)
-
-      # :admin, :api, :brief  todo add as: directive to :api
-      # assert_record(sut[:json_template_specific], expected_json([field: :json_template_specific, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
       assert_record(sut[:json_template_specific], nil)
-
-      # :admin, :api, :brief  todo add as: directive to :api
-      # assert_record(sut[:json_template_specific2], expected_json([field: :json_template_specific2, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
-
       assert_record(sut[:json_template_specific2], nil)
-
     end
 
     test "admin template" do
@@ -170,6 +168,37 @@ defmodule Noizu.EntitiesTest do
       assert_record(sut[:description], nil)
       assert_record(sut[:json_template_specific], expected_json([field: :json_template_specific, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
       assert_record(sut[:json_template_specific2], expected_json([field: :json_template_specific2, template: template, omit: false, as: {:nz, :inherit}, error: {:nz, :inherit}]))
+    end
+
+  end
+
+  describe "Entity ACL" do
+    test "Set Permissions" do
+      sut = Noizu.Entity.Meta.acl(Noizu.Support.Entities.Foo)[:name]
+            #|> IO.inspect(label: "FINALLY")
+      assert sut == [
+                 {:acl_settings, :entity, :role, [:role2, :role3, :supper_trooper, :user]},
+                 {:acl_settings, :field, :role, [:supper_trooper]},
+                 {:acl_settings, {:parent, 0}, :role, [:user]},
+                 {:acl_settings,
+                   {:path, [{Access, :key, [:a]}, {Access, :key, [:b]}]}, :role, [:role_y, :role_x]}
+               ]
+
+    end
+
+    test "Default Permissions - public" do
+      sut = Noizu.Entity.Meta.acl(Noizu.Support.Entities.Foo)[:title]
+      assert sut == {:acl_settings, :entity, :unrestricted, :unrestricted}
+    end
+
+    test "Default Permissions - pii" do
+      sut = Noizu.Entity.Meta.acl(Noizu.Support.Entities.Foo)[:passport_number]
+      assert sut == {:acl_settings, :entity, :role, [:user, :admin, :system]}
+    end
+
+    test "Default Permissions - transitive" do
+      sut = Noizu.Entity.Meta.acl(Noizu.Support.Entities.Foo)[:ephermal_one]
+      assert sut == {:acl_settings, :entity, :role, [:admin, :system]}
     end
 
   end

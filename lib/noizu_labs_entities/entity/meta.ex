@@ -4,13 +4,17 @@
 #-------------------------------------------------------------------------------
 
 defmodule  Noizu.Entity.Meta do
+  defmodule ACL do
+    require Record
+    Record.defrecord(:acl_settings, [target: nil, type: nil, requirement: nil])
+  end
   defmodule Identifier do
     require Record
     Record.defrecord(:settings, [name: nil, generate: true, universal: false,  type: nil])
   end
   defmodule Field do
     require Record
-    Record.defrecord(:settings, [name: nil, type: nil, transient: false, pii: false, default: nil])
+    Record.defrecord(:settings, [name: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
   end
   defmodule Json do
     require Record

@@ -8,6 +8,13 @@ defmodule Noizu.Support.Entities.Foo do
   def_entity do
     identifier :integer
 
+    @restricted :user
+    @restricted {:role, :supper_trooper}
+    @restricted {:role, :field, :supper_trooper}
+    @restricted [{:role, :role2}, {:role, :role3}]
+    @restricted [{:parent, :user}]
+    @restricted [{:path, [{Access, :key, [:a]}, {Access, :key, [:b]}], {:role, :role_x}}]
+    @restricted [{:path, [{Access, :key, [:a]}, {Access, :key, [:b]}], {:role, :role_y}}]
     @pii :low
     field :name
 
