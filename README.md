@@ -85,6 +85,15 @@ end
 # JSON Formatting
 You may add json formatting annotation to Noizu.Entities to define how an entity should be
 displayed for different json formats (:admin, :client,...)
+```
+@json true 
+@json :include
+@json false
+@json :omit
+@json template: :omit
+@json as: :apple, omit: false
+@json for: [:breif, :apple], set: [as: :alias, omit: false]
+```
 
 details_pending
 
@@ -93,6 +102,12 @@ details_pending
 You may add annotation to control required permissions to access/return an entity field, 
 (:admin, :user, {:permission, name}, {:custom, {m,f,a})
 
+```
+@restrict :user
+@restrict {m,f,a} # [entity, field, context] ++ a
+@restrict :admin
+@restrict {:group, group}
+```
 details_pending
 
 # Indexing 

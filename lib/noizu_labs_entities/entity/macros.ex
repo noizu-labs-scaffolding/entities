@@ -203,7 +203,8 @@ defmodule Noizu.Entity.Macros do
     nz_meta = %{
       identifier: nz_entity__identifier,
       fields: nz_entity__fields,
-      json: nz_entity__json
+      json: nz_entity__json,
+      acl: nil,
     }
     #Module.put_attribute(module, :nz_meta, nz_meta)
     {vsn, nz_meta}

@@ -34,6 +34,7 @@ defmodule  Noizu.Entity.Meta do
     json = meta[:json]
     json[s] || json[:default]
   end
+  def acl(m), do: meta(m)[:acl]
 
 
   defmacro __using__(_options \\ nil) do
