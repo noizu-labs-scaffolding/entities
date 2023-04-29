@@ -1,0 +1,48 @@
+#-------------------------------------------------------------------------------
+# Author: Keith Brings <keith.brings@noizu.com>
+# Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
+#-------------------------------------------------------------------------------
+
+defmodule  Noizu.Entity.Meta do
+  defmodule Identifier do
+    require Record
+    Record.defrecord(:settings, [name: nil, generate: true, universal: false,  type: nil])
+  end
+  defmodule Field do
+    require Record
+    Record.defrecord(:settings, [name: nil, type: nil, transient: false, pii: false, default: nil])
+  end
+  defmodule Json do
+    require Record
+    Record.defrecord(:settings, [template: nil, field: nil, as: {:nz, :inherit}, omit: {:nz, :inherit}, error: {:nz, :inherit}])
+    #Record.defrecord(:field_settings, [field: nil, settings: nil])
+    #Record.defrecord(:template_field_settings, [template: nil, field_settings: nil])
+  end
+
+  @callback meta() :: []
+  @callback fields() :: []
+  @callback identifier() :: []
+  @callback json() :: []
+  @callback json(template :: atom) :: []
+
+  def meta(m), do: m.__noizu_meta__()
+  def identifier(m), do: meta(m)[:identifier]
+  def fields(m), do: meta(m)[:fields]
+  def json(m), do: meta(m)[:json]
+  def json(m, s) do
+    meta = meta(m)
+    json = meta[:json]
+    json[s] || json[:default]
+  end
+
+
+  defmacro __using__(_options \\ nil) do
+    quote do
+      require Noizu.Entity.Meta.Identifier
+      require Noizu.Entity.Meta.Field
+      require Noizu.Entity.Meta.Json
+      alias Noizu.Entity.Meta
+    end
+  end
+
+end

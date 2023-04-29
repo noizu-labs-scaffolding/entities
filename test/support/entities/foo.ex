@@ -12,6 +12,7 @@ defmodule Noizu.Support.Entities.Foo do
     field :name
 
     pii() do
+      @json false
       field :passport_number
       field :address
     end
@@ -19,15 +20,37 @@ defmodule Noizu.Support.Entities.Foo do
 
 
     transient() do
+      @json admin: true
       field :ephermal_one
+      @json false
       field :ephermal_two
     end
     @transient true
-    field :ephermal_two
+    field :ephermal_three
 
     field :title
+
+    @json admin: true
+    @json for: [:admin, :admin2], set: [as: :ignore]
+    @json admin: [as: :apple]
+    field :title2
+
+
+    @json false
+    @json admin: true
     field :description
 
+    @json false
+    @json for: [:admin, :api, :brief], set: true
+    @json for: [:foo, :bar], set: [true, as: :fop]
+    @json for: :special, set: [omit: false, as: :bop]
+    field :json_template_specific
+
+    @json false
+    @json for: [:admin, :api, :brief], set: true
+    @json for: [:foo, :bar], set: [true, as: :fop2]
+    @json for: :special, set: [omit: false, as: :bop2]
+    field :json_template_specific2
 
 
   end
