@@ -64,7 +64,7 @@ defimpl Noizu.Entity.Json.Protocol, for: [Any] do
       x -> raise Noizu.Entity.Json.Exception, details: {:other, x}
     end
   end
-  def prep(term, Noizu.Entity.Meta.Json.settings(field: f), _, _), do: {:ok, {f,term}}
+  def prep(term, Noizu.Entity.Meta.Json.json_settings(field: f), _, _), do: {:ok, {f,term}}
 end
 
 

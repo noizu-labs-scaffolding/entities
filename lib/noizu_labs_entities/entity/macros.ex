@@ -66,10 +66,16 @@ defmodule Noizu.Entity.Macros do
     end
   end
 
-
   #==========================================================
   # def_entity macros
   #==========================================================
+
+  defmacro common() do
+    quote do
+      def id(_), do: :nyi
+    end
+  end
+
 
   #----------------------------------------
   # identifier
@@ -77,8 +83,8 @@ defmodule Noizu.Entity.Macros do
   defmacro identifier(type, opts \\ []) do
     name = opts[:name] || :identifier
     quote do
-      Module.put_attribute(__MODULE__, :__nz_identifiers, {unquote(name), Noizu.Entity.Meta.Identifier.settings(name: unquote(name), type: unquote(type))})
-      Module.put_attribute(__MODULE__, :__nz_fields, {unquote(name), Noizu.Entity.Meta.Field.settings(name: unquote(name), default: nil)})
+      Module.put_attribute(__MODULE__, :__nz_identifiers, {unquote(name), Noizu.Entity.Meta.Identifier.identifier_settings(name: unquote(name), type: unquote(type))})
+      Module.put_attribute(__MODULE__, :__nz_fields, {unquote(name), Noizu.Entity.Meta.Field.field_settings(name: unquote(name), default: nil)})
     end
   end
 
@@ -95,7 +101,7 @@ defmodule Noizu.Entity.Macros do
         :__nz_fields,
         {
           name,
-          Noizu.Entity.Meta.Field.settings(
+          Noizu.Entity.Meta.Field.field_settings(
             name: name,
             default: default,
             pii: Noizu.Entity.Macros.extract_simple(:pii, :pii_default),
@@ -162,6 +168,14 @@ defmodule Noizu.Entity.Macros do
     end
   end
 
+
+  #----------------------------------------
+  #
+  #----------------------------------------
+  def persistance_layers() do
+
+  end
+
   #----------------------------------------
   #
   #----------------------------------------
@@ -187,7 +201,7 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   def prepare_struct(fields) do
     fields
-    |> Enum.map(fn({name, Noizu.Entity.Meta.Field.settings(default: dv)}) -> {name, dv} end)
+    |> Enum.map(fn({name, Noizu.Entity.Meta.Field.field_settings(default: dv)}) -> {name, dv} end)
     |> Enum.reverse()
   end
 
@@ -196,7 +210,7 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   def inject_entity_impl(v__nz_identifiers, v__nz_fields, v__nz_json, v__nz_acl) do
     #v__nz_fields = Module.get_attribute(module, :__nz_fields, [])
-    Noizu.Entity.Meta.Field.settings(default: vsn) = get_in(v__nz_fields, [:vsn])
+    Noizu.Entity.Meta.Field.field_settings(default: vsn) = get_in(v__nz_fields, [:vsn])
     #Module.put_attribute(module, :vsn, vsn)
 
     # __noizu_meta__\0
@@ -215,7 +229,7 @@ defmodule Noizu.Entity.Macros do
     acl = Enum.map(v__nz_acl,
       fn
         ({field, [nz: :inherit]}) ->
-          with Noizu.Entity.Meta.Field.settings(transient: t, pii: p) <- nz_entity__fields[field] do
+          with Noizu.Entity.Meta.Field.field_settings(transient: t, pii: p) <- nz_entity__fields[field] do
             x = cond do
               t ->
                 Noizu.Entity.Meta.ACL.acl_settings(target: :entity, type: :role, requirement: [:admin, :system])
@@ -252,7 +266,7 @@ defmodule Noizu.Entity.Macros do
     #               (x) -> x
     #             end)
     #        |> List.to_tuple()
-    [Noizu.Entity.Meta.Json.settings(h, template: template, field: field)]
+    [Noizu.Entity.Meta.Json.json_settings(h, template: template, field: field)]
   end
   def merge_json_settings([a,b|t], template, field) do
     #IO.inspect(%{a: a, b: b}, label: "MERGE JSON")
@@ -292,12 +306,12 @@ defmodule Noizu.Entity.Macros do
 
     core = Enum.map(fields, fn({field, r}) ->
       omit = cond do
-        Noizu.Entity.Meta.Field.settings(r, :transient) == true -> true
+        Noizu.Entity.Meta.Field.field_settings(r, :transient) == true -> true
         field == :meta -> true
         :else -> false
       end
 
-      {field, Noizu.Entity.Meta.Json.settings(template: :default, field: field, omit: omit)}
+      {field, Noizu.Entity.Meta.Json.json_settings(template: :default, field: field, omit: omit)}
     end)
     {de, fp} = pop_in(first_pass, [:default])
 #    IO.inspect(de, label: "EXISTING DEFAULT")
@@ -311,7 +325,7 @@ defmodule Noizu.Entity.Macros do
         {k2, x}
       end)
            |> List.flatten()
-           |> Enum.filter(&( false == Noizu.Entity.Meta.Json.settings(elem(&1, 1), :omit)))
+           |> Enum.filter(&( false == Noizu.Entity.Meta.Json.json_settings(elem(&1, 1), :omit)))
 
       unless v3 == [] do
         {k, v3 |> Map.new()}
@@ -551,25 +565,25 @@ defmodule Noizu.Entity.Macros do
         end
         s = s
             |> Enum.reduce(
-                 Noizu.Entity.Meta.Json.settings(template: nil, field: field),
+                 Noizu.Entity.Meta.Json.json_settings(template: nil, field: field),
                  fn({k,v}, acc) ->
                    case k do
-                     :omit -> Noizu.Entity.Meta.Json.settings(acc, omit: v)
-                     :include -> Noizu.Entity.Meta.Json.settings(acc, omit: !v)
-                     :as -> Noizu.Entity.Meta.Json.settings(acc, as: v)
-                     :error -> Noizu.Entity.Meta.Json.settings(acc, error: v)
+                     :omit -> Noizu.Entity.Meta.Json.json_settings(acc, omit: v)
+                     :include -> Noizu.Entity.Meta.Json.json_settings(acc, omit: !v)
+                     :as -> Noizu.Entity.Meta.Json.json_settings(acc, as: v)
+                     :error -> Noizu.Entity.Meta.Json.json_settings(acc, error: v)
                      _ -> acc
                    end
                  end
                )
         Enum.map(templates,
           fn(template) ->
-            Noizu.Entity.Meta.Json.settings(s, template: template)
+            Noizu.Entity.Meta.Json.json_settings(s, template: template)
           end)
         |> Enum.map(
              fn(json_entry) ->
-               template = Noizu.Entity.Meta.Json.settings(json_entry, :template)
-               #field = Noizu.Entity.Meta.Json.settings(json_entry, :field)
+               template = Noizu.Entity.Meta.Json.json_settings(json_entry, :template)
+               #field = Noizu.Entity.Meta.Json.json_settings(json_entry, :field)
                {template, json_entry}
              end
            )
@@ -610,25 +624,25 @@ defmodule Noizu.Entity.Macros do
           end
           s = s
               |> Enum.reduce(
-                   Noizu.Entity.Meta.Json.settings(template: nil, field: unquote(field)),
+                   Noizu.Entity.Meta.Json.json_settings(template: nil, field: unquote(field)),
                    fn({k,v}, acc) ->
                      case k do
-                       :omit -> Noizu.Entity.Meta.Json.settings(acc, omit: v)
-                       :include -> Noizu.Entity.Meta.Json.settings(acc, omit: !v)
-                       :as -> Noizu.Entity.Meta.Json.settings(acc, as: v)
-                       :error -> Noizu.Entity.Meta.Json.settings(acc, error: v)
+                       :omit -> Noizu.Entity.Meta.Json.json_settings(acc, omit: v)
+                       :include -> Noizu.Entity.Meta.Json.json_settings(acc, omit: !v)
+                       :as -> Noizu.Entity.Meta.Json.json_settings(acc, as: v)
+                       :error -> Noizu.Entity.Meta.Json.json_settings(acc, error: v)
                        _ -> acc
                      end
                    end
                  )
           entries = Enum.map(templates,
                       fn(template) ->
-                        Noizu.Entity.Meta.Json.settings(s, template: template)
+                        Noizu.Entity.Meta.Json.json_settings(s, template: template)
                       end)
                     |> Enum.map(
                          fn(json_entry) ->
-                           template = Noizu.Entity.Meta.Json.settings(json_entry, :template)
-                           field = Noizu.Entity.Meta.Json.settings(json_entry, :field)
+                           template = Noizu.Entity.Meta.Json.json_settings(json_entry, :template)
+                           field = Noizu.Entity.Meta.Json.json_settings(json_entry, :field)
                            Module.put_attribute(__MODULE__, :__nz_json, {template, field, json_entry})
                          end
                        )

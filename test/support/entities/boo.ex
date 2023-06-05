@@ -3,11 +3,11 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 #-------------------------------------------------------------------------------
 
-defmodule Noizu.Support.Entities.Foo do
+defmodule Noizu.Support.Entities.Boo do
   use Noizu.Entity
 
   @vsn 1.0
-  @sref "foo"
+  @sref "boo"
 
   # todo config controlled enablement of mnesia/amnesia/redis/etc providers.
   # todo default dummy handler

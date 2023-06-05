@@ -10,15 +10,19 @@ defmodule  Noizu.Entity.Meta do
   end
   defmodule Identifier do
     require Record
-    Record.defrecord(:settings, [name: nil, generate: true, universal: false,  type: nil])
+    Record.defrecord(:identifier_settings, [name: nil, generate: true, universal: false,  type: nil])
   end
   defmodule Field do
     require Record
-    Record.defrecord(:settings, [name: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
+    Record.defrecord(:field_settings, [name: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
+  end
+  defmodule Persistence do
+    require Record
+    Record.defrecord(:persistence_settings, [store: nil])
   end
   defmodule Json do
     require Record
-    Record.defrecord(:settings, [template: nil, field: nil, as: {:nz, :inherit}, omit: {:nz, :inherit}, error: {:nz, :inherit}])
+    Record.defrecord(:json_settings, [template: nil, field: nil, as: {:nz, :inherit}, omit: {:nz, :inherit}, error: {:nz, :inherit}])
     #Record.defrecord(:field_settings, [field: nil, settings: nil])
     #Record.defrecord(:template_field_settings, [template: nil, field_settings: nil])
   end

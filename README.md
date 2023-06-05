@@ -13,10 +13,11 @@ It automatically hooks your entities up to support noizu_labs_context and noizu_
 
 # Table of Contents
 1. [Overview](#overview)
-2. [Persistence](#persistence)
-3. [Indexing](#indexing)
-4. [Caching](#caching)
-5. [Entity](#entity-definition) 
+2. [Tasks](#tasks)
+3. [Persistence](#persistence)
+4. [Indexing](#indexing)
+5. [Caching](#caching)
+6. [Entity](#entity-definition) 
    1. Overview
    2. ERP
    3. Field Types
@@ -29,10 +30,14 @@ It automatically hooks your entities up to support noizu_labs_context and noizu_
       4. JSON Formatting
       5. Cache
       6. Index 
-6. [Repo](#repo-definition)
+7. [Repo](#repo-definition)
 
 # Overview
 details pending
+
+# Tasks
+You can use the helpers to construct entities and related ecto classes. 
+mix nz.gen.entity my_entity store=ecto sref=my-entity field=biz:integer
 
 # Persistence
 details pending
