@@ -37,7 +37,9 @@ details pending
 
 # Tasks
 You can use the helpers to construct entities and related ecto classes. 
-mix nz.gen.entity my_entity store=ecto sref=my-entity field=biz:integer
+`mix nz.gen.entity my_entity store=ecto sref=my-entity field=biz:integer`
+Generation is not perfect and some manual editing of ecto and entity may be required.
+
 
 # Persistence
 details pending

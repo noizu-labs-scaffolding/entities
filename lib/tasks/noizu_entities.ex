@@ -17,6 +17,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     with :ok <- File.write(filename, content) do
       IO.puts "Generated"
     end
+
   end
 
 
@@ -121,6 +122,10 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         def_entity do
           identifier :integer
           #{entity_fields}
+        end
+
+        defmodule Repo do
+          use Noizu.Repo
         end
       end
     """

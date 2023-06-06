@@ -12,7 +12,6 @@ defmodule Noizu.Repo do
       import Noizu.Repo.Macros, only: [{:def_repo, 0}]
       import NoizuLabs.EntityReference.Helpers
       import NoizuLabs.Entities.Helpers
-      def_repo()
     end
   end
 end

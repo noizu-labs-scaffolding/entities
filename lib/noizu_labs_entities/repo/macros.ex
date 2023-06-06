@@ -19,6 +19,14 @@ defmodule Noizu.Repo.Macros do
                   |> Enum.slice(0..-2)
                   |> Module.concat()
           @poly false
+
+          defstruct [
+            entities: [],
+            length: 0,
+            meta: nil,
+            __transient__: nil
+          ]
+
     end
   end
 end

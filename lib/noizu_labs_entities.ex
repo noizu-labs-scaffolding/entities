@@ -11,6 +11,9 @@ defmodule Noizu.Entities do
       Module.register_attribute(__MODULE__, :persistence, accumulate: true)
       Module.register_attribute(__MODULE__, :vsn, accumulate: false)
       Module.register_attribute(__MODULE__, :sref, accumulate: false)
+      require NoizuLabs.EntityReference.Records
+      alias NoizuLabs.EntityReference.Records, as: R
+      alias NoizuLabs.EntityReference.Protocol, as: ERP
 
       use Noizu.Entity
       use Noizu.Repo
