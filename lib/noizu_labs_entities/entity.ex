@@ -10,6 +10,8 @@ defmodule Noizu.Entity do
   defmacro __using__(options \\ nil) do
     quote do
       require Noizu.Entity.Macros
+      require Noizu.Entity.Meta.Persistence
+      import Noizu.Entity.Meta.Persistence
       import Noizu.Entity.Macros, only: [{:def_entity, 1}]
     end
   end
