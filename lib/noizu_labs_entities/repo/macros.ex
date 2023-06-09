@@ -27,6 +27,11 @@ defmodule Noizu.Repo.Macros do
             __transient__: nil
           ]
 
+          defdelegate create(entity, context, options), to: Noizu.Repo.Meta
+          defoverridable [
+            create: 3
+          ]
+
     end
   end
 end

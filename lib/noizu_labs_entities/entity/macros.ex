@@ -119,11 +119,29 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   # field
   #----------------------------------------
-  defmacro field(name, default \\ nil, _opts \\ []) do
-    quote bind_quoted: [name: name, default: default] do
+  defmacro field(name, default \\ nil, type \\ nil, opts \\ []) do
+    quote bind_quoted: [name: name, type: type, default: default] do
       Noizu.Entity.Macros.Json.extract_json(name)
       acl = {field, field_acl} = Noizu.Entity.Macros.ACL.extract_acl(name)
       Module.put_attribute(__MODULE__, :__nz_acl, acl)
+
+      # Extract any storage attributes.
+      store = case Noizu.Entity.Macros.extract_simple(:store, :store_default, []) do
+        v when is_list(v) ->
+          Enum.map(v,
+            fn
+              ({store,settings}) -> {store, settings}
+              (settings) ->
+                case @__nz_persistence do
+                  [store|_] ->
+                    Noizu.Entity.Meta.Persistence.persistence_settings(store: store) = store
+                    {store, settings}
+                end
+            end
+          )
+        _ -> nil
+      end
+
       Module.put_attribute(
         __MODULE__,
         :__nz_fields,
@@ -132,6 +150,8 @@ defmodule Noizu.Entity.Macros do
           Noizu.Entity.Meta.Field.field_settings(
             name: name,
             default: default,
+            store: store,
+            type: type,
             pii: Noizu.Entity.Macros.extract_simple(:pii, :pii_default),
             transient: Noizu.Entity.Macros.extract_simple(:transient, :transient_default),
             acl: field_acl
@@ -207,12 +227,13 @@ defmodule Noizu.Entity.Macros do
           layers = Enum.map(v,
                      fn(x) ->
                        case x do
+                         Noizu.Entity.Meta.Persistence.persistence_settings(kind: nil) ->
+                           Noizu.Entity.Meta.Persistence.persistence_settings(x, kind: __MODULE__)
                          Noizu.Entity.Meta.Persistence.persistence_settings() -> x
                          _ -> nil
                        end
                      end)
                    |> Enum.filter(&(&1))
-                   |> IO.inspect(label: :layers)
           Module.put_attribute(__MODULE__, :__nz_persistence, layers)
         _ ->
           Module.put_attribute(__MODULE__, :__nz_persistence, [])
@@ -227,6 +248,7 @@ defmodule Noizu.Entity.Macros do
     Module.register_attribute(mod, :__nz_identifiers, accumulate: true)
     Module.register_attribute(mod, :__nz_fields, accumulate: true)
     Module.register_attribute(mod, :__nz_persistence, accumulate: false)
+    Module.register_attribute(mod, :store, accumulate: true)
     Noizu.Entity.Macros.Json.register_attributes(mod)
     Noizu.Entity.Macros.ACL.register_attributes(mod)
   end

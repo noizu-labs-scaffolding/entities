@@ -14,22 +14,22 @@ defmodule  Noizu.Entity.Meta do
   end
   defmodule Field do
     require Record
-    Record.defrecord(:field_settings, [name: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
+    Record.defrecord(:field_settings, [name: nil, store: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
   end
   defmodule Persistence do
     require Record
-    Record.defrecord(:persistence_settings, [table: :auto, store: nil, type: nil])
+    Record.defrecord(:persistence_settings, [table: :auto, kind: nil, store: nil, type: nil])
     def ecto_store(table, store) do
-      persistence_settings(table: table, store: store, type: :ecto)
+      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Ecto)
     end
     def mnesia_store(table, store) do
-      persistence_settings(table: table, store: store, type: :mnesia)
+      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Mnesia)
     end
     def amnesia_store(table, store) do
-      persistence_settings(table: table, store: store, type: :amnesia)
+      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Amnesia)
     end
     def redis_store(table, store) do
-      persistence_settings(table: table, store: store, type: :redis)
+      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Redis)
     end
   end
   defmodule Json do
@@ -42,22 +42,62 @@ defmodule  Noizu.Entity.Meta do
   @callback meta() :: []
   @callback fields() :: []
   @callback identifier() :: []
+  @callback persistence() :: []
   @callback json() :: []
   @callback json(template :: atom) :: []
 
-  def meta(m), do: m.__noizu_meta__()
+
+  #---------------
+  #
+  #---------------
+  def meta(%{__struct__: m}), do: meta(m)
+  def meta(m) when is_atom(m), do: m.__noizu_meta__()
+  def meta(m), do: raise Noizu.EntityReference.ProtocolException, ref: m, message: "Invalid Entity", error: :invalid
+
+
+  #---------------
+  #
+  #---------------
   def persistence(m), do: meta(m)[:persistence]
+
+
+  #---------------
+  #
+  #---------------
   def identifier(m), do: meta(m)[:identifier]
+
+
+  #---------------
+  #
+  #---------------
   def fields(m), do: meta(m)[:fields]
+
+
+  #---------------
+  #
+  #---------------
   def json(m), do: meta(m)[:json]
+
+
+  #---------------
+  #
+  #---------------
   def json(m, s) do
     meta = meta(m)
     json = meta[:json]
     json[s] || json[:default]
   end
+
+
+  #---------------
+  #
+  #---------------
   def acl(m), do: meta(m)[:acl]
 
 
+  #---------------
+  #
+  #---------------
   defmacro __using__(_options \\ nil) do
     quote do
       require Noizu.Entity.Meta.Identifier
