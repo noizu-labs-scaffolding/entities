@@ -50,7 +50,7 @@ defmodule Noizu.Entity.Macros do
       #--------------------------
       # Emit Struct
       #--------------------------
-      @derive NoizuLabs.EntityReference.Protocol
+      @derive Noizu.EntityReference.Protocol
       Module.get_attribute(__MODULE__, :__nz_fields, [])
       |> Noizu.Entity.Macros.prepare_struct()
       |> defstruct

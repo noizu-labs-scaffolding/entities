@@ -10,7 +10,7 @@ defmodule Noizu.Repo do
     quote do
       require Noizu.Repo.Macros
       import Noizu.Repo.Macros, only: [{:def_repo, 0}]
-      import NoizuLabs.EntityReference.Helpers
+      import Noizu.Core.Helpers
       import NoizuLabs.Entities.Helpers
     end
   end
