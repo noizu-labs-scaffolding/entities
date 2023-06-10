@@ -9,7 +9,6 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   end
 
   def create_entity(name, params) do
-    IO.inspect params, label: "Params"
     app_name = Mix.Project.config()[:app] |> Atom.to_string()
 
     filename = "lib/#{app_name}_entities/#{name}.ex"
@@ -48,7 +47,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
   defp extract_sref(params) do
     Enum.find_value(params, fn(param) ->
-      case String.split(param, "=") |> IO.inspect(label: "Split") do
+      case String.split(param, "=") do
         ["sref", x] -> x
         _ -> nil
       end
