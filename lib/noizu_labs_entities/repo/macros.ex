@@ -28,8 +28,10 @@ defmodule Noizu.Repo.Macros do
           ]
 
           defdelegate create(entity, context, options), to: Noizu.Repo.Meta
+          defdelegate update(entity, context, options), to: Noizu.Repo.Meta
           defoverridable [
-            create: 3
+            create: 3,
+            update: 3,
           ]
 
     end

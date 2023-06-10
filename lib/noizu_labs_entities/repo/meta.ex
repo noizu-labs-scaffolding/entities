@@ -30,4 +30,30 @@ defmodule Noizu.Repo.Meta do
     end
   end
 
+  def update(entity, context, options) do
+    # @todo before_create
+    IO.inspect(entity, label:  "update(entity, context, options)")
+    identifier = cond do
+      entity.identifier -> entity.identifier
+    end |> IO.inspect(label: "IDENTIFIER")
+    Enum.map(Noizu.Entity.Meta.persistence(entity.__struct__),
+      fn(settings) ->
+        IO.inspect(settings, label: "settings")
+        update_as_record(entity, settings, context, options)
+        |> IO.inspect(label: "update_as_record")
+      end
+    )
+    # @todo after_create
+    {:ok, entity}
+  end
+
+  def update_as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(type: type) = settings, context, options) do
+    protocol = Module.concat([type, Protocol])
+    with {:ok, record} <- apply(protocol, :as_record, [entity, settings, context, options]) do
+      apply(protocol, :persist, [record, :update, settings, context, options])
+      |> IO.inspect(label: "PERSIST, :update")
+    end
+  end
+
+
 end
