@@ -6,7 +6,7 @@ defmodule Noizu.Entity.Reference do
 
   def id(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.id(reference)
   def ref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.ref(reference)
-  def entity(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.entity(reference)
+  def entity(%__MODULE__{reference: reference}, context), do: Noizu.EntityReference.Protocol.entity(reference, context)
 
   def type_as_entity(this, _, _), do: {:ok, %__MODULE__{reference: this}}
   def stub(), do: {:ok, %__MODULE__{}}
@@ -25,7 +25,7 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Noizu.Entity.Reference] do
     # We need to do a universal ecto conversion
     with {:ok, id} <- Noizu.EntityReference.Protocol.id(field) do
       {name, id}
-    end |> IO.inspect(label: :field_as_record)
+    end
   end
 
   def field_from_record(_, record, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do

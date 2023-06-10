@@ -20,7 +20,6 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
 
   def persist(%{__struct__: table} = record, :create,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), context, options) do
     # Verify table match
-    IO.inspect(record, label: "PERSIST THIS RECORD")
     apply(repo, :insert, [record])
   end
   def persist(%{__struct__: table} = record, :update,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), context, options) do
@@ -28,7 +27,6 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
     apply(repo, :upsert, [record])
   end
   def persist(record,_,_, _, _) do
-    IO.inspect(record, label: "ERROR PENDING")
     {:error, :pending}
   end
 
@@ -39,20 +37,17 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
     # @todo Inject indexes
 
     #     Record.defrecord(:field_settings, [name: nil, store: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
-    fields = Noizu.Entity.Meta.fields(entity) |> IO.inspect(label: :fields)
+    fields = Noizu.Entity.Meta.fields(entity)
              |> Enum.map(
                   fn
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings}) ->
-                      IO.inspect(field_settings, label: "INTERCEPT #{name}- 1")
                       Noizu.Entity.Store.Ecto.Protocol.field_as_record(
                         get_in(entity, [Access.key(name)]),
                         field_settings,
                         settings
                       )
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings}) ->
-                      IO.inspect(field_settings, label: "INTERCEPT #{name}- 2")
                       {:ok, field_entry} = apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
-                      IO.inspect(field_entry, label: "CAST TYPE_AS_ENTITY #{type}")
                       Noizu.Entity.Store.Ecto.Protocol.field_as_record(
                         field_entry,
                         field_settings,

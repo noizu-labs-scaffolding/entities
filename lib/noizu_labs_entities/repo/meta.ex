@@ -24,7 +24,7 @@ defmodule Noizu.Repo.Meta do
   end
 
   def create_as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(type: type) = settings, context, options) do
-    protocol = Module.concat([type, Protocol]) |> IO.inspect(label: "PROTOCOL")
+    protocol = Module.concat([type, Protocol])
     with {:ok, record} <- apply(protocol, :as_record, [entity, settings, context, options]) do
       apply(protocol, :persist, [record, :create, settings, context, options])
     end

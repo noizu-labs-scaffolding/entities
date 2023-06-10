@@ -7,13 +7,6 @@ defmodule Noizu.Entity.Path do
     depth: nil,
   ]
 
-  @zero_matrix %{
-    a11: 0,
-    a12: 0,
-    a21: 0,
-    a22: 0
-  }
-
   @identity_matrix %{
     a11: 1,
     a12: 0,
