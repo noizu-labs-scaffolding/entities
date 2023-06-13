@@ -32,15 +32,12 @@ defmodule Noizu.Repo.Meta do
 
   def update(entity, context, options) do
     # @todo before_create
-    IO.inspect(entity, label:  "update(entity, context, options)")
     identifier = cond do
       entity.identifier -> entity.identifier
-    end |> IO.inspect(label: "IDENTIFIER")
+    end
     Enum.map(Noizu.Entity.Meta.persistence(entity.__struct__),
       fn(settings) ->
-        IO.inspect(settings, label: "settings")
         update_as_record(entity, settings, context, options)
-        |> IO.inspect(label: "update_as_record")
       end
     )
     # @todo after_create

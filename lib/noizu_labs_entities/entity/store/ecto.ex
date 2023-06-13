@@ -24,12 +24,9 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
   end
   def persist(%{__struct__: table} = record, :update,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), context, options) do
     # 1. Get record
-    IO.inspect(record, label: "UPDATE RECORD WITH")
-    if current = apply(repo, :get, [table, record.identifier]) |> IO.inspect(label: "GET CURRENT") do
-      cs = apply(table, :changeset, [current, Map.from_struct(record) |> IO.inspect(label: "MMMMMAPPPP")])
-           |> IO.inspect(label: "GET CHANGE SET")
+    if current = apply(repo, :get, [table, record.identifier]) do
+      cs = apply(table, :changeset, [current, Map.from_struct(record)])
       apply(repo, :update, [cs])
-      |> IO.inspect(label: "APPLY CHANGE SET")
     end
   end
   def persist(record,_,_, _, _) do

@@ -103,7 +103,7 @@ defmodule Noizu.Entity.Path do
     if (m.a22 == 0) do
       Enum.reverse(acc ++ [m.a11 - 1])
     else
-      if (length(acc) < 12) do
+      if (length(acc) < 1024) do
         l = leaf_node(m)
         a11 = -m.a12
         a21 = -m.a22
