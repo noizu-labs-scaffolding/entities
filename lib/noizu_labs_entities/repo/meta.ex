@@ -48,7 +48,6 @@ defmodule Noizu.Repo.Meta do
     protocol = Module.concat([type, Protocol])
     with {:ok, record} <- apply(protocol, :as_record, [entity, settings, context, options]) do
       apply(protocol, :persist, [record, :update, settings, context, options])
-      |> IO.inspect(label: "PERSIST, :update")
     end
   end
 
