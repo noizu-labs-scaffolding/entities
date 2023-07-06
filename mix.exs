@@ -14,6 +14,23 @@ defmodule Noizu.Entities.MixProject do
     ]
   end
 
+  defp description() do
+    "Elixir Entities (Structs with MetaData and Noizu EntityReference Protocol support from noizu-labs-scaffolding/core built in."
+  end
+
+  defp package() do
+    [
+      licenses: ["MIT"],
+      links: %{
+        project: "https://github.com/noizu-labs-scaffolding/entities",
+        noizu_labs: "https://github.com/noizu-labs",
+        noizu_labs_ml: "https://github.com/noizu-labs-ml",
+        noizu_labs_scaffolding: "https://github.com/noizu-labs-scaffolding",
+        developer: "https://github.com/noizu"
+      }
+    ]
+  end
+
   def elixirc_paths(:test), do: ["lib", "test/support"]
   def elixirc_paths(_),     do: ["lib"]
 
@@ -28,6 +45,7 @@ defmodule Noizu.Entities.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:poison, "~> 3.1.0", optional: true},
 
       # {:dep_from_hexpm, "~> 0.3.0"},
