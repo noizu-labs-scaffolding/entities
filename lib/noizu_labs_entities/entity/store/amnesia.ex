@@ -7,16 +7,24 @@ defprotocol Noizu.Entity.Store.Amnesia.Protocol do
   @fallback_to_any true
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
+  def as_entity(entity, settings, context, options)
+  def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
 end
 
 defimpl Noizu.Entity.Store.Amnesia.Protocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
 
+  #---------------------------
+  #
+  #---------------------------
   def persist(_entity, _type, _settings, _context, _options) do
     {:error, :pending}
   end
 
+  #---------------------------
+  #
+  #---------------------------
   def as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _context, _options) do
     # todo strip transient fields,
     # collapse refs.
@@ -27,6 +35,28 @@ defimpl Noizu.Entity.Store.Amnesia.Protocol, for: [Any] do
     {:ok, record}
   end
 
+  #---------------------------
+  #
+  #---------------------------
+  def as_entity(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table), context, options) do
+    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
+         record <- apply(table, :get!, identifier) do
+      from_record(record, settings, context, options)
+    end
+  end
+
+  #---------------------------
+  #
+  #---------------------------
+  def delete_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _context, _options) do
+    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
+      apply(table, :delete!, identifier)
+    end
+  end
+
+  #---------------------------
+  #
+  #---------------------------
   def from_record(%{entity: entity}, _settings, _context, _options) do
     {:ok, entity}
   end

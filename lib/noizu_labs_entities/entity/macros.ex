@@ -42,6 +42,9 @@ defmodule Noizu.Entity.Macros do
       # Repo
       Noizu.Entity.Macros.extract_repo()
 
+      # Sref
+      Noizu.Entity.Macros.extract_sref()
+
       # Set Fields
       unquote(block)
 
@@ -71,11 +74,24 @@ defmodule Noizu.Entity.Macros do
       #--------------------------
       # Noizu.Entity Behavior
       #--------------------------
-      {vsn, nz_meta} = Noizu.Entity.Macros.inject_entity_impl(@__nz_identifiers, @__nz_persistence, @__nz_fields, @__nz_json, @__nz_acl, @__nz_repo)
+      {vsn, nz_meta} = Noizu.Entity.Macros.inject_entity_impl(
+        @__nz_identifiers,
+        @__nz_persistence,
+        @__nz_fields,
+        @__nz_json,
+        @__nz_acl,
+        @__nz_repo,
+        @__nz_sref
+      )
       @vsn vsn
       @nz_meta nz_meta
       def vsn(), do: @vsn
       def __noizu_meta__(), do: @nz_meta
+
+
+
+      # ERP Hooks
+      Noizu.Entity.Macros.erp(@__nz_identifiers)
 
     end
   end
@@ -100,6 +116,36 @@ defmodule Noizu.Entity.Macros do
   #==========================================================
   # def_entity macros
   #==========================================================
+
+  @doc """
+  Todo support different identifier types
+  """
+  defmacro erp(_identifiers) do
+    quote do
+      def kind(ref), do: Noizu.Entity.Meta.IntegerIdentifier.kind(__MODULE__, ref)
+      def id(ref), do: Noizu.Entity.Meta.IntegerIdentifier.id(__MODULE__, ref)
+      def ref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.ref(__MODULE__, ref)
+      def sref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.sref(__MODULE__, ref)
+      def entity(ref, context), do: Noizu.Entity.Meta.IntegerIdentifier.entity(__MODULE__, ref, context)
+      def stub(), do: {:ok, %__MODULE__{}}
+      def stub(ref, _context, _options) do
+        with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+          {:ok, %__MODULE__{identifier: id}}
+        end
+      end
+
+      defoverridable [
+        kind: 1,
+        id: 1,
+        ref: 1,
+        sref: 1,
+        entity: 2,
+        stub: 0,
+        stub: 3,
+      ]
+    end
+  end
+
 
   defmacro common() do
     quote do
@@ -261,11 +307,26 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   #
   #----------------------------------------
+  defmacro extract_sref() do
+    quote do
+      case Noizu.Entity.Macros.extract_simple(:sref, :sref, []) do
+        v when is_atom(v) ->
+          Module.put_attribute(__MODULE__, :__nz_sref, v)
+        _ ->
+          Module.put_attribute(__MODULE__, :__nz_sref, nil)
+      end
+    end
+  end
+
+  #----------------------------------------
+  #
+  #----------------------------------------
   def register_attributes(mod) do
     Module.register_attribute(mod, :__nz_identifiers, accumulate: true)
     Module.register_attribute(mod, :__nz_fields, accumulate: true)
     Module.register_attribute(mod, :__nz_persistence, accumulate: false)
     Module.register_attribute(mod, :__nz_repo, accumulate: false)
+    Module.register_attribute(mod, :__nz_sref, accumulate: false)
     Module.register_attribute(mod, :store, accumulate: true)
     Noizu.Entity.Macros.Json.register_attributes(mod)
     Noizu.Entity.Macros.ACL.register_attributes(mod)
@@ -290,7 +351,7 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   #
   #----------------------------------------
-  def inject_entity_impl(v__nz_identifiers, v__nz_persistence, v__nz_fields, v__nz_json, v__nz_acl, v__nz_repo) do
+  def inject_entity_impl(v__nz_identifiers, v__nz_persistence, v__nz_fields, v__nz_json, v__nz_acl, v__nz_repo, v__nz_sref) do
     #v__nz_fields = Module.get_attribute(module, :__nz_fields, [])
     Noizu.Entity.Meta.Field.field_settings(default: vsn) = get_in(v__nz_fields, [:vsn])
     #Module.put_attribute(module, :vsn, vsn)
@@ -332,7 +393,8 @@ defmodule Noizu.Entity.Macros do
       json: nz_entity__json,
       persistence: nz_entity__persistence,
       acl: acl,
-      repo: v__nz_repo
+      repo: v__nz_repo,
+      sref: v__nz_sref
     }
     #Module.put_attribute(module, :nz_meta, nz_meta)
     {vsn, nz_meta}

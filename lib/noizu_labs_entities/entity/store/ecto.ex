@@ -18,6 +18,9 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
+  #---------------------------
+  #
+  #---------------------------
   def persist(%{__struct__: table} = record, :create,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), _context, _options) do
     # Verify table match
     apply(repo, :insert, [record])
@@ -33,6 +36,10 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
     {:error, :pending}
   end
 
+
+  #---------------------------
+  #
+  #---------------------------
   def as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = settings, context, options) do
     # @todo strip transient fields,
     # @todo collapse refs.
@@ -62,16 +69,47 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
     {:ok, record}
   end
 
+  #---------------------------
+  #
+  #---------------------------
+  def as_entity(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table), context, options) do
+    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
+         record <- apply(table, :get!, identifier) do
+      from_record(record, settings, context, options)
+    end
+  end
+
+  #---------------------------
+  #
+  #---------------------------
+  def delete_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _context, _options) do
+    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
+      apply(table, :delete!, identifier)
+    end
+  end
+
+
+  #---------------------------
+  #
+  #---------------------------
   def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
     name = field_store[table][:name] || field_store[store][:name] || name
     {name, field}
   end
 
+
+  #---------------------------
+  #
+  #---------------------------
   def field_from_record(_, record, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
     {name, get_in(record, [Access.key(as_name)])}
   end
 
+
+  #---------------------------
+  #
+  #---------------------------
   def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, _context, _options) do
     fields = Noizu.Entity.Meta.fields(kind)
              |> Enum.map(
