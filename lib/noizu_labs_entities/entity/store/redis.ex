@@ -14,11 +14,11 @@ end
 defimpl Noizu.Entity.Store.Redis.Protocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
 
-  def persist(entity, type, settings, context, options) do
+  def persist(_entity, _type, _settings, _context, _options) do
     {:error, :pending}
   end
 
-  def as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), context, options) do
+  def as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: _table), _context, _options) do
     # @todo strip transient fields,
     # @todo collapse refs.
     # @todo map fields
@@ -26,10 +26,10 @@ defimpl Noizu.Entity.Store.Redis.Protocol, for: [Any] do
     {:ok, entity}
   end
 
-  def from_record(nil, _, context, options) do
+  def from_record(nil, _, _context, _options) do
     {:error, :not_found}
   end
-  def from_record(record, _, context, options) do
+  def from_record(record, _, _context, _options) do
     {:ok, record}
   end
 end

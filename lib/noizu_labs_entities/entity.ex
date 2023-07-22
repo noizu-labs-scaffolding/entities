@@ -7,7 +7,7 @@ defmodule Noizu.Entity do
   @callback vsn() :: float
   @callback __noizu_meta__() :: Map.t
 
-  defmacro __using__(options \\ nil) do
+  defmacro __using__(_options \\ nil) do
     quote do
       require Noizu.Entity.Macros
       require Noizu.Entity.Meta.Persistence

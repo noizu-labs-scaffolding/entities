@@ -26,12 +26,12 @@ defmodule Noizu.EntitiesTest do
     Noizu.Entity.Meta.ACL.acl_settings(
       target: ignore_key(:target, keys),
       type: ignore_key(:type, keys),
-      requirement: ignore_key(:requirement, keys),
+      requirement: ignore_key(:requirement, keys)
     )
   end
 
   def expected_json(keys) do
-    Noizu.Entity.Meta.Json.settings(
+    Noizu.Entity.Meta.Json.json_settings(
       template: ignore_key(:template, keys),
       field: ignore_key(:field, keys),
       as: ignore_key(:as, keys),
@@ -41,7 +41,7 @@ defmodule Noizu.EntitiesTest do
   end
 
   def expected_field(keys) do
-    Noizu.Entity.Meta.Field.settings(
+    Noizu.Entity.Meta.Field.field_settings(
       name: ignore_key(:name, keys),
       type: ignore_key(:type, keys),
       transient: ignore_key(:transient, keys),

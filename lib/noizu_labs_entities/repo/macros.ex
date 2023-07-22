@@ -29,11 +29,27 @@ defmodule Noizu.Repo.Macros do
 
           defdelegate create(entity, context, options), to: Noizu.Repo.Meta
           defdelegate update(entity, context, options), to: Noizu.Repo.Meta
+
+          defdelegate __before_create__(entity, context, options), to: Noizu.Repo.Meta
+          defdelegate __do_create__(entity, context, options), to: Noizu.Repo.Meta
+          defdelegate __after_create__(entity, context, options), to: Noizu.Repo.Meta
+
+          defdelegate __before_update__(entity, context, options), to: Noizu.Repo.Meta
+          defdelegate __do_update__(entity, context, options), to: Noizu.Repo.Meta
+          defdelegate __after_update__(entity, context, options), to: Noizu.Repo.Meta
+
           defoverridable [
             create: 3,
             update: 3,
-          ]
 
+            __before_create__: 3,
+            __do_create__: 3,
+            __after_create__: 3,
+
+            __before_update__: 3,
+            __do_update__: 3,
+            __after_update__: 3,
+          ]
     end
   end
 end

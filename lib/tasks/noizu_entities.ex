@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   defp add_ecto(name, fields) do
     ecto = Enum.map(fields, fn {_,{field, type}} -> "#{field}:#{type}" end)
     ecto = ["Schema" <> "." <> name, Macro.underscore(name)|  ecto]
-    Mix.Tasks.Phx.Gen.Schema.run(ecto)
+    apply(Mix.Tasks.Phx.Gen.Schema, :run, [ecto])
   end
 
   def entity_template(name, params) do
@@ -99,14 +99,14 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     # Payload Snippet
     entity_fields =
-      Enum.map(fields, fn({_,{field, type}}) -> "field :#{field}" end)
+      Enum.map(fields, fn({_,{field, _type}}) -> "field :#{field}" end)
       |> Enum.join("\n    ")
     entity_persistence = Enum.map(storage,
                            fn({store, settings}) ->
                              "@persistence {#{inspect store}, #{inspect settings}}"
                            end) |> Enum.join("\n   ")
 
-    entity = """
+    """
       #-------------------------------------------------------------------------------
       # Author: #{@author}
       # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.

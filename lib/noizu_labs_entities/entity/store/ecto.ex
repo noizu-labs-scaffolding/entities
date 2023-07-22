@@ -18,18 +18,18 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
-  def persist(%{__struct__: table} = record, :create,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), context, options) do
+  def persist(%{__struct__: table} = record, :create,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), _context, _options) do
     # Verify table match
     apply(repo, :insert, [record])
   end
-  def persist(%{__struct__: table} = record, :update,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), context, options) do
+  def persist(%{__struct__: table} = record, :update,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), _context, _options) do
     # 1. Get record
     if current = apply(repo, :get, [table, record.identifier]) do
       cs = apply(table, :changeset, [current, Map.from_struct(record)])
       apply(repo, :update, [cs])
     end
   end
-  def persist(record,_,_, _, _) do
+  def persist(_,_,_, _, _) do
     {:error, :pending}
   end
 
@@ -72,18 +72,18 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
     {name, get_in(record, [Access.key(as_name)])}
   end
 
-  def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, context, options) do
+  def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, _context, _options) do
     fields = Noizu.Entity.Meta.fields(kind)
              |> Enum.map(
                   fn
-                    (Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings) ->
+                    (Noizu.Entity.Meta.Field.field_settings(name: _name, type: nil) = field_settings) ->
                       Noizu.Entity.Store.Ecto.Protocol.field_from_record(
                         nil,
                         record,
                         field_settings,
                         settings
                       )
-                    (Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings) ->
+                    (Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings) ->
                       {:ok, stub} = apply(type, :stub, [])
                       Noizu.Entity.Store.Ecto.Protocol.field_from_record(
                         stub, # used for matching

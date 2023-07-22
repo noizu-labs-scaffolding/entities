@@ -39,6 +39,9 @@ defmodule Noizu.Entity.Macros do
       # Persistence
       Noizu.Entity.Macros.extract_persistence()
 
+      # Repo
+      Noizu.Entity.Macros.extract_repo()
+
       # Set Fields
       unquote(block)
 
@@ -68,7 +71,7 @@ defmodule Noizu.Entity.Macros do
       #--------------------------
       # Noizu.Entity Behavior
       #--------------------------
-      {vsn, nz_meta} = Noizu.Entity.Macros.inject_entity_impl(@__nz_identifiers, @__nz_persistence, @__nz_fields, @__nz_json, @__nz_acl)
+      {vsn, nz_meta} = Noizu.Entity.Macros.inject_entity_impl(@__nz_identifiers, @__nz_persistence, @__nz_fields, @__nz_json, @__nz_acl, @__nz_repo)
       @vsn vsn
       @nz_meta nz_meta
       def vsn(), do: @vsn
@@ -119,7 +122,7 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   # field
   #----------------------------------------
-  defmacro field(name, default \\ nil, type \\ nil, opts \\ []) do
+  defmacro field(name, default \\ nil, type \\ nil, _opts \\ []) do
     quote bind_quoted: [name: name, type: type, default: default] do
       Noizu.Entity.Macros.Json.extract_json(name)
       acl = {field, field_acl} = Noizu.Entity.Macros.ACL.extract_acl(name)
@@ -244,10 +247,25 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   #
   #----------------------------------------
+  defmacro extract_repo() do
+    quote do
+      case Noizu.Entity.Macros.extract_simple(:repo, :repo, []) do
+        v when is_atom(v) ->
+          Module.put_attribute(__MODULE__, :__nz_repo, v)
+        _ ->
+          Module.put_attribute(__MODULE__, :__nz_repo, Module.concat([__MODULE__, Repo]))
+      end
+    end
+  end
+
+  #----------------------------------------
+  #
+  #----------------------------------------
   def register_attributes(mod) do
     Module.register_attribute(mod, :__nz_identifiers, accumulate: true)
     Module.register_attribute(mod, :__nz_fields, accumulate: true)
     Module.register_attribute(mod, :__nz_persistence, accumulate: false)
+    Module.register_attribute(mod, :__nz_repo, accumulate: false)
     Module.register_attribute(mod, :store, accumulate: true)
     Noizu.Entity.Macros.Json.register_attributes(mod)
     Noizu.Entity.Macros.ACL.register_attributes(mod)
@@ -272,7 +290,7 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   #
   #----------------------------------------
-  def inject_entity_impl(v__nz_identifiers, v__nz_persistence, v__nz_fields, v__nz_json, v__nz_acl) do
+  def inject_entity_impl(v__nz_identifiers, v__nz_persistence, v__nz_fields, v__nz_json, v__nz_acl, v__nz_repo) do
     #v__nz_fields = Module.get_attribute(module, :__nz_fields, [])
     Noizu.Entity.Meta.Field.field_settings(default: vsn) = get_in(v__nz_fields, [:vsn])
     #Module.put_attribute(module, :vsn, vsn)
@@ -314,6 +332,7 @@ defmodule Noizu.Entity.Macros do
       json: nz_entity__json,
       persistence: nz_entity__persistence,
       acl: acl,
+      repo: v__nz_repo
     }
     #Module.put_attribute(module, :nz_meta, nz_meta)
     {vsn, nz_meta}

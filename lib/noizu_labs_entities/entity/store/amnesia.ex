@@ -13,11 +13,11 @@ end
 defimpl Noizu.Entity.Store.Amnesia.Protocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
 
-  def persist(entity, type, settings, context, options) do
+  def persist(_entity, _type, _settings, _context, _options) do
     {:error, :pending}
   end
 
-  def as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), context, options) do
+  def as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _context, _options) do
     # todo strip transient fields,
     # collapse refs.
 
@@ -27,10 +27,10 @@ defimpl Noizu.Entity.Store.Amnesia.Protocol, for: [Any] do
     {:ok, record}
   end
 
-  def from_record(%{entity: entity}, settings, context, options) do
+  def from_record(%{entity: entity}, _settings, _context, _options) do
     {:ok, entity}
   end
-  def from_record(_, settings, context, options) do
+  def from_record(_, _settings, _context, _options) do
     {:error, :invalid_record}
   end
 

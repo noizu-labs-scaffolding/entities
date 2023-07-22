@@ -14,7 +14,7 @@ defmodule  Noizu.Entity.Meta do
   end
   defmodule Field do
     require Record
-    Record.defrecord(:field_settings, [name: nil, store: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
+    Record.defrecord(:field_settings, [name: nil, store: [], type: nil, transient: false, pii: false, default: nil, acl: nil])
   end
   defmodule Persistence do
     require Record
@@ -59,6 +59,12 @@ defmodule  Noizu.Entity.Meta do
   #
   #---------------
   def persistence(m), do: meta(m)[:persistence]
+
+
+  #---------------
+  #
+  #---------------
+  def repo(m), do: meta(m)[:repo]
 
 
   #---------------

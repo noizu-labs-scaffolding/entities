@@ -25,10 +25,9 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Noizu.Entity.TimeStamp] do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
-
-  def as_record(_, _), do: {:error, :not_supported}
-  def from_record(_,_), do: {:error, :not_supported}
-
+  def as_record(_,_,_,_), do: {:error, :not_supported}
+  def from_record(_,_,_,_), do: {:error, :not_supported}
+  def persist(_,_,_,_,_), do: {:error, :not_supported}
 
   def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
     name = field_store[table][:name] || field_store[store][:name] || name

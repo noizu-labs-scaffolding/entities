@@ -17,10 +17,15 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Noizu.Entity.Reference] do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
-  def as_record(_, _), do: {:error, :not_supported}
-  def from_record(_,_), do: {:error, :not_supported}
+  def as_record(_,_,_,_), do: {:error, :not_supported}
+  def from_record(_,_,_,_), do: {:error, :not_supported}
+  def persist(_,_,_,_,_), do: {:error, :not_supported}
 
-  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
+  def field_as_record(
+        field,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)
+      ) do
     name = field_store[table][:name] || field_store[store][:name] || name
     # We need to do a universal ecto conversion
     with {:ok, id} <- Noizu.EntityReference.Protocol.id(field) do
@@ -28,8 +33,13 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Noizu.Entity.Reference] do
     end
   end
 
-  def field_from_record(_, record, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
-    as_name = field_store[table][:name] || field_store[store][:name] || name
+  def field_from_record(
+        _,
+        _record,
+        Noizu.Entity.Meta.Field.field_settings(name: _name, store: _field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: _store, table: _table)
+      ) do
+    #as_name = field_store[table][:name] || field_store[store][:name] || name
     # We need to do a universal lookup
     {:error, :pending}
   end
