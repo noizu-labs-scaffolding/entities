@@ -3,7 +3,7 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 #-------------------------------------------------------------------------------
 
-defprotocol Noizu.Entity.Store.Dummy.Protocol do
+defprotocol Noizu.Entity.Store.Dummy.EntityProtocol do
   @fallback_to_any true
   require  Noizu.Entity.Meta.Field
 
@@ -11,9 +11,15 @@ defprotocol Noizu.Entity.Store.Dummy.Protocol do
   def as_record(entity, settings, context, options)
   def as_entity(entity, settings, context, options)
   def delete_record(entity, settings, context, options)
-  def field_as_record(field, entity, settings)
-  def field_from_record(field, record, entity, settings)
   def from_record(record, settings, context, options)
+end
+
+
+
+defprotocol Noizu.Entity.Store.Dummy.Entity.FieldProtocol do
+  @fallback_to_any true
+  def field_as_record(field, field_settings, persistence_settings, context, options)
+  def field_from_record(field, record, field_settings, persistence_settings, context, options)
 end
 
 defmodule Noizu.Entity.Store.Dummy.StorageLayer do
@@ -56,7 +62,7 @@ defmodule Noizu.Entity.Store.Dummy.StorageLayer do
 end
 
 
-defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Any] do
+defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
@@ -85,17 +91,21 @@ defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Any] do
              |> Enum.map(
                   fn
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings}) ->
-                      Noizu.Entity.Store.Dummy.Protocol.field_as_record(
+                      Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
                         get_in(entity, [Access.key(name)]),
                         field_settings,
-                        settings
+                        settings,
+                        context,
+                        options
                       )
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings}) ->
                       {:ok, field_entry} = apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
-                      Noizu.Entity.Store.Dummy.Protocol.field_as_record(
+                      Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
                         field_entry,
                         field_settings,
-                        settings
+                        settings,
+                        context,
+                        options
                       )
                   end)
              |> List.flatten()
@@ -124,45 +134,33 @@ defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Any] do
   end
 
 
-  #---------------------------
-  #
-  #---------------------------
-  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
-    name = field_store[table][:name] || field_store[store][:name] || name
-    {name, field}
-  end
 
 
   #---------------------------
   #
   #---------------------------
-  def field_from_record(_, record, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
-    as_name = field_store[table][:name] || field_store[store][:name] || name
-    {name, get_in(record, [Access.key(as_name)])}
-  end
-
-
-  #---------------------------
-  #
-  #---------------------------
-  def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, _context, _options) do
+  def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, context, options) do
     fields = Noizu.Entity.Meta.fields(kind)
              |> Enum.map(
                   fn
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: nil) = field_settings}) ->
-                      Noizu.Entity.Store.Dummy.Protocol.field_from_record(
+                      Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_from_record(
                         nil,
                         record,
                         field_settings,
-                        settings
+                        settings,
+                        context,
+                        options
                       )
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings}) ->
                       {:ok, stub} = apply(type, :stub, [])
-                      Noizu.Entity.Store.Dummy.Protocol.field_from_record(
+                      Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_from_record(
                         stub, # used for matching
                         record,
                         field_settings,
-                        settings
+                        settings,
+                        context,
+                        options
                       )
                   end)
              |> List.flatten()
@@ -170,4 +168,39 @@ defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Any] do
     {:ok, entity}
   end
 
+end
+
+
+defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Any] do
+  require  Noizu.Entity.Meta.Persistence
+  require  Noizu.Entity.Meta.Field
+
+  #---------------------------
+  #
+  #---------------------------
+  def field_as_record(
+        field,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        _context,
+        _options
+      ) do
+    name = field_store[table][:name] || field_store[store][:name] || name
+    {name, field}
+  end
+
+  #---------------------------
+  #
+  #---------------------------
+  def field_from_record(
+        _field_stub,
+        record,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        _context,
+        _options
+      ) do
+    as_name = field_store[table][:name] || field_store[store][:name] || name
+    {name, get_in(record, [Access.key(as_name)])}
+  end
 end

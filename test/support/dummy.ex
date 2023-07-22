@@ -15,5 +15,7 @@ defmodule Noizu.Support.Entity.ETS.DummyRecord do
     created_on: nil,
     modified_on: nil,
     deleted_on: nil,
+    special_field_identifier: nil,
+    special_field_sno: nil,
   ]
 end

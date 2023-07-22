@@ -3,8 +3,9 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 #-------------------------------------------------------------------------------
 
-defprotocol Noizu.Entity.Store.Redis.Protocol do
+defprotocol Noizu.Entity.Store.Redis.EntityProtocol do
   @fallback_to_any true
+  require  Noizu.Entity.Meta.Field
 
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
@@ -14,7 +15,14 @@ defprotocol Noizu.Entity.Store.Redis.Protocol do
   def key(entity, settings, context, options)
 end
 
-defimpl Noizu.Entity.Store.Redis.Protocol, for: [Any] do
+defprotocol Noizu.Entity.Store.Redis.Entity.FieldProtocol do
+  @fallback_to_any true
+  def field_as_record(field, field_settings, persistence_settings, context, options)
+  def field_from_record(field, record, field_settings, persistence_settings, context, options)
+end
+
+
+defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
 
 
@@ -93,4 +101,12 @@ defimpl Noizu.Entity.Store.Redis.Protocol, for: [Any] do
   def from_record(record, _, _context, _options) do
     {:ok, record}
   end
+end
+
+
+defimpl Noizu.Entity.Store.Redis.Entity.FieldProtocol, for: [Any] do
+  require  Noizu.Entity.Meta.Persistence
+
+  def field_as_record(_field, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
+  def field_from_record(_field, _record, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
 end

@@ -4,6 +4,7 @@ defmodule Noizu.Entity.TimeStamp do
     modified_on: nil,
     deleted_on: nil
   ]
+  use Noizu.Entity.Field.Behaviour
 
   def stub(), do: {:ok, %__MODULE__{}}
 
@@ -20,10 +21,7 @@ defmodule Noizu.Entity.TimeStamp do
   end
 end
 
-
-
-
-defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Noizu.Entity.TimeStamp] do
+defmodule Noizu.Entity.TimeStamp.TypeHelper do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
@@ -33,7 +31,13 @@ defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Noizu.Entity.TimeStamp] do
   def from_record(_,_,_,_), do: {:error, :not_supported}
   def persist(_,_,_,_,_), do: {:error, :not_supported}
 
-  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
+  def field_as_record(
+        field,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        _context,
+        _options
+      ) do
     name = field_store[table][:name] || field_store[store][:name] || name
     unless name in [:time_stamp, :root] do
       [
@@ -50,7 +54,14 @@ defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Noizu.Entity.TimeStamp] do
     end
   end
 
-  def field_from_record(_, record, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
+  def field_from_record(
+        _field_stub,
+        record,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        _context,
+        _options
+      ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
     unless as_name in [:time_stamp, :root] do
       field = %Noizu.Entity.TimeStamp{
@@ -71,50 +82,30 @@ defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Noizu.Entity.TimeStamp] do
 
 end
 
-defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Noizu.Entity.TimeStamp] do
-  require  Noizu.Entity.Meta.Persistence
-  require  Noizu.Entity.Meta.Field
 
-  def as_record(_,_,_,_), do: {:error, :not_supported}
-  def as_entity(_,_,_,_), do: {:error, :not_supported}
-  def delete_record(_,_,_,_), do: {:error, :not_supported}
-  def from_record(_,_,_,_), do: {:error, :not_supported}
-  def persist(_,_,_,_,_), do: {:error, :not_supported}
 
-  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
-    name = field_store[table][:name] || field_store[store][:name] || name
-    unless name in [:time_stamp, :root] do
-      [
-        {:"#{name}_created_on", field.created_on},
-        {:"#{name}_modified_on", field.modified_on},
-        {:"#{name}_deleted_on", field.deleted_on},
-      ]
-    else
-      [
-        {:created_on, field.created_on},
-        {:modified_on, field.modified_on},
-        {:deleted_on, field.deleted_on},
-      ]
-    end
-  end
+defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.TimeStamp] do
+  defdelegate persist(entity,type,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate as_record(entity,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate as_entity(entity,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate delete_record(entity,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate from_record(record,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+end
 
-  def field_from_record(_, record, Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store), Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table)) do
-    as_name = field_store[table][:name] || field_store[store][:name] || name
-    unless as_name in [:time_stamp, :root] do
-      field = %Noizu.Entity.TimeStamp{
-        created_on: get_in(record, [Access.key(:"#{name}_created_on")]),
-        modified_on: get_in(record, [Access.key(:"#{name}_modified_on")]),
-        deleted_on: get_in(record, [Access.key(:"#{name}_deleted_on")]),
-      }
-      {name, field}
-    else
-      field = %Noizu.Entity.TimeStamp{
-        created_on: get_in(record, [Access.key(:created_on)]),
-        modified_on: get_in(record, [Access.key(:modified_on)]),
-        deleted_on: get_in(record, [Access.key(:deleted_on)]),
-      }
-      {name, field}
-    end
-  end
+defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Entity.TimeStamp] do
+  defdelegate field_from_record(field, record, field_settings, persistence_settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate field_as_record(field, field_settings, persistence_settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
+end
 
+defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.TimeStamp] do
+  defdelegate persist(entity,type,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate as_record(entity,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate as_entity(entity,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate delete_record(entity,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate from_record(record,settings,context,options), to: Noizu.Entity.TimeStamp.TypeHelper
+end
+
+defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.TimeStamp] do
+  defdelegate field_from_record(field, record, field_settings, persistence_settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate field_as_record(field, field_settings, persistence_settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
 end

@@ -14,7 +14,7 @@ defmodule Noizu.EntitiesTest do
 
   @context Noizu.Context.system()
 
-#  doctest Noizu.Entities
+  #  doctest Noizu.Entities
   def ignore_key(key, keys) do
     ks = Enum.map(keys, fn({k,_}) -> k end)
     cond do
@@ -98,7 +98,7 @@ defmodule Noizu.EntitiesTest do
   describe "Entity Json" do
     test "templates" do
       templates  = Noizu.Entity.Meta.json(Noizu.Support.Entities.Foo)
-      |> Map.keys
+                   |> Map.keys
       assert templates == [:admin, :admin2, :api, :bar, :brief, :default, :foo, :special]
     end
 
@@ -177,14 +177,14 @@ defmodule Noizu.EntitiesTest do
   describe "Entity ACL" do
     test "Set Permissions" do
       sut = Noizu.Entity.Meta.acl(Noizu.Support.Entities.Foo)[:name]
-            #|> IO.inspect(label: "FINALLY")
+      #|> IO.inspect(label: "FINALLY")
       assert sut == [
-                 {:acl_settings, :entity, :role, [:role2, :role3, :supper_trooper, :user]},
-                 {:acl_settings, :field, :role, [:supper_trooper]},
-                 {:acl_settings, {:parent, 0}, :role, [:user]},
-                 {:acl_settings,
-                   {:path, [{Access, :key, [:a]}, {Access, :key, [:b]}]}, :role, [:role_y, :role_x]}
-               ]
+               {:acl_settings, :entity, :role, [:role2, :role3, :supper_trooper, :user]},
+               {:acl_settings, :field, :role, [:supper_trooper]},
+               {:acl_settings, {:parent, 0}, :role, [:user]},
+               {:acl_settings,
+                 {:path, [{Access, :key, [:a]}, {Access, :key, [:b]}]}, :role, [:role_y, :role_x]}
+             ]
 
     end
 
@@ -223,6 +223,8 @@ defmodule Noizu.EntitiesTest do
     end
 
 
+
+
     test "Delete Record" do
       identifier = :os.system_time(:millisecond)  * 100 + 2
       entity = %Noizu.Support.Entities.Foo{
@@ -236,6 +238,113 @@ defmodule Noizu.EntitiesTest do
       Noizu.Support.Entities.Foo.Repo.delete(entity, @context, nil)
       {:error, :not_found} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
     end
+  end
+
+
+  describe "Repo - Field Hooks" do
+    test "Field PreCreate - entity" do
+      identifier = :os.system_time(:millisecond) * 100 + 1
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        special_field: %Noizu.Support.Entity.TestField{sno: "Appa"},
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.create(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+      assert entity.special_field.identifier == 31337
+      assert entity.special_field.sno == "Appa"
+      assert sut.special_field == entity.special_field
+    end
+
+    test "Field PreCreate - entity exists" do
+      identifier = :os.system_time(:millisecond) * 100 + 1
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        special_field: %Noizu.Support.Entity.TestField{identifier: 5, sno: "Appa"},
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.create(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+      assert entity.special_field.identifier == 5
+      assert entity.special_field.sno == "Appa"
+      assert sut.special_field == entity.special_field
+    end
+
+    test "Field PreCreate - short hand" do
+      identifier = :os.system_time(:millisecond) * 100 + 1
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        special_field: "Oppa",
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.create(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+      assert entity.special_field.identifier == 0xF00BA7
+      assert entity.special_field.sno == "Oppa"
+      assert sut.special_field == entity.special_field
+    end
+
+
+    test "Field PreUpdate - entity" do
+      identifier = :os.system_time(:millisecond) * 100 + 1
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        special_field: %Noizu.Support.Entity.TestField{sno: "Appa"},
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.update(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+      assert entity.special_field.identifier == nil
+      assert entity.special_field.sno == "Appa_updated"
+      assert sut.special_field == entity.special_field
+    end
+
+    test "Field PreUpdate - entity exists" do
+      identifier = :os.system_time(:millisecond) * 100 + 1
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        special_field: %Noizu.Support.Entity.TestField{identifier: 5, sno: "Appa"},
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.update(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+      assert entity.special_field.identifier == 5
+      assert entity.special_field.sno == "Appa_updated"
+      assert sut.special_field == entity.special_field
+    end
+
+    test "Field PreUpdate - short hand" do
+      identifier = :os.system_time(:millisecond) * 100 + 1
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        special_field: "Oppa",
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.update(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+      assert entity.special_field.identifier == 0xF00BA8
+      assert entity.special_field.sno == "Oppa"
+      assert sut.special_field == entity.special_field
+    end
+
 
   end
 

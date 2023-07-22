@@ -25,6 +25,7 @@ defmodule Noizu.Support.Entities.Foo do
     # Auto
     identifier :integer
     field :time_stamp, nil, Noizu.Entity.TimeStamp
+    field :special_field, nil, Noizu.Support.Entity.TestField
 
     @restricted :user
     @restricted {:role, :supper_trooper}

@@ -3,8 +3,9 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 #-------------------------------------------------------------------------------
 
-defprotocol Noizu.Entity.Store.Amnesia.Protocol do
+defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
   @fallback_to_any true
+
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
   def as_entity(entity, settings, context, options)
@@ -12,7 +13,15 @@ defprotocol Noizu.Entity.Store.Amnesia.Protocol do
   def from_record(record, settings, context, options)
 end
 
-defimpl Noizu.Entity.Store.Amnesia.Protocol, for: [Any] do
+
+defprotocol Noizu.Entity.Store.Amnesia.Entity.FieldProtocol do
+  @fallback_to_any true
+  def field_as_record(field, field_settings, persistence_settings, context, options)
+  def field_from_record(field, record, field_settings, persistence_settings, context, options)
+end
+
+
+defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
 
   #---------------------------
@@ -64,4 +73,11 @@ defimpl Noizu.Entity.Store.Amnesia.Protocol, for: [Any] do
     {:error, :invalid_record}
   end
 
+end
+
+defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Any] do
+  require  Noizu.Entity.Meta.Persistence
+
+  def field_as_record(_field, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
+  def field_from_record(_field, _record, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
 end
