@@ -12,6 +12,8 @@ defmodule Noizu.EntitiesTest do
   require Noizu.Entity.Meta.Json
   require Noizu.Entity.Meta.ACL
 
+  @context Noizu.Context.system()
+
 #  doctest Noizu.Entities
   def ignore_key(key, keys) do
     ks = Enum.map(keys, fn({k,_}) -> k end)
@@ -200,6 +202,41 @@ defmodule Noizu.EntitiesTest do
       sut = Noizu.Entity.Meta.acl(Noizu.Support.Entities.Foo)[:ephermal_one]
       assert sut == {:acl_settings, :entity, :role, [:admin, :system]}
     end
+  end
+
+
+  describe "Repo Crude" do
+    test "Save and Get Record" do
+      identifier = :os.system_time(:millisecond) * 100 + 1
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.create(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+      assert sut.__struct__ == entity.__struct__
+      assert sut.title == entity.title
+      assert sut.time_stamp == entity.time_stamp
+    end
+
+
+    test "Delete Record" do
+      identifier = :os.system_time(:millisecond)  * 100 + 2
+      entity = %Noizu.Support.Entities.Foo{
+        identifier: identifier,
+        name: "Henry",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+      {:ok, entity} = Noizu.Support.Entities.Foo.Repo.create(entity, @context, nil)
+      Noizu.Support.Entities.Foo.Repo.delete(entity, @context, nil)
+      {:error, :not_found} = Noizu.Support.Entities.Foo.Repo.get(identifier, @context, nil)
+    end
 
   end
+
 end

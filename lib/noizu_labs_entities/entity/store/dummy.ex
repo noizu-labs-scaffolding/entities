@@ -3,7 +3,7 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 #-------------------------------------------------------------------------------
 
-defprotocol Noizu.Entity.Store.Ecto.Protocol do
+defprotocol Noizu.Entity.Store.Dummy.Protocol do
   @fallback_to_any true
   require  Noizu.Entity.Meta.Field
 
@@ -16,28 +16,60 @@ defprotocol Noizu.Entity.Store.Ecto.Protocol do
   def from_record(record, settings, context, options)
 end
 
-defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
+defmodule Noizu.Entity.Store.Dummy.StorageLayer do
+  @table_name :dummy_storage_device
+
+  def init do
+    create_table()
+  end
+
+  defp create_table do
+    case :ets.info(@table_name) do
+      :undefined -> :ets.new(@table_name, [:public, :named_table])
+      _ -> :ok
+    end
+  end
+
+  def write(identifier, name_space, entity) do
+    #IO.inspect(entity, label:  "WRITE #{identifier}:#{name_space}")
+    create_table()
+    key = {identifier, name_space}
+    :ets.insert(@table_name, {key, entity})
+  end
+
+  def delete(identifier, name_space) do
+    #IO.puts "delete #{identifier}:#{name_space}"
+    create_table()
+    key = {identifier, name_space}
+    :ets.delete(@table_name, key)
+  end
+
+  def get(identifier, name_space) do
+    #IO.puts "get #{identifier}:#{name_space}"
+    create_table()
+    key = {identifier, name_space}
+    case :ets.lookup(@table_name, key) do
+      [{_, entity}] -> {:ok, entity}
+      [] -> {:error, :not_found}
+    end
+  end
+end
+
+
+defimpl Noizu.Entity.Store.Dummy.Protocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
   #---------------------------
   #
   #---------------------------
-  def persist(%{__struct__: table} = record, :create,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), _context, _options) do
+  def persist(record = %{identifier: id}, _type,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _context, _options) do
     # Verify table match
-    apply(repo, :insert, [record])
-  end
-  def persist(%{__struct__: table} = record, :update,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), _context, _options) do
-    # 1. Get record
-    if current = apply(repo, :get, [table, record.identifier]) do
-      cs = apply(table, :changeset, [current, Map.from_struct(record)])
-      apply(repo, :update, [cs])
-    end
+    Noizu.Entity.Store.Dummy.StorageLayer.write(id, table, record)
   end
   def persist(_,_,_, _, _) do
     {:error, :pending}
   end
-
 
   #---------------------------
   #
@@ -53,14 +85,14 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
              |> Enum.map(
                   fn
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings}) ->
-                      Noizu.Entity.Store.Ecto.Protocol.field_as_record(
+                      Noizu.Entity.Store.Dummy.Protocol.field_as_record(
                         get_in(entity, [Access.key(name)]),
                         field_settings,
                         settings
                       )
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings}) ->
                       {:ok, field_entry} = apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
-                      Noizu.Entity.Store.Ecto.Protocol.field_as_record(
+                      Noizu.Entity.Store.Dummy.Protocol.field_as_record(
                         field_entry,
                         field_settings,
                         settings
@@ -76,7 +108,7 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
   #---------------------------
   def as_entity(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table), context, options) do
     with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
-         record <- apply(table, :get!, identifier) do
+         {:ok, record} <- Noizu.Entity.Store.Dummy.StorageLayer.get(identifier, table) do
       from_record(record, settings, context, options)
     end
   end
@@ -86,7 +118,8 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
   #---------------------------
   def delete_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _context, _options) do
     with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
-      apply(table, :delete!, identifier)
+      Noizu.Entity.Store.Dummy.StorageLayer.delete(identifier, table)
+      :ok
     end
   end
 
@@ -117,7 +150,7 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
              |> Enum.map(
                   fn
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: nil) = field_settings}) ->
-                      Noizu.Entity.Store.Ecto.Protocol.field_from_record(
+                      Noizu.Entity.Store.Dummy.Protocol.field_from_record(
                         nil,
                         record,
                         field_settings,
@@ -125,7 +158,7 @@ defimpl Noizu.Entity.Store.Ecto.Protocol, for: [Any] do
                       )
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings}) ->
                       {:ok, stub} = apply(type, :stub, [])
-                      Noizu.Entity.Store.Ecto.Protocol.field_from_record(
+                      Noizu.Entity.Store.Dummy.Protocol.field_from_record(
                         stub, # used for matching
                         record,
                         field_settings,

@@ -42,17 +42,18 @@ defmodule Noizu.Repo.Macros do
           #----------------
           #
           #----------------
-          defdelegate get(entity, context, options) when is_struct(entity), to: Noizu.Repo.Meta
           def get(R.ref(module: @entity) = ref, context, options) do
             with {:ok, stub} <- apply(@entity, :stub, [ref, context, options]) do
               get(stub, context, options)
             end
           end
-          def get(ref, context, options) do
-            with {:ok, stub} <- apply(@entity, :stub, [ref, context, options]) do
+          def get(ref, context, options) when not is_struct(ref) do
+            with {:ok, ref} <- apply(@entity, :ref, [ref]),
+              {:ok, stub} <- apply(@entity, :stub, [ref, context, options]) do
               get(stub, context, options)
             end
           end
+          def get(entity, context, options) when is_struct(entity), do: Noizu.Repo.Meta.get(entity, context, options)
 
           #----------------
           #
@@ -106,7 +107,7 @@ defmodule Noizu.Repo.Macros do
 
             __before_get__: 3,
             __do_get__: 3,
-            __after_update__: 3,
+            __after_get__: 3,
 
             __before_delete__: 3,
             __do_delete__: 3,

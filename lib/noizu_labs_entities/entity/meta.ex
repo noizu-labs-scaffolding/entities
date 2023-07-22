@@ -34,6 +34,9 @@ defmodule  Noizu.Entity.Meta do
     def redis_store(table, store) do
       persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Redis)
     end
+    def dummy_store(table, store) do
+      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Dummy)
+    end
   end
   defmodule Json do
     require Record

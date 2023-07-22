@@ -9,6 +9,7 @@ defmodule Noizu.Support.Entities.Foo do
   @vsn 1.0
   @sref "foo"
 
+  @persistence dummy_store(Noizu.Support.Entity.ETS.DummyRecord, Noizu.Support.Entity.ETS.DummyRepo)
   # todo config controlled enablement of mnesia/amnesia/redis/etc providers.
   # todo default dummy handler
   # todo mix command to inject entities and setup ecto/mnesia
@@ -23,6 +24,7 @@ defmodule Noizu.Support.Entities.Foo do
     # Universal
     # Auto
     identifier :integer
+    field :time_stamp, nil, Noizu.Entity.TimeStamp
 
     @restricted :user
     @restricted {:role, :supper_trooper}
@@ -85,6 +87,11 @@ defmodule Noizu.Support.Entities.Foo do
 
   end
 
+
+  defmodule Repo do
+    use Noizu.Repo
+    def_repo()
+  end
   # todo  REPO - own module
   # todo  all entity to pl logic
   # todo  ref, entity, id, -> Noizu.Entity.ref(module, ref, options) -> injected by derive with macro callback.

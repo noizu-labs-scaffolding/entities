@@ -2,7 +2,6 @@
 # Author: Keith Brings <keith.brings@noizu.com>
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 #-------------------------------------------------------------------------------
-
 defmodule Noizu.Support.Entities.Boo do
   use Noizu.Entity
 
@@ -18,6 +17,7 @@ defmodule Noizu.Support.Entities.Boo do
   # todo index name, type, settings
   # todo invalidate cache on update
   # todo fragmented key library - own repo
+  @persistence dummy_store(Noizu.Support.Entity.ETS.DummyRecord, Noizu.Support.Entity.ETS.DummyRepo)
   def_entity do
 
     # Universal
@@ -85,7 +85,14 @@ defmodule Noizu.Support.Entities.Boo do
 
   end
 
-  # todo  REPO - own module
+
+
+
+  defmodule Repo do
+    use Noizu.Repo
+    def_repo()
+  end
+
   # todo  all entity to pl logic
   # todo  ref, entity, id, -> Noizu.Entity.ref(module, ref, options) -> injected by derive with macro callback.
 

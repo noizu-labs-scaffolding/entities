@@ -8,7 +8,7 @@ defmodule Noizu.Support.Entities.Bop do
 
   @vsn 1.0
   @sref "bop"
-
+  @persistence dummy_store(Noizu.Support.Entity.ETS.DummyRecord, Noizu.Support.Entity.ETS.DummyRepo)
   # todo config controlled enablement of mnesia/amnesia/redis/etc providers.
   # todo default dummy handler
   # todo mix command to inject entities and setup ecto/mnesia
@@ -85,7 +85,10 @@ defmodule Noizu.Support.Entities.Bop do
 
   end
 
-  # todo  REPO - own module
+  defmodule Repo do
+    use Noizu.Repo
+    def_repo()
+  end
   # todo  all entity to pl logic
   # todo  ref, entity, id, -> Noizu.Entity.ref(module, ref, options) -> injected by derive with macro callback.
 
