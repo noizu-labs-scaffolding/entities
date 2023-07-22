@@ -6,8 +6,10 @@ defmodule Noizu.Entity.UID do
   @handler Application.compile_env(:noizu_labs_entities, :uid_provider, Noizu.Entity.UID.Stub)
   @callback generate(any, any) :: any
   def generate(r,n), do: apply(@handler, :generate, [r,n])
+  def ref(id), do: apply(@handler, :ref, [id])
 end
 
 defmodule Noizu.Entity.UID.Stub do
   def generate(_,_), do: {:ok, :os.system_time(:millisecond) - 1683495051937}
+  def ref(_), do: {:error, :unsupported}
 end

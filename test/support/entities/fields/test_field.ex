@@ -72,7 +72,7 @@ defmodule  Noizu.Support.Entity.TestField.TypeHelper do
   end
 
   def field_from_record(
-        _,
+        _field_stub,
         record,
         Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
         Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),

@@ -61,14 +61,18 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
                       Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
                         get_in(entity, [Access.key(name)]),
                         field_settings,
-                        settings
+                        settings,
+                        context,
+                        options
                       )
                     ({_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings}) ->
                       {:ok, field_entry} = apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
                       Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
                         field_entry,
                         field_settings,
-                        settings
+                        settings,
+                        context,
+                        options
                       )
                   end)
              |> List.flatten()
@@ -79,9 +83,9 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   #---------------------------
   #
   #---------------------------
-  def as_entity(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table), context, options) do
+  def as_entity(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store), context, options) do
     with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
-         record <- apply(table, :get!, identifier) do
+         record <- apply(store, :get, [table, identifier]) do
       from_record(record, settings, context, options)
     end
   end
@@ -89,9 +93,11 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   #---------------------------
   #
   #---------------------------
-  def delete_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _context, _options) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
-      apply(table, :delete!, identifier)
+  def delete_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store), _context, _options) do
+    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity)
+      do
+      apply(store, :delete, [struct(table, [identifier: identifier])])
+      :ok
     end
   end
 
