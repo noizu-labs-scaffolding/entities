@@ -66,8 +66,8 @@ defmodule  Noizu.Support.Entity.TestField.TypeHelper do
 
     # We need to do a universal ecto conversion
     [
-      {:"#{as_name}_identifier", field.identifier},
-      {:"#{as_name}_sno", field.sno},
+      {:ok,{:"#{as_name}_identifier", field.identifier}},
+      {:ok,{:"#{as_name}_sno", field.sno}}
     ]
   end
 
@@ -83,7 +83,7 @@ defmodule  Noizu.Support.Entity.TestField.TypeHelper do
     identifier = Map.get(record, :"#{as_name}_identifier")
     sno = Map.get(record, :"#{as_name}_sno")
 
-    {name, %Noizu.Support.Entity.TestField{identifier: identifier, sno: sno}}
+    {:ok, {name, %Noizu.Support.Entity.TestField{identifier: identifier, sno: sno}}}
   end
 end
 

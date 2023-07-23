@@ -95,6 +95,8 @@ defmodule  Noizu.Entity.Reference.TypeHelper do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
+  require Noizu.EntityReference.Records
+  alias Noizu.EntityReference.Records, as: R
 
   def persist(_,_,_,_,_), do: {:error, :not_supported}
   def as_record(_,_,_,_), do: {:error, :not_supported}
@@ -112,21 +114,30 @@ defmodule  Noizu.Entity.Reference.TypeHelper do
     name = field_store[table][:name] || field_store[store][:name] || name
     # We need to do a universal ecto conversion
     with {:ok, id} <- Noizu.EntityReference.Protocol.id(field) do
-      {name, id}
+      {:ok, {name, id}}
     end
   end
 
   def field_from_record(
         _,
-        _record,
-        Noizu.Entity.Meta.Field.field_settings(name: _name, store: _field_store),
-        Noizu.Entity.Meta.Persistence.persistence_settings(store: _store, table: _table),
-        _context,
+        record,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        context,
         _options
       ) do
-    #as_name = field_store[table][:name] || field_store[store][:name] || name
+    as_name = field_store[table][:name] || field_store[store][:name] || name
     # We need to do a universal lookup
-    {:error, :pending}
+    case Map.get(record, as_name) do
+      v when is_struct(v) -> {:ok, v}
+      v = R.ref() -> Noizu.EntityReference.Protocol.entity(v, context)
+      v when is_integer(v) -> Noizu.Entity.UID.ref(v) |> Noizu.EntityReference.Protocol.entity(context)
+      v -> v
+    end |> case do
+             nil -> {:ok, {name, nil}}
+             {:ok, entity} -> {:ok, {name, entity}}
+             v -> v
+           end
   end
 end
 

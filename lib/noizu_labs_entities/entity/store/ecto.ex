@@ -76,6 +76,13 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
                       )
                   end)
              |> List.flatten()
+             |> List.flatten()
+             |> Enum.map(
+                  fn
+                    ({:ok, v}) -> v
+                    (_) -> nil
+                  end)
+             |> Enum.filter(&(&1))
     record = struct(table, fields)
     {:ok, record}
   end
@@ -105,6 +112,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   #
   #---------------------------
   def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, context, options) do
+    IO.puts "FROM RECORD: #{kind} - #{inspect record}"
     fields = Noizu.Entity.Meta.fields(kind)
              |> Enum.map(
                   fn
@@ -129,7 +137,14 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
                       )
                   end)
              |> List.flatten()
-    entity = struct(kind, fields)
+             |> Enum.map(
+                  fn
+                    ({:ok, v}) -> v
+                    (_) -> nil
+                  end)
+             |> Enum.filter(&(&1))
+    IO.puts "CALL STRUCT #{kind} - #{inspect fields}"
+    entity = struct(kind, fields) |> IO.inspect(label: "OUTCOME")
     {:ok, entity}
   end
 
@@ -150,7 +165,7 @@ defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Any] do
         _options
       ) do
     name = field_store[table][:name] || field_store[store][:name] || name
-    {name, field}
+    {:ok, {name, field}}
   end
 
 
@@ -166,6 +181,6 @@ defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Any] do
         _options
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
-    {name, get_in(record, [Access.key(as_name)])}
+    {:ok, {name, get_in(record, [Access.key(as_name)])}}
   end
 end

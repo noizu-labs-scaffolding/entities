@@ -41,15 +41,15 @@ defmodule Noizu.Entity.TimeStamp.TypeHelper do
     name = field_store[table][:name] || field_store[store][:name] || name
     unless name in [:time_stamp, :root] do
       [
-        {:"#{name}_created_on", field.created_on},
-        {:"#{name}_modified_on", field.modified_on},
-        {:"#{name}_deleted_on", field.deleted_on},
+        {:ok, {:"#{name}_created_on", field.created_on}},
+        {:ok, {:"#{name}_modified_on", field.modified_on}},
+        {:ok, {:"#{name}_deleted_on", field.deleted_on}},
       ]
     else
       [
-        {:created_on, field.created_on},
-        {:modified_on, field.modified_on},
-        {:deleted_on, field.deleted_on},
+        {:ok, {:created_on, field.created_on}},
+        {:ok, {:modified_on, field.modified_on}},
+        {:ok, {:deleted_on, field.deleted_on}},
       ]
     end
   end
@@ -69,14 +69,14 @@ defmodule Noizu.Entity.TimeStamp.TypeHelper do
         modified_on: get_in(record, [Access.key(:"#{name}_modified_on")]),
         deleted_on: get_in(record, [Access.key(:"#{name}_deleted_on")]),
       }
-      {name, field}
+      {:ok, {name, field}}
     else
       field = %Noizu.Entity.TimeStamp{
         created_on: get_in(record, [Access.key(:created_on)]),
         modified_on: get_in(record, [Access.key(:modified_on)]),
         deleted_on: get_in(record, [Access.key(:deleted_on)]),
       }
-      {name, field}
+      {:ok, {name, field}}
     end
   end
 

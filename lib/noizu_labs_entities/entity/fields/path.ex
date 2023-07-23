@@ -203,25 +203,30 @@ defmodule Noizu.Entity.Path.TypeHelper do
       ) do
     name = field_store[table][:name] || field_store[store][:name] || name
     [
-      {:"#{name}_depth", field.depth},
-      {:"#{name}_a11", field.matrix.a11},
-      {:"#{name}_a12", field.matrix.a12},
-      {:"#{name}_a21", field.matrix.a21},
-      {:"#{name}_a22", field.matrix.a22},
+      {:ok, {:"#{name}_depth", field.depth}},
+      {:ok, {:"#{name}_a11", field.matrix.a11}},
+      {:ok, {:"#{name}_a12", field.matrix.a12}},
+      {:ok, {:"#{name}_a21", field.matrix.a21}},
+      {:ok, {:"#{name}_a22", field.matrix.a22}},
     ]
   end
 
   def field_from_record(
         _,
-        _record,
-        Noizu.Entity.Meta.Field.field_settings(name: _name, store: _field_store),
-        Noizu.Entity.Meta.Persistence.persistence_settings(store: _store, table: _table),
-        _context,
+        record,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        context,
         _options
       ) do
-    #as_name = field_store[table][:name] || field_store[store][:name] || name
-    # We need to do a universal lookup
-    {:error, :pending}
+    as_name = field_store[table][:name] || field_store[store][:name] || name
+    depth = Map.get(record, :"#{name}_depth")
+    a11 = Map.get(record, :"#{name}_a11")
+    a12 = Map.get(record, :"#{name}_a12")
+    a21 = Map.get(record, :"#{name}_a21")
+    a22 = Map.get(record, :"#{name}_a22")
+    entity = Noizu.Entity.Path.new(%{a11: a11, a12: a12, a21: a21, a22: a22, depth: depth})
+    entity && {:ok, {name, entity}} || {:ok, {name, nil}}
   end
 end
 
