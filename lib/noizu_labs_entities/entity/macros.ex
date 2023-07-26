@@ -309,8 +309,8 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   defmacro extract_sref() do
     quote do
-      case Noizu.Entity.Macros.extract_simple(:sref, :sref, []) do
-        v when is_atom(v) ->
+      case Noizu.Entity.Macros.extract_simple(:sref, :sref, nil) do
+        v when is_bitstring(v) ->
           Module.put_attribute(__MODULE__, :__nz_sref, v)
         _ ->
           Module.put_attribute(__MODULE__, :__nz_sref, nil)
