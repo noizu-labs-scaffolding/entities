@@ -112,7 +112,6 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   #
   #---------------------------
   def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, context, options) do
-    IO.puts "FROM RECORD: #{kind} - #{inspect record}"
     fields = Noizu.Entity.Meta.fields(kind)
              |> Enum.map(
                   fn
@@ -143,8 +142,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
                     (_) -> nil
                   end)
              |> Enum.filter(&(&1))
-    IO.puts "CALL STRUCT #{kind} - #{inspect fields}"
-    entity = struct(kind, fields) |> IO.inspect(label: "OUTCOME")
+    entity = struct(kind, fields)
     {:ok, entity}
   end
 
