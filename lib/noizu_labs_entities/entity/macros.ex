@@ -120,19 +120,54 @@ defmodule Noizu.Entity.Macros do
   @doc """
   Todo support different identifier types
   """
-  defmacro erp(_identifiers) do
+  defmacro erp(identifiers) do
     quote do
-      def kind(ref), do: Noizu.Entity.Meta.IntegerIdentifier.kind(__MODULE__, ref)
-      def id(ref), do: Noizu.Entity.Meta.IntegerIdentifier.id(__MODULE__, ref)
-      def ref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.ref(__MODULE__, ref)
-      def sref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.sref(__MODULE__, ref)
-      def entity(ref, context), do: Noizu.Entity.Meta.IntegerIdentifier.entity(__MODULE__, ref, context)
-      def stub(), do: {:ok, %__MODULE__{}}
-      def stub(ref, _context, _options) do
-        with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-          {:ok, %__MODULE__{identifier: id}}
-        end
+      require Noizu.Entity.Meta
+      require Noizu.Entity.Meta.Identifier
+      alias Noizu.Entity.Meta, as: Meta
+      IO.inspect(unquote(identifiers), label: "ERP CALLED WITH:")
+
+      case unquote(identifiers) do
+        [{:identifier, Meta.Identifier.identifier_settings(type: :integer)}] ->
+          def kind(ref), do: Noizu.Entity.Meta.IntegerIdentifier.kind(__MODULE__, ref)
+          def id(ref), do: Noizu.Entity.Meta.IntegerIdentifier.id(__MODULE__, ref)
+          def ref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.ref(__MODULE__, ref)
+          def sref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.sref(__MODULE__, ref)
+          def entity(ref, context), do: Noizu.Entity.Meta.IntegerIdentifier.entity(__MODULE__, ref, context)
+          def stub(), do: {:ok, %__MODULE__{}}
+          def stub(ref, _context, _options) do
+            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+              {:ok, %__MODULE__{identifier: id}}
+            end
+          end
+        [{:identifier, Meta.Identifier.identifier_settings(type: :ref)}] ->
+          IO.puts "REF NOT YET SUPPORTED"
+          def kind(ref), do: Noizu.Entity.Meta.RefIdentifier.kind(__MODULE__, ref)
+          def id(ref), do: Noizu.Entity.Meta.RefIdentifier.id(__MODULE__, ref)
+          def ref(ref), do: Noizu.Entity.Meta.RefIdentifier.ref(__MODULE__, ref)
+          def sref(ref), do: Noizu.Entity.Meta.RefIdentifier.sref(__MODULE__, ref)
+          def entity(ref, context), do: Noizu.Entity.Meta.RefIdentifier.entity(__MODULE__, ref, context)
+          def stub(), do: {:ok, %__MODULE__{}}
+          def stub(ref, _context, _options) do
+            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+              {:ok, %__MODULE__{identifier: id}}
+            end
+          end
+        [{:identifier, Meta.Identifier.identifier_settings(type: :dual_ref)}] ->
+          IO.puts "DUAL REF NOT YET SUPPORTED"
+          def kind(ref), do: Noizu.Entity.Meta.DualRefIdentifier.kind(__MODULE__, ref)
+          def id(ref), do: Noizu.Entity.Meta.DualRefIdentifier.id(__MODULE__, ref)
+          def ref(ref), do: Noizu.Entity.Meta.DualRefIdentifier.ref(__MODULE__, ref)
+          def sref(ref), do: Noizu.Entity.Meta.DualRefIdentifier.sref(__MODULE__, ref)
+          def entity(ref, context), do: Noizu.Entity.Meta.DualRefIdentifier.entity(__MODULE__, ref, context)
+          def stub(), do: {:ok, %__MODULE__{}}
+          def stub(ref, _context, _options) do
+            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+              {:ok, %__MODULE__{identifier: id}}
+            end
+          end
       end
+
 
       defoverridable [
         kind: 1,
