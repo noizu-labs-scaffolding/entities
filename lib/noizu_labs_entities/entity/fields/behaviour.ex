@@ -22,21 +22,21 @@ defmodule Noizu.Entity.Field.Behaviour do
   defmacro __using__(_options \\ nil) do
     quote do
       @behaviour Noizu.Entity.Field.Behaviour
-      def as_record(_,_,_,_), do: {:error, :unsupported}
-      def as_entity(_,_,_,_), do: {:error, :unsupported}
-      def delete_record(_,_,_,_), do: {:error, :unsupported}
-      def from_record(_,_,_,_), do: {:error, :unsupported}
-      def persist(_,_,_,_,_), do: {:error, :unsupported}
+      def as_record(_,_,_,_), do: {:error, {:as_record, :unsupported}}
+      def as_entity(_,_,_,_), do: {:error, {:as_entity, :unsupported}}
+      def delete_record(_,_,_,_), do: {:error, {:delete_record, :unsupported}}
+      def from_record(_,_,_,_), do: {:error, {:from_record, :unsupported}}
+      def persist(_,_,_,_,_), do: {:error, {:persist, :unsupported}}
 
-      def type__before_create(_,_,_,_), do: {:error, :unsupported}
-      def type__before_update(_,_,_,_), do: {:error, :unsupported}
-      def type__after_delete(_,_,_,_), do: {:error, :unsupported}
+      def type__before_create(_,_,_,_), do: {:error, {:unsupported, __MODULE__, :type__before_create}}
+      def type__before_update(_,_,_,_), do: {:error, {:unsupported, __MODULE__, :type__before_update}}
+      def type__after_delete(_,_,_,_), do: {:error, {:unsupported, __MODULE__, :type__after_delete}}
 
       def type_as_entity(this, _, _), do: {:ok, this}
       def stub(), do: {:ok, %__MODULE__{}}
 
-      def field_as_record(_,_,_,_), do: {:error, :unsupported}
-      def field_from_record(_,_,_,_), do: {:error, :unsupported}
+      def field_as_record(_,_,_,_), do: {:error, :field_as_record}
+      def field_from_record(_,_,_,_), do: {:error, :field_from_record}
 
       defoverridable [
         as_record: 4,

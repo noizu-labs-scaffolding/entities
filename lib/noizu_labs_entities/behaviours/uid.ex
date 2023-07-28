@@ -11,5 +11,5 @@ end
 
 defmodule Noizu.Entity.UID.Stub do
   def generate(_,_), do: {:ok, :os.system_time(:millisecond) - 1683495051937}
-  def ref(_), do: {:error, :unsupported}
+  def ref(_), do: {:error, {:unsupported, __MODULE__, :ref}}
 end

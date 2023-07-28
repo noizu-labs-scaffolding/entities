@@ -71,7 +71,7 @@ end
 if Code.ensure_loaded?(Poison) do
   defmodule Noizu.Entity.Json.DefaultHandler do
     def decode(_,_,_) do
-      {:error, :unsupported}
+      {:error, {:unsupported, :decode}}
     end
     def decode!(_,_,_) do
       raise Noizu.Entity.Json.Exception, message: :unsupported

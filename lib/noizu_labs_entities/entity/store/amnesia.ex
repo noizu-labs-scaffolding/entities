@@ -78,6 +78,6 @@ end
 defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
 
-  def field_as_record(_field, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
-  def field_from_record(_field, _record, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
+  def field_as_record(_field, _field_settings, _persistence_settings, _context, _options), do: {:error, {:unsupported, Amnesia}}
+  def field_from_record(_field, _record, _field_settings, _persistence_settings, _context, _options), do: {:error, {:unsupported, Amnesia}}
 end

@@ -66,7 +66,7 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   #---------------------------
   def as_entity(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(store: store), context, options) do
     with {:ok, key} <- key(entity, settings, context, options),
-         {:ok, redis_entity} <- apply(store, :get_binary, key),
+         {:ok, redis_entity} <- apply(store, :get_binary, [key]),
          true <- redis_entity && true || {:error, :not_found},
          {:ok, entity} <- from_record(redis_entity, settings, context, options)
       do
@@ -80,7 +80,7 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   #---------------------------
   def delete_record(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(store: store), context, options) do
     with {:ok, key} <- key(entity, settings, context, options),
-         :ok <- apply(store, :delete, key)
+         :ok <- apply(store, :delete, [key])
       do
       {:ok, entity}
     end
@@ -103,10 +103,33 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   end
 end
 
-
 defimpl Noizu.Entity.Store.Redis.Entity.FieldProtocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
+  require  Noizu.Entity.Meta.Field
+  #---------------------------
+  #
+  #---------------------------
+  def field_as_record(
+        field,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: _field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: _store, table: _table),
+        _context,
+        _options
+      ) do
+    {:ok, {name, field}}
+  end
 
-  def field_as_record(_field, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
-  def field_from_record(_field, _record, _field_settings, _persistence_settings, _context, _options), do: {:error, :unsupported}
+  #---------------------------
+  #
+  #---------------------------
+  def field_from_record(
+        _field_stub,
+        record,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: _field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: _store, table: _table),
+        _context,
+        _options
+      ) do
+    {:ok, {name, get_in(record, [Access.key(name)])}}
+  end
 end
