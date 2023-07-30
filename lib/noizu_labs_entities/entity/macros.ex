@@ -125,7 +125,6 @@ defmodule Noizu.Entity.Macros do
       require Noizu.Entity.Meta
       require Noizu.Entity.Meta.Identifier
       alias Noizu.Entity.Meta, as: Meta
-      IO.inspect(unquote(identifiers), label: "ERP CALLED WITH:")
 
       case unquote(identifiers) do
         [{:identifier, Meta.Identifier.identifier_settings(type: :integer)}] ->
@@ -141,7 +140,6 @@ defmodule Noizu.Entity.Macros do
             end
           end
         [{:identifier, Meta.Identifier.identifier_settings(type: :ref)}] ->
-          IO.puts "REF NOT YET SUPPORTED"
           def kind(ref), do: Noizu.Entity.Meta.RefIdentifier.kind(__MODULE__, ref)
           def id(ref), do: Noizu.Entity.Meta.RefIdentifier.id(__MODULE__, ref)
           def ref(ref), do: Noizu.Entity.Meta.RefIdentifier.ref(__MODULE__, ref)
@@ -154,7 +152,6 @@ defmodule Noizu.Entity.Macros do
             end
           end
         [{:identifier, Meta.Identifier.identifier_settings(type: :dual_ref)}] ->
-          IO.puts "DUAL REF NOT YET SUPPORTED"
           def kind(ref), do: Noizu.Entity.Meta.DualRefIdentifier.kind(__MODULE__, ref)
           def id(ref), do: Noizu.Entity.Meta.DualRefIdentifier.id(__MODULE__, ref)
           def ref(ref), do: Noizu.Entity.Meta.DualRefIdentifier.ref(__MODULE__, ref)

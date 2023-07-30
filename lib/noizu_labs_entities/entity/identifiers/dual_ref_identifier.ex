@@ -9,128 +9,89 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   #----------------
   #
   #----------------
-  def kind(m, id) when is_integer(id), do: {:ok, m}
   def kind(m, R.ref(module: m)), do: {:ok, m}
+  def kind(m, {R.ref(), R.ref()}), do: {:ok, m}
   def kind(m, %{__struct__: m}), do: {:ok, m}
   def kind(m, "ref." <> _ = ref) do
+    # @TODO - verify ref.<is_sref>.{ref}
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
-          String.trim_leading(ref, "ref.#{sref}.")
-          |> Integer.parse()
-          |> case do
-               {identifier, ""} when is_integer(identifier) -> {:ok, m}
-               _ -> {:error, {:unsupported, ref}}
-             end
+          {:ok, m}
         :else -> {:error, {:unsupported, ref}}
       end
     end
   end
   def kind(_m, ref), do: {:error, {:unsupported, ref}}
 
-  def id(m, id) when is_integer(id), do: {:ok, m}
-  def id(m, R.ref(module: m, identifier: id)) when is_integer(id), do: {:ok, id}
-  def id(m, %{__struct__: m, identifier: id}) when is_integer(id), do: {:ok, id}
+  def id(m, {R.ref(), R.ref()} = ref), do: {:ok, ref}
+  def id(m, R.ref(module: m, identifier: {R.ref(), R.ref()}) = ref), do: {:ok, R.ref(ref, :identifier)}
+  def id(m, %{__struct__: m, identifier: {R.ref(), R.ref()}} = ref), do: {:ok, ref.identifier}
   def id(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
-          String.trim_leading(ref, "ref.#{sref}.")
-          |> Integer.parse()
-          |> case do
-               {identifier, ""} when is_integer(identifier) -> {:ok, identifier}
-               _ -> {:error, {:unsupported, ref}}
-             end
+#          inner_sref = String.trim_leading(ref, "ref.#{sref}{")
+#          with {:ok, inner_ref} <- Noizu.EntityReference.Protocol.ref(inner_sref) do
+#            {:ok, inner_ref}
+#          else
+#            _ ->
+              {:error, {:unsupported, ref}}
+          #end
         :else -> {:error, {:unsupported, ref}}
       end
     end
   end
   def id(_m, ref), do: {:error, {:unsupported, ref}}
 
-  def ref(m, id) when is_integer(id), do: {:ok, R.ref(module: m, identifier: id)}
-  def ref(m, R.ref(module: m, identifier: id)) when is_integer(id), do: {:ok, R.ref(module: m, identifier: id)}
-  def ref(m, %{__struct__: m, identifier: id}) when is_integer(id), do: {:ok, R.ref(module: m, identifier: id)}
+  def ref(m, {R.ref(), R.ref()} = inner_ref), do: {:ok, R.ref(module: m, identifier: inner_ref)}
+  def ref(m, R.ref(module: m, identifier: {R.ref(), R.ref()}) = ref), do: {:ok, ref}
+  def ref(m, %{__struct__: m, identifier: {R.ref(), R.ref()}} = ref), do: {:ok, R.ref(module: m, identifier: ref.identifier)}
   def ref(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
-          String.trim_leading(ref, "ref.#{sref}.")
-          |> Integer.parse()
-          |> case do
-               {identifier, ""} when is_integer(identifier) -> {:ok, R.ref(module: m, identifier: identifier)}
-               _ -> {:error, {:unsupported, ref}}
-             end
+#          inner_sref = String.trim_leading(ref, "ref.#{sref}.")
+#          with {:ok, inner_ref} <- Noizu.EntityReference.Protocol.ref(inner_sref) do
+#            {:ok, R.ref(module: m, identifier: inner_ref)}
+#          else
+#            _ ->
+              {:error, {:unsupported, ref}}
+          #end
         :else -> {:error, {:unsupported, ref}}
       end
     end
   end
   def ref(_m, ref), do: {:error, {:unsupported, ref}}
 
-  def sref(m, id) when is_integer(id) do
+  def sref(m, ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
-         {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
-      {:ok, "ref.#{sref}.#{id}"}
+         {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}},
+         {:ok, {inner_ref_a, inner_ref_b}} <- apply(m, :id, [ref]),
+         {:ok, inner_sref_a} <- Noizu.EntityReference.Protocol.sref(inner_ref_a),
+         {:ok, inner_sref_b} <- Noizu.EntityReference.Protocol.sref(inner_ref_b)
+      do
+      {:ok, "ref.#{sref}.{#{inner_sref_a},#{inner_sref_b}}"}
+    else
+      _ -> {:error, {:unsupported, ref}}
     end
   end
-  def sref(m, R.ref(module: m, identifier: id)) when is_integer(id) do
-    with sref <- Noizu.Entity.Meta.sref(m),
-         {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
-      {:ok, "ref.#{sref}.#{id}"}
-    end
-  end
-  def sref(m, %{__struct__: m, identifier: id}) when is_integer(id) do
-    with sref <- Noizu.Entity.Meta.sref(m),
-         {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
-      {:ok, "ref.#{sref}.#{id}"}
-    end
-  end
-  def sref(m, "ref." <> _ = ref) do
-    with sref <- Noizu.Entity.Meta.sref(m),
-         {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
-      cond do
-        String.starts_with?(ref, "ref.#{sref}.") ->
-          String.trim_leading(ref, "ref.#{sref}.")
-          |> Integer.parse()
-          |> case do
-               {identifier, ""} when is_integer(identifier) -> {:ok, "ref.#{sref}.#{identifier}"}
-               _ -> {:error, {:unsupported, ref}}
-             end
-        :else -> {:error, {:unsupported, ref}}
-      end
-    end
-  end
-  def sref(_m, ref), do: {:error, {:unsupported, ref}}
 
-
-
-  def entity(m, id, context) when is_integer(id), do: apply(m, :entity, [R.ref(module: m, identifier: id), context])
-  def entity(m, R.ref(module: m, identifier: id) = ref, context) when is_integer(id) do
-    with repo <- Noizu.Entity.Meta.repo(ref),
+  def entity(m, %{__struct__: m} = ref, context) do
+    {:ok, ref}
+  end
+  def entity(m, ref, context) do
+    with {:ok, ref} <- apply(m, :ref, [ref]),
+         repo <- Noizu.Entity.Meta.repo(ref),
          {:ok, repo} <- repo && {:ok, repo} || {:error, {m, :repo_not_foundf}}
       do
       apply(repo, :get, [ref, context, []])
+    else
+      _ -> {:error, {:unsupported, ref}}
     end
   end
-  def entity(m, %{__struct__: m, identifier: id} = ref, _context) when is_integer(id), do: {:ok, ref}
-  def entity(m, "ref." <> _ = ref, context) do
-    with sref <- Noizu.Entity.Meta.sref(m),
-         {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
-      cond do
-        String.starts_with?(ref, "ref.#{sref}.") ->
-          String.trim_leading(ref, "ref.#{sref}.")
-          |> Integer.parse()
-          |> case do
-               {identifier, ""} when is_integer(identifier) -> apply(m, :entity, [R.ref(module: m, identifier: identifier), context])
-               _ -> {:error, {:unsupported, ref}}
-             end
-        :else -> {:error, {:unsupported, ref}}
-      end
-    end
-  end
-  def entity(_m, ref, _context), do: {:error, {:unsupported, ref}}
-
 
 end

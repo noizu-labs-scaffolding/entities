@@ -9,7 +9,6 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   #----------------
   #
   #----------------
-  def kind(m, id) when is_integer(id), do: {:ok, m}
   def kind(m, R.ref(module: m)), do: {:ok, m}
   def kind(m, R.ref(module: n)), do: {:ok, m}
   def kind(m, %{__struct__: m}), do: {:ok, m}
