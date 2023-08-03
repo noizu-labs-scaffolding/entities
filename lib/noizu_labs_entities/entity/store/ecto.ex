@@ -3,6 +3,9 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 #-------------------------------------------------------------------------------
 
+defmodule Noizu.Entity.Store.Ecto.Exception do
+  defexception [:message]
+end
 
 defprotocol Noizu.Entity.Store.Ecto.EntityProtocol do
   @fallback_to_any true
@@ -20,6 +23,21 @@ defprotocol Noizu.Entity.Store.Ecto.Entity.FieldProtocol do
   def field_as_record(field, field_settings, persistence_settings, context, options)
   def field_from_record(field, record, field_settings, persistence_settings, context, options)
 end
+
+
+unless Code.ensure_loaded?(Ecto) do
+  defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
+    def persist(entity, type, settings, context, options), do: (raise Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+    def as_record(entity, settings, context, options), do: (raise Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+    def as_entity(entity, settings, context, options), do: (raise Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+    def delete_record(entity, settings, context, options), do: (raise Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+    def from_record(record, settings, context, options), do: (raise Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+  end
+  defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Any] do
+    def field_as_record(field, field_settings, persistence_settings, context, options), do: (raise Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+    def field_from_record(field, record, field_settings, persistence_settings, context, options), do: (raise Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+  end
+else
 
 defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
@@ -42,7 +60,6 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   def persist(_,_,_, _, _) do
     {:error, :pending}
   end
-
 
   #---------------------------
   #
@@ -181,4 +198,6 @@ defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Any] do
     as_name = field_store[table][:name] || field_store[store][:name] || name
     {:ok, {name, get_in(record, [Access.key(as_name)])}}
   end
+end
+
 end

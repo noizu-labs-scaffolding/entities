@@ -6,6 +6,11 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
+
+  def format_identifier(m, _, _) do
+    raise Noizu.Entity.Identifier.Exception, message: "#{m.__struct__} Generate Identifier with ref type not supported"
+  end
+
   #----------------
   #
   #----------------

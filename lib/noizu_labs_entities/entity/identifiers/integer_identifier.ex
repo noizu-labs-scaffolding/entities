@@ -6,6 +6,10 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
+  def format_identifier(m, identifier, _) do
+    identifier
+  end
+
   #----------------
   #
   #----------------
@@ -29,7 +33,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   end
   def kind(_m, ref), do: {:error, {:unsupported, ref}}
 
-  def id(m, id) when is_integer(id), do: {:ok, m}
+  def id(m, id) when is_integer(id), do: {:ok, id}
   def id(m, R.ref(module: m, identifier: id)) when is_integer(id), do: {:ok, id}
   def id(m, %{__struct__: m, identifier: id}) when is_integer(id), do: {:ok, id}
   def id(m, "ref." <> _ = ref) do

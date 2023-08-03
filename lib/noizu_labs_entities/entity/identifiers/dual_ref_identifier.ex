@@ -6,6 +6,11 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
+
+  def format_identifier(m, _, _) do
+    raise Noizu.Entity.Identifier.Exception, message: "#{m.__struct__} Generate Identifier with dual_ref type not supported"
+  end
+
   #----------------
   #
   #----------------

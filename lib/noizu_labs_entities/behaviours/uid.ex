@@ -10,6 +10,6 @@ defmodule Noizu.Entity.UID do
 end
 
 defmodule Noizu.Entity.UID.Stub do
-  def generate(_,_), do: {:ok, :os.system_time(:millisecond) - 1683495051937}
+  def generate(_,_), do: {:ok, {:os.system_time(:millisecond) - 1683495051937, 0}}
   def ref(_), do: {:error, {:unsupported, __MODULE__, :ref}}
 end

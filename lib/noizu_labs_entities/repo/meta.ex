@@ -6,6 +6,7 @@
 defmodule Noizu.Repo.Meta do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
+  require Noizu.Entity.Meta.Identifier
   # import Noizu.Core.Helpers
 
 
@@ -71,8 +72,25 @@ defmodule Noizu.Repo.Meta do
       entity.identifier ->
         {:ok, entity}
       :else ->
-        with {:ok, identifier} <- Noizu.Entity.UID.generate(Module.concat([entity.__struct__, Repo]), node()) do
-          {:ok, %{entity| identifier: identifier}}
+        with {:ok, {identifier, index}} <- Noizu.Entity.UID.generate(Module.concat([entity.__struct__, Repo]), node()) do
+          case Noizu.Entity.Meta.identifier(entity) do
+            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :integer)} ->
+              identifier = Noizu.Entity.Meta.IntegerIdentifier.format_identifier(entity, identifier, index)
+              {:ok, put_in(entity, [Access.key(field)], identifier)}
+            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :uuid)} ->
+              identifier = Noizu.Entity.Meta.UUIDIdentifier.format_identifier(entity, identifier, index)
+              {:ok, put_in(entity, [Access.key(field)], identifier)}
+            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :ref)} ->
+              identifier = Noizu.Entity.Meta.RefIdentifier.format_identifier(entity, identifier, index)
+              {:ok, put_in(entity, [Access.key(field)], identifier)}
+            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :dual_ref)} ->
+              identifier = Noizu.Entity.Meta.DualRefIdentifier.format_identifier(entity, identifier, index)
+              {:ok, put_in(entity, [Access.key(field)], identifier)}
+            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: user_defined)} ->
+              identifier = apply(user_defined, :format_identifier, [entity, identifier, index])
+              {:ok, put_in(entity, [Access.key(field)], identifier)}
+          end
+
         end
     end
     |> case do
