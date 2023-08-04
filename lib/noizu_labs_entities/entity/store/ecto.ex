@@ -39,13 +39,14 @@ unless Code.ensure_loaded?(Ecto) do
   end
 else
 
-defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
+defmodule Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
 
   #---------------------------
   #
   #---------------------------
+  @callback persist(record :: any, type :: :create | :update, settings :: Tuple, context :: any, options :: any) :: {:ok, any} | {:error, details :: any}
   def persist(%{__struct__: table} = record, :create,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), _context, _options) do
     # Verify table match
     apply(repo, :insert, [record])
@@ -53,13 +54,9 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   def persist(%{__struct__: table} = record, :update,  Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: repo), _context, _options) do
     # 1. Get record
     if current = apply(repo, :get, [table, record.identifier]) do
-      IO.puts "UPDATE: #{inspect current}"
       cs = apply(table, :changeset, [current, Map.from_struct(record)])
-      IO.puts "UPDATE.CS: #{inspect cs}"
       apply(repo, :update, [cs])
-    else
-        IO.puts "NO CURRENT ON UPDATE!? #{inspect record, pretty: true}"
-    end |> IO.inspect(label: "PERSIST OUTCOME")
+    end
   end
   def persist(_,_,_, _, _) do
     {:error, :pending}
@@ -68,6 +65,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   #---------------------------
   #
   #---------------------------
+  @callback as_record(entity :: any, settings :: Tuple, context :: any, options :: any) :: {:ok, any} | {:error, details :: any}
   def as_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = settings, context, options) do
     # @todo strip transient fields,
     # @todo collapse refs.
@@ -111,6 +109,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   #---------------------------
   #
   #---------------------------
+  @callback as_entity(entity :: any, settings :: Tuple, context :: any, options :: any) :: {:ok, any} | {:error, details :: any}
   def as_entity(entity, settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store), context, options) do
     with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
          record <- apply(store, :get, [table, identifier]) do
@@ -121,17 +120,18 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
   #---------------------------
   #
   #---------------------------
+  @callback delete_record(entity :: any, settings :: Tuple, context :: any, options :: any) :: {:ok, any} | {:error, details :: any}
   def delete_record(entity, Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store), _context, _options) do
     with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity)
       do
       apply(store, :delete, [struct(table, [identifier: identifier])])
-      :ok
     end
   end
 
   #---------------------------
   #
   #---------------------------
+  @callback from_record(entity :: any, settings :: Tuple, context :: any, options :: any) :: {:ok, any} | {:error, details :: any}
   def from_record(record, Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings, context, options) do
     fields = Noizu.Entity.Meta.fields(kind)
              |> Enum.map(
@@ -167,11 +167,53 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
     {:ok, entity}
   end
 
+  defmacro __using__(_) do
+    quote do
+      @behaviour Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+      defdelegate persist(record, action, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+      defdelegate as_record(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+      defdelegate as_entity(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+      defdelegate delete_record(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+      defdelegate from_record(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
+      defoverridable [
+        persist: 5,
+        as_record: 4,
+        as_entity: 4,
+        delete_record: 4,
+        from_record: 4
+      ]
+    end
+  end
+end
+
+defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
+
+  defmacro __deriving__(module, struct, options) do
+    quote do
+      use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+      defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [unquote(module)] do
+        def persist(record, action, settings, context, options), do: apply(unquote(module), :persist, [record, action, settings, context, options])
+        def as_record(record, settings, context, options), do: apply(unquote(module), :as_record, [record, settings, context, options])
+        def as_entity(record, settings, context, options), do: apply(unquote(module), :as_entity, [record, settings, context, options])
+        def delete_record(record, settings, context, options), do: apply(unquote(module), :delete_record, [record, settings, context, options])
+        def from_record(record, settings, context, options), do: apply(unquote(module), :from_record, [record, settings, context, options])
+      end
+    end
+  end
+
+  defdelegate persist(record, action, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+  defdelegate as_record(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+  defdelegate as_entity(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+  defdelegate delete_record(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+  defdelegate from_record(record, settings, context, options), to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 end
 
 defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Any] do
   require  Noizu.Entity.Meta.Persistence
   require  Noizu.Entity.Meta.Field
+
+
 
   #---------------------------
   #

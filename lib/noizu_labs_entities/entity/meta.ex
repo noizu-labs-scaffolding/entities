@@ -22,6 +22,34 @@ defmodule  Noizu.Entity.Meta do
   defmodule Persistence do
     require Record
     Record.defrecord(:persistence_settings, [table: :auto, kind: nil, store: nil, type: nil])
+
+
+
+    def by_table(module, table) do
+      Enum.find(Noizu.Entity.Meta.persistence(module),
+        fn
+          (settings = persistence_settings(table: ^table)) -> {:ok, settings}
+          (_) -> nil
+        end) || {:error, :not_found}
+    end
+
+    def by_type(module, type) do
+      Enum.find(Noizu.Entity.Meta.persistence(module),
+        fn
+          (settings = persistence_settings(type: ^type)) -> {:ok, settings}
+          (_) -> nil
+        end) || {:error, :not_found}
+    end
+
+    def by_store(module, store) do
+      Enum.find(Noizu.Entity.Meta.persistence(module),
+        fn
+          (settings = persistence_settings(store: ^store)) -> {:ok, settings}
+          (_) -> nil
+        end) || {:error, :not_found}
+    end
+
+
     def ecto_store(table, store) do
       persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Ecto)
     end

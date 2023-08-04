@@ -3,6 +3,7 @@
 # ERP methods
 #================================
 defmodule Noizu.Entity.Meta.IntegerIdentifier do
+  require Noizu.Entity.Meta.Persistence
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
@@ -119,6 +120,15 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
     end
   end
   def entity(m, %{__struct__: m, identifier: id} = ref, _context) when is_integer(id), do: {:ok, ref}
+  def entity(m, %{__struct__: record_type} = ref, context) do
+    with {:ok, settings = Noizu.Entity.Meta.Persistence.persistence_settings(type: type)} <-
+           Noizu.Entity.Meta.Persistence.by_table(m, record_type) do
+      protocol = Module.concat(type, EntityProtocol)
+      apply(protocol, :as_entity, [ref, settings, context, []])
+    else
+      _ -> {:error, {:unsupported, ref}}
+    end
+  end
   def entity(m, "ref." <> _ = ref, context) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- sref && {:ok, sref} || {:error, {:sref_undefined, m}} do
