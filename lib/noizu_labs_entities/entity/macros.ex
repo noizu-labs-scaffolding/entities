@@ -21,7 +21,7 @@ defmodule Noizu.Entity.Macros do
       import Noizu.Entity.Macros,
              only: [
                {:identifier, 1}, {:identifier, 2},
-               {:field, 1}, {:field, 2}, {:field, 3},
+               {:field, 1}, {:field, 2}, {:field, 3}, {:field, 4},
                {:transient, 1},
                {:pii, 1}, {:pii, 2}
              ]
@@ -226,8 +226,8 @@ defmodule Noizu.Entity.Macros do
   #----------------------------------------
   # field
   #----------------------------------------
-  defmacro field(name, default \\ nil, type \\ nil, _opts \\ []) do
-    quote bind_quoted: [name: name, type: type, default: default] do
+  defmacro field(name, default \\ nil, type \\ nil, opts \\ []) do
+    quote bind_quoted: [name: name, type: type, default: default, opts: opts] do
       Noizu.Entity.Macros.Json.extract_json(name)
       acl = {field, field_acl} = Noizu.Entity.Macros.ACL.extract_acl(name)
       Module.put_attribute(__MODULE__, :__nz_acl, acl)
@@ -249,6 +249,19 @@ defmodule Noizu.Entity.Macros do
         _ -> nil
       end
 
+
+      # Extract any config attributes
+      config = case Noizu.Entity.Macros.extract_simple(:config, :config_default, []) do
+        v when is_list(v) ->
+          Enum.map(v,
+            fn
+              ({config,settings}) -> {config, settings}
+              (_) -> nil
+            end
+          ) |> Enum.reject(&is_nil/1)
+        _ -> nil
+      end ++ (opts || [])
+
       Module.put_attribute(
         __MODULE__,
         :__nz_fields,
@@ -261,7 +274,8 @@ defmodule Noizu.Entity.Macros do
             type: type,
             pii: Noizu.Entity.Macros.extract_simple(:pii, :pii_default),
             transient: Noizu.Entity.Macros.extract_simple(:transient, :transient_default),
-            acl: field_acl
+            acl: field_acl,
+            options: config
           )
         }
       )
@@ -386,6 +400,7 @@ defmodule Noizu.Entity.Macros do
     Module.register_attribute(mod, :__nz_repo, accumulate: false)
     Module.register_attribute(mod, :__nz_sref, accumulate: false)
     Module.register_attribute(mod, :store, accumulate: true)
+    Module.register_attribute(mod, :config, accumulate: true)
     Noizu.Entity.Macros.Json.register_attributes(mod)
     Noizu.Entity.Macros.ACL.register_attributes(mod)
   end

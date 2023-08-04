@@ -12,6 +12,7 @@ defprotocol Noizu.Entity.Store.Redis.EntityProtocol do
   def as_entity(entity, settings, context, options)
   def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
+  def from_record(entity, record, settings, context, options)
   def key(entity, settings, context, options)
 end
 
@@ -90,10 +91,17 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   #---------------------------
   #
   #---------------------------
+  def from_record(_, record, settings, context, options) do
+    # todo refresh entity
+    from_record(record, settings, context, options)
+  end
+
+  #---------------------------
+  #
+  #---------------------------
   def from_record(nil, _, _context, _options) do
     {:error, :not_found}
   end
-
 
   #---------------------------
   #

@@ -13,6 +13,7 @@ defprotocol Noizu.Entity.Store.Mnesia.EntityProtocol do
   def as_entity(entity, settings, context, options)
   def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
+  def from_record(entity, record, settings, context, options)
 end
 
 defprotocol Noizu.Entity.Store.Mnesia.Entity.FieldProtocol do

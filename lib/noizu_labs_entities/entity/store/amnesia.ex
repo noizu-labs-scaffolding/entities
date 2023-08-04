@@ -11,6 +11,7 @@ defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
   def as_entity(entity, settings, context, options)
   def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
+  def from_record(entity, record, settings, context, options)
 end
 
 
@@ -68,6 +69,10 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   #---------------------------
   def from_record(%{entity: entity}, _settings, _context, _options) do
     {:ok, entity}
+  end
+  def from_record(_, record, settings, context, options) do
+    # @todo refresh entity with record
+    from_record(record, settings, context, options)
   end
   def from_record(_, _settings, _context, _options) do
     {:error, :invalid_record}
