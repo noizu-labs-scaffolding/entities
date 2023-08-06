@@ -97,7 +97,7 @@ defmodule Noizu.Entity.Macros.ACL do
   def valid_acl(x) when is_list(x), do: Enum.map(x, &(valid_acl(&1))) |> List.flatten()
 
   # Unsupported
-  def valid_acl(x), do: {:error, {:unsupported, x}}
+  def valid_acl(x), do: {:error, {:unsupported, {:acl, x}}}
 
 
   def merge_acl__weight(target, type) do

@@ -9,6 +9,7 @@ defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
   def as_entity(entity, settings, context, options)
+  def as_entity(entity, record, settings, context, options)
   def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
   def from_record(entity, record, settings, context, options)
@@ -53,6 +54,13 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
          record <- apply(table, :get!, identifier) do
       from_record(record, settings, context, options)
     end
+  end
+
+  #---------------------------
+  #
+  #---------------------------
+  def as_entity(_, record, settings = Noizu.Entity.Meta.Persistence.persistence_settings(), context, options) do
+    from_record(record, settings, context, options)
   end
 
   #---------------------------

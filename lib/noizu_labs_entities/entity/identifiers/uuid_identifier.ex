@@ -56,11 +56,11 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
           {:ok, m}
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :kind, ref}}}
       end
     end
   end
-  def kind(_m, ref), do: {:error, {:unsupported, ref}}
+  def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
 
   def id(m, <<_::binary-size(16)>> = id), do: {:ok, uuid_string(id)}
   def id(m, <<_,_,_,_,_,_,_,_,?-,_,_,_,_,?-,_,_,_,_,?-,_,_,_,_,?-,_,_,_,_,_,_,_,_,_,_,_,_>> = id), do: {:ok, id}
@@ -78,13 +78,13 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
           id = String.trim_leading(ref, "ref.#{sref}.")
           case id do
             v = <<_,_,_,_,_,_,_,_,?-,_,_,_,_,?-,_,_,_,_,?-,_,_,_,_,?-,_,_,_,_,_,_,_,_,_,_,_,_>> -> {:ok, v}
-            _ -> {:error, {:unsupported, ref}}
+            _ -> {:error, {:unsupported, {__MODULE__, :id, ref}}}
           end
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :id, ref}}}
       end
     end
   end
-  def id(_m, ref), do: {:error, {:unsupported, ref}}
+  def id(_m, ref), do: {:error, {:unsupported, {__MODULE__, :id, ref}}}
 
 
   def ref(m, ref) do

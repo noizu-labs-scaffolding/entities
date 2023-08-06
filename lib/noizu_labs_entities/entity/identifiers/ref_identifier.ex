@@ -24,11 +24,11 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
           {:ok, m}
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :kind, ref}}}
       end
     end
   end
-  def kind(_m, ref), do: {:error, {:unsupported, ref}}
+  def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
 
   def id(m, R.ref(module: n, identifier: _) = ref) when m != n, do: {:ok, ref}
   def id(m, R.ref(module: m, identifier: R.ref(module: n, identifier: _)) = ref), do: {:ok, R.ref(ref, :identifier)}
@@ -42,13 +42,13 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
           with {:ok, inner_ref} <- Noizu.EntityReference.Protocol.ref(inner_sref) do
             {:ok, inner_ref}
           else
-            _ -> {:error, {:unsupported, ref}}
+            _ -> {:error, {:unsupported, {__MODULE__, :id, ref}}}
           end
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :id, ref}}}
       end
     end
   end
-  def id(_m, ref), do: {:error, {:unsupported, ref}}
+  def id(_m, ref), do: {:error, {:unsupported, {__MODULE__, :id, ref}}}
 
   def ref(m, R.ref(module: n, identifier: _) = inner_ref) when m != n, do: {:ok, R.ref(module: m, identifier: inner_ref)}
   def ref(m, R.ref(module: m, identifier: R.ref(module: n, identifier: _)) = ref), do: {:ok, ref}
@@ -62,13 +62,13 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
           with {:ok, inner_ref} <- Noizu.EntityReference.Protocol.ref(inner_sref) do
             {:ok, R.ref(module: m, identifier: inner_ref)}
           else
-            _ -> {:error, {:unsupported, ref}}
+            _ -> {:error, {:unsupported, {__MODULE__, :ref, ref}}}
           end
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :ref, ref}}}
       end
     end
   end
-  def ref(_m, ref), do: {:error, {:unsupported, ref}}
+  def ref(_m, ref), do: {:error, {:unsupported, {__MODULE__, :ref, ref}}}
 
   def sref(m, ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -78,7 +78,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
     do
       {:ok, "ref.#{sref}.{#{inner_sref}}"}
       else
-      _ -> {:error, {:unsupported, ref}}
+      _ -> {:error, {:unsupported, {__MODULE__, :sref, ref}}}
     end
   end
 
@@ -92,7 +92,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
                               do
       apply(repo, :get, [ref, context, []])
     else
-      _ -> {:error, {:unsupported, ref}}
+      _ -> {:error, {:unsupported, {__MODULE__, :entity, ref}}}
     end
   end
 

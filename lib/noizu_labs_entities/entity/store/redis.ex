@@ -10,6 +10,7 @@ defprotocol Noizu.Entity.Store.Redis.EntityProtocol do
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
   def as_entity(entity, settings, context, options)
+  def as_entity(entity, record, settings, context, options)
   def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
   def from_record(entity, record, settings, context, options)
@@ -75,6 +76,12 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
     end
   end
 
+  #---------------------------
+  #
+  #---------------------------
+  def as_entity(_, record, settings = Noizu.Entity.Meta.Persistence.persistence_settings(), context, options) do
+    from_record(record, settings, context, options)
+  end
 
   #---------------------------
   #

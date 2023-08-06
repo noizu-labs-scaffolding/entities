@@ -24,11 +24,11 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
           {:ok, m}
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :kind, ref}}}
       end
     end
   end
-  def kind(_m, ref), do: {:error, {:unsupported, ref}}
+  def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
 
   def id(m, {R.ref(), R.ref()} = ref), do: {:ok, ref}
   def id(m, R.ref(module: m, identifier: {R.ref(), R.ref()}) = ref), do: {:ok, R.ref(ref, :identifier)}
@@ -43,13 +43,13 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
 #            {:ok, inner_ref}
 #          else
 #            _ ->
-              {:error, {:unsupported, ref}}
+              {:error, {:unsupported, {__MODULE__, :id, ref}}}
           #end
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :id, ref}}}
       end
     end
   end
-  def id(_m, ref), do: {:error, {:unsupported, ref}}
+  def id(_m, ref), do: {:error, {:unsupported, {__MODULE__, :id, ref}}}
 
   def ref(m, {R.ref(), R.ref()} = inner_ref), do: {:ok, R.ref(module: m, identifier: inner_ref)}
   def ref(m, R.ref(module: m, identifier: {R.ref(), R.ref()}) = ref), do: {:ok, ref}
@@ -64,13 +64,13 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
 #            {:ok, R.ref(module: m, identifier: inner_ref)}
 #          else
 #            _ ->
-              {:error, {:unsupported, ref}}
+            {:error, {:unsupported, {__MODULE__, :ref, ref}}}
           #end
-        :else -> {:error, {:unsupported, ref}}
+        :else -> {:error, {:unsupported, {__MODULE__, :ref, ref}}}
       end
     end
   end
-  def ref(_m, ref), do: {:error, {:unsupported, ref}}
+  def ref(_m, ref), do: {:error, {:unsupported, {__MODULE__, :ref, ref}}}
 
   def sref(m, ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -81,7 +81,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
       do
       {:ok, "ref.#{sref}.{#{inner_sref_a},#{inner_sref_b}}"}
     else
-      _ -> {:error, {:unsupported, ref}}
+      _ -> {:error, {:unsupported, {__MODULE__, :sref, ref}}}
     end
   end
 
@@ -91,11 +91,11 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   def entity(m, ref, context) do
     with {:ok, ref} <- apply(m, :ref, [ref]),
          repo <- Noizu.Entity.Meta.repo(ref),
-         {:ok, repo} <- repo && {:ok, repo} || {:error, {m, :repo_not_foundf}}
+         {:ok, repo} <- repo && {:ok, repo} || {:error, {m, :repo_not_found}}
       do
       apply(repo, :get, [ref, context, []])
     else
-      _ -> {:error, {:unsupported, ref}}
+      _ -> {:error, {:unsupported, {__MODULE__, :entity, ref}}}
     end
   end
 
