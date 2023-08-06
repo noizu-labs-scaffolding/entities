@@ -103,7 +103,8 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
            {:ok, {name, get_in(record, [Access.key(:__loader__) |as_access_path(t)])}}
          {:load, [:"^"]} -> nil
          {:load, p} ->
-           {:ok, {name, get_in(record, [Access.key(:__loader__), Access.key(as_name)|as_access_path(p)])}}
+           mp = [Access.key(:__loader__), Access.key(as_name) |as_access_path(p)]
+           {:ok, {name, get_in(record, mp)}}
          {:f4, sync_derived} ->
            case sync_derived.(as_name, record, context, field_options) do
              {:ok, v} -> {:ok, {name, v}}
@@ -114,7 +115,8 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
              {:ok, v} -> {:ok, {name, v}}
              _ -> nil
            end
-         _ -> nil
+         _ ->
+           nil
        end
   end
 
