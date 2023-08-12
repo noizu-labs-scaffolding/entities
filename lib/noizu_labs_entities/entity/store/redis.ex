@@ -24,9 +24,9 @@ defprotocol Noizu.Entity.Store.Redis.Entity.FieldProtocol do
 end
 
 
-defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
+defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   require  Noizu.Entity.Meta.Persistence
-
+  require  Noizu.Entity.Meta.Field
 
   #---------------------------
   #
@@ -116,6 +116,61 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   def from_record(record, _, _context, _options) do
     {:ok, record}
   end
+
+  defmacro __using__(_) do
+    quote do
+      @behaviour Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate key(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate persist(record, action, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate as_record(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate as_entity(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate delete_record(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate from_record(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+      defdelegate from_record(entity, record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
+      defoverridable [
+        key: 4,
+        persist: 5,
+        as_record: 4,
+        as_entity: 4,
+        as_entity: 5,
+        delete_record: 4,
+        from_record: 4,
+        from_record: 5
+      ]
+    end
+  end
+end
+
+
+defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
+  require  Noizu.Entity.Meta.Persistence
+
+  defmacro __deriving__(module, struct, options) do
+    quote do
+      use Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
+      defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [unquote(module)] do
+        def persist(record, action, settings, context, options), do: apply(unquote(module), :persist, [record, action, settings, context, options])
+        def as_record(record, settings, context, options), do: apply(unquote(module), :as_record, [record, settings, context, options])
+        def as_entity(record, settings, context, options), do: apply(unquote(module), :as_entity, [record, settings, context, options])
+        def as_entity(entity, record, settings, context, options), do: apply(unquote(module), :as_entity, [entity, record, settings, context, options])
+        def delete_record(record, settings, context, options), do: apply(unquote(module), :delete_record, [record, settings, context, options])
+        def from_record(record, settings, context, options), do: apply(unquote(module), :from_record, [record, settings, context, options])
+        def from_record(entity, record, settings, context, options), do: apply(unquote(module), :from_record, [entity, record, settings, context, options])
+      end
+    end
+  end
+
+  defdelegate persist(record, action, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+  defdelegate as_record(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+  defdelegate as_entity(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+  defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+  defdelegate delete_record(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+  defdelegate from_record(record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+  defdelegate from_record(entity, record, settings, context, options), to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
 end
 
 defimpl Noizu.Entity.Store.Redis.Entity.FieldProtocol, for: [Any] do
