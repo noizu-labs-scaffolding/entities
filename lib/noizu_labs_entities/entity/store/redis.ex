@@ -152,6 +152,7 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
       use Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
       defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [unquote(module)] do
+        def key(record, settings, context, options), do: apply(unquote(module), :key, [record, settings, context, options])
         def persist(record, action, settings, context, options), do: apply(unquote(module), :persist, [record, action, settings, context, options])
         def as_record(record, settings, context, options), do: apply(unquote(module), :as_record, [record, settings, context, options])
         def as_entity(record, settings, context, options), do: apply(unquote(module), :as_entity, [record, settings, context, options])
