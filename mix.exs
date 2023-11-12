@@ -5,7 +5,7 @@ defmodule Noizu.Entities.MixProject do
     [
       app: :noizu_labs_entities,
       name: "NoizuLabs Entities",
-      version: "0.1.2",
+      version: "0.1.3",
       elixir: "~> 1.14",
       package: package(),
       description: description(),
