@@ -1,7 +1,7 @@
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Author: Keith Brings <keith.brings@noizu.com>
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 defmodule Noizu.Support.Entities.Foo do
   use Noizu.Entity
@@ -9,7 +9,10 @@ defmodule Noizu.Support.Entities.Foo do
   @vsn 1.0
   @sref "foo"
 
-  @persistence dummy_store(Noizu.Support.Entity.ETS.DummyRecord, Noizu.Support.Entity.ETS.DummyRepo)
+  @persistence dummy_store(
+                 Noizu.Support.Entity.ETS.DummyRecord,
+                 Noizu.Support.Entity.ETS.DummyRepo
+               )
   # todo config controlled enablement of mnesia/amnesia/redis/etc providers.
   # todo default dummy handler
   # todo mix command to inject entities and setup ecto/mnesia
@@ -20,12 +23,11 @@ defmodule Noizu.Support.Entities.Foo do
   # todo invalidate cache on update
   # todo fragmented key library - own repo
   def_entity do
-
     # Universal
     # Auto
-    identifier :integer
-    field :time_stamp, nil, Noizu.Entity.TimeStamp
-    field :special_field, nil, Noizu.Support.Entity.TestField
+    identifier(:integer)
+    field(:time_stamp, nil, Noizu.Entity.TimeStamp)
+    field(:special_field, nil, Noizu.Support.Entity.TestField)
 
     @restricted :user
     @restricted {:role, :supper_trooper}
@@ -35,66 +37,63 @@ defmodule Noizu.Support.Entities.Foo do
     @restricted [{:path, [{Access, :key, [:a]}, {Access, :key, [:b]}], {:role, :role_x}}]
     @restricted [{:path, [{Access, :key, [:a]}, {Access, :key, [:b]}], {:role, :role_y}}]
     @pii :low
-    field :name
+    field(:name)
 
-    pii() do
+    pii do
       @json false
-      field :passport_number
-      field :address
+      field(:passport_number)
+      field(:address)
     end
 
     # type: atom, ref, module, handler
-    #index true
-    #index index_name: setting
-    transient() do
+    # index true
+    # index index_name: setting
+    transient do
       @json admin: true
-      field :ephermal_one
+      field(:ephermal_one)
       @json false
-      field :ephermal_two
+      field(:ephermal_two)
     end
+
     @transient true
-    field :ephermal_three
+    field(:ephermal_three)
 
     # Embed
     # Format
     # Handler
     @json brief: false
-    field :title
+    field(:title)
 
     @json :omit
     @json admin: true
     @json for: [:admin, :admin2], set: [as: :ignore]
     @json admin: [as: :apple]
-    field :title2
-
+    field(:title2)
 
     @json false
     @json admin: true
-    field :description
+    field(:description)
 
     @json false
     @json for: [:admin, :api, :brief], set: true
     @json for: [:foo, :bar], set: [true, as: :fop]
     @json for: :special, set: [omit: false, as: :bop]
     @json for: :api, set: [omit: true, as: :bop2]
-    field :json_template_specific
+    field(:json_template_specific)
 
     @json false
     @json for: [:admin, :api, :brief], set: true
     @json for: [:foo, :bar], set: [true, as: :fop2]
     @json for: :api, set: [omit: false, as: :bop2]
-    field :json_template_specific2
-
-
+    field(:json_template_specific2)
   end
-
 
   defmodule Repo do
     use Noizu.Repo
     def_repo()
   end
+
   # todo  REPO - own module
   # todo  all entity to pl logic
   # todo  ref, entity, id, -> Noizu.Entity.ref(module, ref, options) -> injected by derive with macro callback.
-
 end

@@ -1,11 +1,12 @@
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Author: Keith Brings <keith.brings@noizu.com>
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 defmodule Noizu.Entity.ACL.Exception do
   defexception [:details]
+
   def message(e) do
-    "#{inspect e.details}"
+    "#{inspect(e.details)}"
   end
 end
 
@@ -16,6 +17,7 @@ end
 
 defimpl Noizu.Entity.ACL.Protocol, for: [Any] do
   def restrict(for, entity, settings, context, options)
+
   def restrict(:read, entity, _, _, _) do
     {:ok, entity}
   end

@@ -1,11 +1,9 @@
 defmodule Noizu.Entity.Path do
   @derive Noizu.EntityReference.Protocol
-  defstruct [
-    path: nil,
-    materialized_path: nil,
-    matrix: nil,
-    depth: nil,
-  ]
+  defstruct path: nil,
+            materialized_path: nil,
+            matrix: nil,
+            depth: nil
 
   @identity_matrix %{
     a11: 1,
@@ -16,20 +14,23 @@ defmodule Noizu.Entity.Path do
   use Noizu.Entity.Field.Behaviour
 
   def parent_path(nil), do: nil
+
   def parent_path(%{__struct__: __MODULE__} = this) do
     new(Enum.slice(this.path, 0..-2))
   end
 
   def path_string(nil), do: nil
+
   def path_string(%{__struct__: __MODULE__} = this) do
     Enum.join(this.path, ".")
   end
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
+  # ---------------------------
   def position_matrix(position) when is_integer(position) do
     i = position + 1
+
     %{
       a11: i,
       a12: -1,
@@ -38,56 +39,62 @@ defmodule Noizu.Entity.Path do
     }
   end
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
-  def multiply_matrix(%{a11: a11, a12: a12, a21: a21, a22: a22}, %{a11: b11, a12: b12, a21: b21, a22: b22}) do
+  # ---------------------------
+  def multiply_matrix(%{a11: a11, a12: a12, a21: a21, a22: a22}, %{
+        a11: b11,
+        a12: b12,
+        a21: b21,
+        a22: b22
+      }) do
     %{
-      a11: (a11 * b11 + a12 * b21),
-      a12: (a11 * b12 + a12 * b22),
-      a21: (a21 * b11 + a22 * b21),
-      a22: (a21 * b12 + a22 * b22),
+      a11: a11 * b11 + a12 * b21,
+      a12: a11 * b12 + a12 * b22,
+      a21: a21 * b11 + a22 * b21,
+      a22: a21 * b12 + a22 * b22
     }
   end
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
+  # ---------------------------
   def leaf_node(%{a11: a11, a12: a12, a21: _a21, a22: _a22}) do
     Integer.floor_div(a11, -a12)
   end
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
+  # ---------------------------
   def convert_path_to_matrix([]), do: @identity_matrix
+
   def convert_path_to_matrix(path) when is_list(path) do
     Enum.reduce(
       path,
       @identity_matrix,
-      fn (position, path) ->
+      fn position, path ->
         multiply_matrix(path, position_matrix(position))
       end
     )
   end
 
-
-  #---------------------------
+  # ---------------------------
   # child
-  #---------------------------
+  # ---------------------------
   def child(path, position) do
     np = path.path ++ [position]
+
     %__MODULE__{
       depth: path.depth + 1,
       path: np,
       materialized_path: convert_path_to_tuple(np),
-      matrix:  multiply_matrix(path.matrix, position_matrix(position))
+      matrix: multiply_matrix(path.matrix, position_matrix(position))
     }
   end
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
+  # ---------------------------
   def convert_matrix_to_path(m) do
     convert_matrix_to_path(m, [])
   end
@@ -97,15 +104,15 @@ defmodule Noizu.Entity.Path do
   end
 
   def convert_matrix_to_path(m, acc) do
-    if (m.a22 == 0) do
+    if m.a22 == 0 do
       Enum.reverse(acc ++ [m.a11 - 1])
     else
-      if (length(acc) < 1024) do
+      if length(acc) < 1024 do
         l = leaf_node(m)
         a11 = -m.a12
         a21 = -m.a22
-        a12 = (m.a11 - (a11 * (l + 1)))
-        a22 = (m.a21 - (a21 * (l + 1)))
+        a12 = m.a11 - a11 * (l + 1)
+        a22 = m.a21 - a21 * (l + 1)
         convert_matrix_to_path(%{a11: a11, a12: a12, a21: a21, a22: a22}, acc ++ [l])
       else
         {:error, acc}
@@ -113,9 +120,9 @@ defmodule Noizu.Entity.Path do
     end
   end
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
+  # ---------------------------
   def convert_tuple_to_path(path) when is_tuple(path) do
     convert_tuple_to_path(path, [])
   end
@@ -127,18 +134,18 @@ defmodule Noizu.Entity.Path do
 
   def convert_tuple_to_path({a, b}, acc), do: convert_tuple_to_path(b, acc ++ [a])
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
+  # ---------------------------
   def convert_path_to_tuple(path) when is_list(path) do
     path
     |> Enum.reverse()
-    |> Enum.reduce({}, &({&1, &2}))
+    |> Enum.reduce({}, &{&1, &2})
   end
 
-  #---------------------------
+  # ---------------------------
   #
-  #---------------------------
+  # ---------------------------
   def new(%{path_a11: a11, path_a12: a12, path_a21: a21, path_a22: a22}) do
     new(%{a11: a11, a12: a12, a21: a21, a22: a22})
   end
@@ -147,7 +154,7 @@ defmodule Noizu.Entity.Path do
     new(%{a11: a11, a12: -a12, a21: a21, a22: -a22})
   end
 
-  def new(%{a11: _a11, a12: _a12, a21: _a21, a22: _a22} = m)  do
+  def new(%{a11: _a11, a12: _a12, a21: _a21, a22: _a22} = m) do
     new(convert_matrix_to_path(m))
   end
 
@@ -172,27 +179,24 @@ defmodule Noizu.Entity.Path do
       matrix: @identity_matrix
     }
   end
+
   def new(path) when is_bitstring(path) do
     path
     |> String.split(".")
-    |> Enum.map(&(String.to_integer(&1)))
+    |> Enum.map(&String.to_integer(&1))
     |> new()
   end
-
-
 end
 
-
 defmodule Noizu.Entity.Path.TypeHelper do
-  require  Noizu.Entity.Meta.Persistence
-  require  Noizu.Entity.Meta.Field
+  require Noizu.Entity.Meta.Persistence
+  require Noizu.Entity.Meta.Field
 
-
-  def persist(_,_,_,_,_), do: {:error, :not_supported}
-  def as_record(_,_,_,_), do: {:error, :not_supported}
-  def as_entity(_,_,_,_), do: {:error, :not_supported}
-  def delete_record(_,_,_,_), do: {:error, :not_supported}
-  def from_record(_,_,_,_), do: {:error, :not_supported}
+  def persist(_, _, _, _, _), do: {:error, :not_supported}
+  def as_record(_, _, _, _), do: {:error, :not_supported}
+  def as_entity(_, _, _, _), do: {:error, :not_supported}
+  def delete_record(_, _, _, _), do: {:error, :not_supported}
+  def from_record(_, _, _, _), do: {:error, :not_supported}
 
   def field_as_record(
         field,
@@ -202,12 +206,13 @@ defmodule Noizu.Entity.Path.TypeHelper do
         _options
       ) do
     name = field_store[table][:name] || field_store[store][:name] || name
+
     [
       {:ok, {:"#{name}_depth", field.depth}},
       {:ok, {:"#{name}_a11", field.matrix.a11}},
       {:ok, {:"#{name}_a12", field.matrix.a12}},
       {:ok, {:"#{name}_a21", field.matrix.a21}},
-      {:ok, {:"#{name}_a22", field.matrix.a22}},
+      {:ok, {:"#{name}_a22", field.matrix.a22}}
     ]
   end
 
@@ -226,32 +231,52 @@ defmodule Noizu.Entity.Path.TypeHelper do
     a21 = Map.get(record, :"#{name}_a21")
     a22 = Map.get(record, :"#{name}_a22")
     entity = Noizu.Entity.Path.new(%{a11: a11, a12: a12, a21: a21, a22: a22, depth: depth})
-    entity && {:ok, {name, entity}} || {:ok, {name, nil}}
+    (entity && {:ok, {name, entity}}) || {:ok, {name, nil}}
   end
 end
 
 defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.Path] do
-  defdelegate persist(entity,type,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate as_record(entity,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate as_entity(entity,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate delete_record(entity,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate from_record(record,settings,context,options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate persist(entity, type, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate delete_record(entity, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate from_record(record, settings, context, options), to: Noizu.Entity.Path.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Entity.Path] do
-  defdelegate field_from_record(field, record, field_settings, persistence_settings, context, options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate field_as_record(field, field_settings, persistence_settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate field_from_record(
+                field,
+                record,
+                field_settings,
+                persistence_settings,
+                context,
+                options
+              ),
+              to: Noizu.Entity.Path.TypeHelper
+
+  defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
+    to: Noizu.Entity.Path.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.Path] do
-  defdelegate persist(entity,type,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate as_record(entity,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate as_entity(entity,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate delete_record(entity,settings,context,options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate from_record(record,settings,context,options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate persist(entity, type, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate delete_record(entity, settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate from_record(record, settings, context, options), to: Noizu.Entity.Path.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.Path] do
-  defdelegate field_from_record(field, record, field_settings, persistence_settings, context, options), to: Noizu.Entity.Path.TypeHelper
-  defdelegate field_as_record(field, field_settings, persistence_settings, context, options), to: Noizu.Entity.Path.TypeHelper
+  defdelegate field_from_record(
+                field,
+                record,
+                field_settings,
+                persistence_settings,
+                context,
+                options
+              ),
+              to: Noizu.Entity.Path.TypeHelper
+
+  defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
+    to: Noizu.Entity.Path.TypeHelper
 end

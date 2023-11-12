@@ -13,12 +13,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     filename = "lib/#{app_name}_entities/#{name}.ex"
     content = entity_template(name, params)
+
     with :ok <- File.write(filename, content) do
-      IO.puts "Generated"
+      IO.puts("Generated")
     end
-
   end
-
 
   defp app_name() do
     Mix.Project.config()[:app]
@@ -28,14 +27,14 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Enum.join("")
   end
 
-  defp entity_name(name,_) do
+  defp entity_name(name, _) do
     String.split(name, ".")
     |> Enum.map(&String.capitalize(&1))
     |> Enum.join(".")
   end
 
   defp prep_params(params) do
-    Enum.group_by(params, fn(param) ->
+    Enum.group_by(params, fn param ->
       cond do
         String.starts_with?(param, "sref=") -> :sref
         String.starts_with?(param, "field=") -> :field
@@ -46,7 +45,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   end
 
   defp extract_sref(params) do
-    Enum.find_value(params, fn(param) ->
+    Enum.find_value(params, fn param ->
       case String.split(param, "=") do
         ["sref", x] -> x
         _ -> nil
@@ -55,32 +54,42 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   end
 
   defp extract_fields(nil), do: []
+
   defp extract_fields(params) do
-    Enum.map(params,
+    Enum.map(
+      params,
       fn
-        ("field=" <> f) ->
+        "field=" <> f ->
           case String.split(f, ":") do
             [name, type] ->
               {:field, {name, type}}
           end
-        (_) -> nil
-      end) |> Enum.filter(&(&1))
+
+        _ ->
+          nil
+      end
+    )
+    |> Enum.filter(& &1)
   end
 
   defp extract_storage(nil), do: []
+
   defp extract_storage(params) do
-    Enum.map(params,
+    Enum.map(
+      params,
       fn
-        ("store=ecto") -> {:ecto, :storage}
-        ("store=redis") -> {:redis, :storage}
-        ("store=mnesia") -> {:mnesia, :storage}
-        (_) -> nil
-      end) |> Enum.filter(&(&1))
+        "store=ecto" -> {:ecto, :storage}
+        "store=redis" -> {:redis, :storage}
+        "store=mnesia" -> {:mnesia, :storage}
+        _ -> nil
+      end
+    )
+    |> Enum.filter(& &1)
   end
 
   defp add_ecto(name, fields) do
-    ecto = Enum.map(fields, fn {_,{field, type}} -> "#{field}:#{type}" end)
-    ecto = ["Schema" <> "." <> name, Macro.underscore(name)|  ecto]
+    ecto = Enum.map(fields, fn {_, {field, type}} -> "#{field}:#{type}" end)
+    ecto = ["Schema" <> "." <> name, Macro.underscore(name) | ecto]
     apply(Mix.Tasks.Phx.Gen.Schema, :run, [ecto])
   end
 
@@ -99,30 +108,35 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     # Payload Snippet
     entity_fields =
-      Enum.map(fields, fn({_,{field, _type}}) -> "field :#{field}" end)
+      Enum.map(fields, fn {_, {field, _type}} -> "field :#{field}" end)
       |> Enum.join("\n    ")
-    entity_persistence = Enum.map(storage,
-                           fn({store, settings}) ->
-                             "@persistence {#{inspect store}, #{inspect settings}}"
-                           end) |> Enum.join("\n   ")
+
+    entity_persistence =
+      Enum.map(
+        storage,
+        fn {store, settings} ->
+          "@persistence {#{inspect(store)}, #{inspect(settings)}}"
+        end
+      )
+      |> Enum.join("\n   ")
 
     """
       #-------------------------------------------------------------------------------
       # Author: #{@author}
       # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
       #-------------------------------------------------------------------------------
-
+    
       defmodule #{sm} do
         use Noizu.Entities
-
+    
         @vsn 1.0
-        #{ sref && "@sref \"#{sref}\"" || "" }
+        #{(sref && "@sref \"#{sref}\"") || ""}
         #{entity_persistence}
         def_entity do
           identifier :integer
           #{entity_fields}
         end
-
+    
         defmodule Repo do
           use Noizu.Repo
         end
