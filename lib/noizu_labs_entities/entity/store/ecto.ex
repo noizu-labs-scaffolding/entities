@@ -150,6 +150,8 @@ else
         end)
         |> Enum.filter(& &1)
 
+
+
       record = struct(table, fields)
       {:ok, record}
     end

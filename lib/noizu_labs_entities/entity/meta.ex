@@ -19,7 +19,6 @@ defmodule Noizu.Entity.Meta do
 
   defmodule Field do
     require Record
-
     Record.defrecord(:field_settings,
       name: nil,
       store: [],

@@ -49,8 +49,8 @@ defmodule Noizu.Entities.MixProject do
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:poison, "~> 3.1.0", optional: true},
       {:mimic, "~> 1.0.0", only: :test},
-      {:ecto_sql, "~> 3.6"}
-
+      {:ecto_sql, "~> 3.6"},
+      {:amnesia, git: "https://github.com/noizu/amnesia.git", tag: "0.2.8", optional: true},
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

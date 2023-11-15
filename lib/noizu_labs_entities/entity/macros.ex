@@ -300,12 +300,13 @@ defmodule Noizu.Entity.Macros do
             Enum.map(
               v,
               fn
+                v when is_list(v) -> v
                 {config, settings} -> {config, settings}
                 _ -> nil
               end
             )
             |> Enum.reject(&is_nil/1)
-
+            |> List.flatten()
           _ ->
             nil
         end ++ (opts || [])
