@@ -8,6 +8,7 @@ defmodule Noizu.UUID do
   defdelegate binary_to_string!(id), to: @handler
   defdelegate uuid5(id), to: @handler
   defdelegate uuid5(prefix, seed), to: @handler
+  defdelegate uuid5(prefix, seed, format), to: @handler
 end
 
 defmodule Noizu.Entity.Meta.UUIDIdentifier do
