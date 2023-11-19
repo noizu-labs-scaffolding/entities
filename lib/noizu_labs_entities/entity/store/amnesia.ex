@@ -239,6 +239,12 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Noizu.Entity.UUIDRefere
 end
 
 defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Noizu.Entity.UUIDReference] do
+  require Noizu.Entity.Meta.Persistence
+  require Noizu.Entity.Meta.Field
+
+  require Noizu.EntityReference.Records
+  alias Noizu.EntityReference.Records, as: R
+
   defdelegate field_from_record(
                 field,
                 record,
@@ -249,7 +255,18 @@ defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Noizu.Entity.UUID
               ),
               to: Noizu.Entity.UUIDReference.TypeHelper
 
-  defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
+   def field_as_record(
+        field,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        _context,
+        _options
+      ) do
+    name = field_store[table][:name] || field_store[store][:name] || name
+    # We need to do a universal ecto conversion
+    with {:ok, ref} <- Noizu.EntityReference.Protocol.ref(field) do
+      {:ok, {name, ref}}
+    end
+  end
 end
 
