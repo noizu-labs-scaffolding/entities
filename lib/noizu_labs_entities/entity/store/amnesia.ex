@@ -201,7 +201,7 @@ defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Any] do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
   def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, transient: true) = _field_settings, _persistence_settings, _context, _options) do
-    {:ok, {field, nil}}
+    {:ok, {name, nil}}
   end
   def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name) = _field_settings, _persistence_settings, _context, _options) do
     {:ok, {name, field}}
