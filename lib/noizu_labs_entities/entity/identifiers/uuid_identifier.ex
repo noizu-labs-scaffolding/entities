@@ -19,7 +19,7 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
 
   defdelegate format_identifier(m, identifier, index), to: @handler
   defdelegate uuid_string(id), to: @handler
-  defdelegate kind(id), to: @handler
+  defdelegate kind(m, id), to: @handler
   defdelegate id(m, id), to: @handler
   defdelegate ref(m, id), to: @handler
   defdelegate sref(m, id), to: @handler
