@@ -177,6 +177,8 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
                            {:ok, unpacked} <- Noizu.EntityReference.Protocol.entity(get_in(entity, [Access.key(field)]), context)
                         do
                         {field, unpacked}
+                      else
+                         _ -> nil
                       end
                     (_) -> nil
                   end)
