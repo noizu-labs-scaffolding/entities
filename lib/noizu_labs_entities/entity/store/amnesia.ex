@@ -115,7 +115,9 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
       end)
       |> Enum.reject(&is_nil/1)
       |> Map.new()
-    entity = Map.merge(entity, fields)
+
+    entity = Enum.reduce(entity, fields, fn({k,v}) -> put_in(entity, [Access.key(k)], v) end)
+    
 
     record = struct(table, [{:entity, entity}|indexes])
     {:ok, record}
@@ -180,7 +182,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
                   end)
              |> Enum.reject(&is_nil/1)
     unless unpack == [] do
-      entity = Map.merge(entity, unpack)
+      entity = Enum.reduce(entity, unpack, fn({k,v}) -> put_in(entity, [Access.key(k)], v) end)      
       {:ok, entity}
     else
       {:ok, entity}
