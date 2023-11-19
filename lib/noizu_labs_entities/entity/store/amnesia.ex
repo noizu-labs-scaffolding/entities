@@ -216,3 +216,40 @@ defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Any] do
       ),
       do: {:error, {:unsupported, Amnesia}} # We simply grab Amnesia for default cases. Multi Table scenarios require Overrides
 end
+
+
+
+
+
+defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Noizu.Entity.UUIDReference] do
+  defdelegate persist(entity, type, settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+
+  defdelegate as_record(entity, settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+
+  defdelegate as_entity(entity, settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+
+  defdelegate delete_record(entity, settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+
+  defdelegate from_record(record, settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+end
+
+defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Noizu.Entity.UUIDReference] do
+  defdelegate field_from_record(
+                field,
+                record,
+                field_settings,
+                persistence_settings,
+                context,
+                options
+              ),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+
+  defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+end
+
