@@ -116,6 +116,8 @@ defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Entity.TimeSta
     to: Noizu.Entity.TimeStamp.TypeHelper
 end
 
+
+
 defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.TimeStamp] do
   defdelegate persist(entity, type, settings, context, options),
     to: Noizu.Entity.TimeStamp.TypeHelper
@@ -130,17 +132,29 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.TimeStamp] d
     to: Noizu.Entity.TimeStamp.TypeHelper
 end
 
-defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.TimeStamp] do
-  defdelegate field_from_record(
-                field,
-                record,
-                field_settings,
-                persistence_settings,
-                context,
-                options
-              ),
-              to: Noizu.Entity.TimeStamp.TypeHelper
 
-  defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
-    to: Noizu.Entity.TimeStamp.TypeHelper
+
+defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.TimeStamp] do
+  require Noizu.Entity.Meta.Field
+  def field_from_record(
+        field,
+        record,
+        Noizu.Entity.Meta.Field.field_settings(name: name),
+        persistence_settings,
+        context,
+        options
+      )
+    do
+    {:ok, {name, get_in(record, [Access.key(name)])}}
+  end
+
+  def field_as_record(
+        field,
+        Noizu.Entity.Meta.Field.field_settings(name: name) = field_settings,
+        persistence_settings,
+        context,
+        options)
+      do
+        {:ok, {name, field}}
+    end
 end

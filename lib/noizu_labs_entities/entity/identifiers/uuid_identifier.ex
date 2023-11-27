@@ -6,7 +6,6 @@ defmodule Noizu.UUID do
   @handler Application.compile_env(:noizu_labs_entities, :uuid_lib, UUID)
 
   defdelegate binary_to_string!(id), to: @handler
-  defdelegate uuid5(id), to: @handler
   defdelegate uuid5(prefix, seed), to: @handler
   defdelegate uuid5(prefix, seed, format), to: @handler
 end
@@ -56,7 +55,7 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
 
       def format_identifier(m, identifier, index) do
         with repo <- Noizu.Entity.Meta.repo(m) do
-          <<e10, e11, e12>> = Integer.to_string(index, 16) |> String.pad_leading("0", 3)
+          <<e10, e11, e12>> = Integer.to_string(index, 16) |> String.pad_leading(3, "0")
 
           <<a1, a2, a3, a4, a5, a6, a7, a8, ?-, b1, b2, b3, b4, ?-, c1, c2, c3, c4, ?-, d1, d2,
             d3, d4, ?-, e1, e2, e3, e4, e5, e6, e7, e8, e9, _, _,
@@ -105,10 +104,10 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
 
       def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
 
-      def id(m, <<_::binary-size(16)>> = id), do: {:ok, uuid_string(id)}
+      def id(_m, <<_::binary-size(16)>> = id), do: {:ok, uuid_string(id)}
 
       def id(
-            m,
+            _m,
             <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _,
               _, _, _, _, _, _, _, _, _>> = id
           ),
@@ -163,12 +162,8 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
             String.starts_with?(ref, "ref.#{sref}.") ->
               id = String.trim_leading(ref, "ref.#{sref}.")
 
-              case id do
-                v =
-                    <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-,
-                      _, _, _, _, _, _, _, _, _, _, _, _>> ->
-                  {:ok, v}
-
+              case ShortUUID.decode(id) do
+                {:ok, value} -> {:ok, value}
                 _ ->
                   {:error, {:unsupported, {__MODULE__, :id, ref}}}
               end
@@ -190,8 +185,9 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       def sref(m, ref) do
         with sref <- Noizu.Entity.Meta.sref(m),
              {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}},
-             {:ok, id} <- apply(m, :id, [ref]) do
-          {:ok, "ref.#{sref}.#{id}"}
+             {:ok, id} <- apply(m, :id, [ref]),
+             {:ok, value} <- ShortUUID.encode(id) do
+          {:ok, "ref.#{sref}.#{value}"}
         end
       end
 

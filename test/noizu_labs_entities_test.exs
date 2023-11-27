@@ -50,7 +50,8 @@ defmodule Noizu.EntitiesTest do
       transient: ignore_key(:transient, keys),
       pii: ignore_key(:pii, keys),
       default: ignore_key(:default, keys),
-      acl: ignore_key(:acl, keys)
+      acl: ignore_key(:acl, keys),
+      options: ignore_key(:options, keys)
     )
   end
 

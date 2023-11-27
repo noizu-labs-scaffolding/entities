@@ -273,4 +273,3 @@ defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Noizu.Entity.UUID
     end
   end
 end
-

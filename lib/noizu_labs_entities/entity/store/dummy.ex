@@ -103,6 +103,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
       Noizu.Entity.Meta.fields(entity)
       |> Enum.map(fn
         {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings} ->
+
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
             get_in(entity, [Access.key(name)]),
             field_settings,
@@ -112,8 +113,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
           )
 
         {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
-          {:ok, field_entry} =
-            apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
+          {:ok, field_entry} = apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
 
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
             field_entry,
@@ -124,6 +124,12 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
           )
       end)
       |> List.flatten()
+      |> Enum.map(
+           fn
+             {:ok, v} -> v
+             _ -> nil
+           end)
+      |> Enum.reject(&is_nil/1)
 
     record = struct(table, fields)
     {:ok, record}
@@ -198,7 +204,6 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
             context,
             options
           )
-
         {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings} ->
           {:ok, stub} = apply(type, :stub, [])
 
@@ -213,6 +218,12 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
           )
       end)
       |> List.flatten()
+      |> Enum.map(
+           fn
+             {:ok, v} -> v
+             _ -> nil
+           end)
+      |> Enum.reject(&is_nil/1)
 
     entity = struct(kind, fields)
     {:ok, entity}
@@ -234,7 +245,7 @@ defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Any] do
         _options
       ) do
     name = field_store[table][:name] || field_store[store][:name] || name
-    {name, field}
+    {:ok, {name, field}}
   end
 
   # ---------------------------
@@ -249,6 +260,6 @@ defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Any] do
         _options
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
-    {name, get_in(record, [Access.key(as_name)])}
+    {:ok, {name, get_in(record, [Access.key(as_name)])}}
   end
 end

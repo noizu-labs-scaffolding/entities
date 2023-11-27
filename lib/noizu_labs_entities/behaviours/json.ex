@@ -19,6 +19,7 @@ defimpl Noizu.Entity.Json.Protocol, for: [Any] do
   @restricted :"*restricted*"
   require Noizu.Entity.Meta.Json
 
+
   def embed_field(value, field_settings, term, term_settings, context, options)
 
   def embed_field(value = nil, _, _, _, _, _) do
@@ -43,28 +44,34 @@ defimpl Noizu.Entity.Json.Protocol, for: [Any] do
 
   def prep(term, settings, context, options)
 
-  def prep(%{__struct__: m} = term, settings, context, options) do
+  def prep(%{__struct__: m} = term, settings, context, options) when is_map(settings) do
     with acl_config <- Noizu.Entity.Meta.acl(m),
          {:ok, restricted} <-
            Noizu.Entity.ACL.Protocol.restrict(:read, term, acl_config, context, options) do
       Enum.map(
         settings,
-        fn {field, field_settings} ->
-          with {:ok, v} <-
-                 restricted
-                 |> get_in([Access.key(field)])
-                 |> embed_field(field_settings, term, settings, context, options),
-               {:ok, x} <- Noizu.Entity.Json.Protocol.prep(v, field_settings, context, options) do
-            x
-          else
-            {:omit, _} -> nil
-            # todo tuple error handling
-            {:error, x} -> raise Noizu.Entity.Json.Exception, details: x
-            x -> raise Noizu.Entity.Json.Exception, details: {:other, x}
-          end
+        fn
+          {:identifier, _} ->
+            with {:ok, sref} <- Noizu.EntityReference.Protocol.sref(term) do
+              {:identifier, sref}
+            else _ -> nil
+            end
+          {field, field_settings} ->
+            with {:ok, v} <-
+                   restricted
+                   |> get_in([Access.key(field)])
+                   |> embed_field(field_settings, term, settings, context, options),
+                 {:ok, x} <- Noizu.Entity.Json.Protocol.prep(v, field_settings, context, options) do
+              x
+            else
+              {:omit, _} -> nil
+              # todo tuple error handling
+              {:error, x} -> raise Noizu.Entity.Json.Exception, details: x
+              x -> raise Noizu.Entity.Json.Exception, details: {:other, x}
+            end
         end
       )
-      |> Enum.filter(& &1)
+      |> Enum.reject(&is_nil/1)
       |> Map.new()
     else
       {:omit, _} -> nil
@@ -74,7 +81,6 @@ defimpl Noizu.Entity.Json.Protocol, for: [Any] do
       x -> raise Noizu.Entity.Json.Exception, details: {:other, x}
     end
   end
-
   def prep(term, Noizu.Entity.Meta.Json.json_settings(field: f), _, _), do: {:ok, {f, term}}
 end
 

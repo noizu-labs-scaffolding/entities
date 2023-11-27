@@ -113,7 +113,10 @@ defmodule Noizu.Entity.Meta do
   # ---------------
   def meta(%{__struct__: m}), do: meta(m)
   def meta(R.ref(module: m)), do: meta(m)
-  def meta(m) when is_atom(m), do: apply(m, :__noizu_meta__, [])
+  def meta(m) when is_atom(m) do
+    apply(m, :__noizu_meta__, [])
+    rescue _ -> nil
+  end
 
   def meta(m),
     do:

@@ -12,7 +12,12 @@ defmodule Noizu.Entity do
       require Noizu.Entity.Macros
       require Noizu.Entity.Meta.Persistence
       import Noizu.Entity.Meta.Persistence
-      import Noizu.Entity.Macros, only: [{:def_entity, 1}]
+      import Noizu.Entity.Macros,
+             only: [
+               {:def_entity, 1},
+               {:jason_encoder, 0},
+               {:jason_encoder, 1}
+             ]
       Module.register_attribute(__MODULE__, :persistence, accumulate: true)
     end
   end

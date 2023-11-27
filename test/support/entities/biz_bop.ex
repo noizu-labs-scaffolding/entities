@@ -21,7 +21,7 @@ defmodule Noizu.Support.Entities.BizBopEntity do
   def_entity do
     # Universal
     # Auto
-    identifier(:integer)
+    identifier(:uuid)
 
     @restricted :user
     @restricted {:role, :supper_trooper}
@@ -86,10 +86,12 @@ defmodule Noizu.Support.Entities.BizBopEntity do
     @config misc: :apple
     field(:created_on)
   end
+  jason_encoder()
 
   defmodule Repo do
     use Noizu.Repo
     def_repo()
+    jason_repo_encoder()
   end
 
   # todo  all entity to pl logic

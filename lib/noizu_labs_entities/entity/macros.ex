@@ -13,6 +13,27 @@ defmodule Noizu.Entity.Macros do
   require Noizu.Entity.Macros.Json
   require Noizu.Entity.Macros.ACL
 
+  defmacro jason_encoder(_opts \\ nil) do
+    quote do
+      defimpl Jason.Encoder do
+        def encode(s, {_,_,user_settings} = opts) do
+          json_format = user_settings[:json_format] || :default
+          settings = cond do
+            x = Noizu.Entity.Meta.json(s)[json_format] -> x
+            x = Noizu.Entity.Meta.json(s)[:default] -> x
+          end
+          Noizu.Entity.Json.Protocol.prep(s, settings, user_settings[:context], user_settings[:settings])
+          |> Jason.Encode.map(opts)
+        end
+        def encode(s, {_,_} = opts) do
+          settings = Noizu.Entity.Meta.fields(s)
+          Noizu.Entity.Json.Protocol.prep(s, settings, Noizu.Context.system(), [])
+          |> Jason.Encode.map(opts)
+        end
+      end
+    end
+  end
+
   # ----------------------------------------
   # def_entity
   # ----------------------------------------
@@ -28,7 +49,9 @@ defmodule Noizu.Entity.Macros do
           {:field, 4},
           {:transient, 1},
           {:pii, 1},
-          {:pii, 2}
+          {:pii, 2},
+          {:jason_encoder, 0},
+          {:jason_encoder, 1}
         ]
 
       require Noizu.Entity.Meta.Identifier
