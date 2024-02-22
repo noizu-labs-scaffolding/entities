@@ -5,7 +5,7 @@
 
 defmodule Noizu.JasonEncoderTest do
   use ExUnit.Case
-  require Noizu.Support.Entities.Foo
+  require Noizu.Support.Entities.Foos.Foo
   require Noizu.Entity.Macros
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
@@ -15,7 +15,7 @@ defmodule Noizu.JasonEncoderTest do
   @context Noizu.Context.system()
 
   test "Happy Path" do
-    {:ok, e} = %Noizu.Support.Entities.BizBopEntity{title2: "Apple", description: "Bop", created_on: DateTime.utc_now()}
+    {:ok, e} = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", created_on: DateTime.utc_now()}
                |> NoizuTest.EntityRepo.create(@context)
     json =  Jason.encode(e, user: [context: @context, options: []])
     assert json == {:ok,

@@ -470,7 +470,15 @@ defmodule Noizu.Entity.Macros do
           Module.put_attribute(__MODULE__, :__nz_repo, v)
 
         _ ->
-          Module.put_attribute(__MODULE__, :__nz_repo, Module.concat([__MODULE__, Repo]))
+          cond do
+            Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
+              Module.put_attribute(__MODULE__, :__nz_repo, Module.concat([__MODULE__, Repo]))
+            :else ->
+              repo = Module.split(__MODULE__)
+                     |> Enum.slice(0..-2//1)
+                     |> Module.concat()
+              Module.put_attribute(__MODULE__, :__nz_repo, repo)
+          end
       end
     end
   end

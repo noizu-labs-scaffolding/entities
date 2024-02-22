@@ -2,7 +2,13 @@
 # Author: Keith Brings <keith.brings@noizu.com>
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
-defmodule Noizu.Support.Entities.Boo do
+
+defmodule Noizu.Support.Entities.Boos do
+  use Noizu.Repo
+  def_repo()
+end
+
+defmodule Noizu.Support.Entities.Boos.Boo do
   use Noizu.Entity
 
   @vsn 1.0

@@ -3,7 +3,13 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 
-defmodule Noizu.Support.Entities.Foo do
+
+defmodule Noizu.Support.Entities.Foos do
+  use Noizu.Repo
+  def_repo()
+end
+
+defmodule Noizu.Support.Entities.Foos.Foo do
   use Noizu.Entity
 
   @vsn 1.0
@@ -88,10 +94,6 @@ defmodule Noizu.Support.Entities.Foo do
     field(:json_template_specific2)
   end
 
-  defmodule Repo do
-    use Noizu.Repo
-    def_repo()
-  end
 
   # todo  REPO - own module
   # todo  all entity to pl logic

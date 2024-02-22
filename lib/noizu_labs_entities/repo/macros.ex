@@ -23,16 +23,33 @@ defmodule Noizu.Repo.Macros do
   # ----------------------------------------
   # def_repo
   # ----------------------------------------
-  defmacro def_repo() do
+  defmacro def_repo(options \\ []) do
     quote do
       require Noizu.EntityReference.Records
       alias Noizu.EntityReference.Records, as: R
 
-      @entity __MODULE__
-              |> Module.split()
-              |> Enum.slice(0..-2)
-              |> Module.concat()
-      @poly false
+
+      @entity (cond do
+        x = unquote(options[:entity]) -> x
+        Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
+          __MODULE__
+          |> Module.split()
+          |> Enum.slice(0..-2)
+          |> Module.concat()
+        :else ->
+          __MODULE__
+          |> Module.split()
+          |> then(
+               fn(l) ->
+                 l ++ [Inflex.singularize(List.last(l))]
+               end)
+          |> Module.concat()
+      end)
+
+      @poly (cond do
+        x = unquote(options[:poly]) -> x
+        :else -> false
+      end)
 
       defstruct entities: [],
                 length: 0,
@@ -103,7 +120,8 @@ defmodule Noizu.Repo.Macros do
 
       def __noizu_meta__() do
         [
-          entity: @entity
+          entity: @entity,
+          poly: @poly,
         ]
       end
 

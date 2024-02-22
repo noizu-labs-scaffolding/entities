@@ -5,7 +5,7 @@
 
 defmodule Noizu.AmnesiaEntitiesTest do
   use ExUnit.Case
-  require Noizu.Support.Entities.Foo
+  require Noizu.Support.Entities.Foos.Foo
   require Noizu.Entity.Macros
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
@@ -15,9 +15,9 @@ defmodule Noizu.AmnesiaEntitiesTest do
   @context Noizu.Context.system()
 
   test "smoke test" do
-    {:ok, e} = %Noizu.Support.Entities.BizBopEntity{title2: "Apple", description: "Bop", created_on: DateTime.utc_now()}
+    {:ok, e} = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", created_on: DateTime.utc_now()}
                |> NoizuTest.EntityRepo.create(@context)
-    r = NoizuEntityTestDb.BizBopTable.read!(e.identifier)
+    r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.identifier)
     assert is_integer(r.created_on)
     fields = Noizu.Entity.Meta.fields(e)
     Noizu.Entity.Meta.Field.field_settings(options: o) = fields[:title2]

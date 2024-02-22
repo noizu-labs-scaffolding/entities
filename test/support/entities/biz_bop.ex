@@ -2,7 +2,13 @@
 # Author: Keith Brings <keith.brings@noizu.com>
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
-defmodule Noizu.Support.Entities.BizBopEntity do
+
+defmodule Noizu.Support.Entities.BizBops do
+  use Noizu.Repo
+  def_repo()
+end
+
+defmodule Noizu.Support.Entities.BizBops.BizBop do
   use Noizu.Entity
 
   @vsn 1.0
@@ -17,7 +23,7 @@ defmodule Noizu.Support.Entities.BizBopEntity do
   # todo index name, type, settings
   # todo invalidate cache on update
   # todo fragmented key library - own repo
-  @persistence amnesia_store(NoizuEntityTestDb.BizBopTable, NoizuTest.EntityRepo)
+  @persistence amnesia_store(NoizuEntityTestDb.BizBops.BizBopTable, NoizuTest.EntityRepo)
   def_entity do
     # Universal
     # Auto
@@ -87,12 +93,6 @@ defmodule Noizu.Support.Entities.BizBopEntity do
     field(:created_on)
   end
   jason_encoder()
-
-  defmodule Repo do
-    use Noizu.Repo
-    def_repo()
-    jason_repo_encoder()
-  end
 
   # todo  all entity to pl logic
   # todo  ref, entity, id, -> Noizu.Entity.ref(module, ref, options) -> injected by derive with macro callback.
