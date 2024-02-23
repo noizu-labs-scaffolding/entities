@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Nz.Gen.Entity do
   @moduledoc """
-  mix nz.gen.entity Repo Entity plural_snake --identifier:uuid --field=field_name:type --sref=reference --store=ecto
-  example: mix nz.gen.entity Users User users --identifier:uuid --field=name:string --field=email:string --field=password:string --store=ecto --live
+  mix nz.gen.entity Repo Entity plural_snake identifier=uuid field=field_name:type --sref=reference --store=ecto
+  example: mix nz.gen.entity Users User users identifier=uuid field=name:string field=email:string field=password:string --store=ecto --live
   use --no-live to prevent liveview generation
   """
   use Mix.Task
@@ -25,38 +25,38 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
          {:ok, {context_contents, entity_contents}} <- entity_template(context_name, entity_name, params) do
       with :ok <- File.write(repo_filename, context_contents) do
         IO.puts("#{repo_filename} Generated")
-      end
-      with :ok <- File.write(entity_filename, entity_contents) do
-        IO.puts("#{entity_filename} Generated")
-      end
 
-      app_name = app_name()
-      live = Enum.find_value(params, & &1 == "--live" && :live)
-      live = Enum.find_value(params, fn
-        "--live" -> :live
-        "--no-live" -> :no_live
-      end)
+        with :ok <- File.write(entity_filename, entity_contents) do
+          IO.puts("#{entity_filename} Generated")
 
-      params = prep_params(params)
-      fields = extract_fields(params[:field])
-      storage = extract_storage(params[:store])
 
-      unless live == :no_live do
-        add_live(context_name, entity_name, table_name, fields)
-      else
-        # Ecto Setup
-        if storage[:ecto] do
-          add_ecto(context_name, entity_name, table_name, fields)
+          app_name = app_name()
+          live = Enum.find_value(params, & &1 == "--live" && :live)
+          live = Enum.find_value(params, fn
+            "--live" -> :live
+            "--no-live" -> :no_live
+            _ -> nil
+          end)
+
+          params = prep_params(params)
+          fields = extract_fields(params[:field], params[:field_meta])
+          storage = extract_storage(params[:store])
+
+          unless live == :no_live do
+            add_live(context_name, entity_name, table_name, fields)
+          else
+            # Ecto Setup
+            if storage[:ecto] do
+              add_ecto(context_name, entity_name, table_name, fields)
+            end
+          end
+        else
+          error -> IO.inspect(error, label: "Error")
         end
+      else
+        error -> IO.inspect(error, label: "Error")
       end
-
-
-
-
     end
-
-
-
   end
 
   defp app_name() do
@@ -76,10 +76,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   defp prep_params(params) do
     Enum.group_by(params, fn param ->
       cond do
-        String.starts_with?(param, "sref=") -> :sref
+        String.starts_with?(param, "--sref=") -> :sref
         String.starts_with?(param, "field=") -> :field
+        String.starts_with?(param, "field.") -> :field_meta
         String.starts_with?(param, "identifier=") -> :identifier
-        String.starts_with?(param, "store=") -> :store
+        String.starts_with?(param, "--store=") -> :store
         :else -> :misc
       end
     end)
@@ -88,7 +89,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   defp extract_sref(params) do
     Enum.find_value(params, fn param ->
       case String.split(param, "=") do
-        ["sref", x] -> x
+        ["--sref", x] -> x
         _ -> nil
       end
     end)
@@ -99,7 +100,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     Enum.map(
       params,
       fn
-        "identifier:" <> f ->
+        "identifier=" <> f ->
           case f do
             "uuid" -> ":uuid"
             "integer" -> ":integer"
@@ -115,16 +116,44 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> List.first()
   end
 
-  defp extract_fields(nil), do: []
+  defp extract_field_meta(field, nil), do: []
+  defp extract_field_meta(field, meta) do
+    Enum.map(
+      meta,
+      fn
+        "field." <> f ->
+          cond do
+            Strings.starts_with?(f, field <> ".") ->
+              f = String.trim_leading(f, field <> ".")
+              case String.split(f, "=") do
+                [name] -> {String.downcase(name), "true"}
+                [name | value] -> {String.downcase(name), Enum.join(value, "=")}
+                _ -> nil
+              end
+            :else -> nil
+          end
+        _ ->
+          nil
+      end
+    )
+    |> Enum.reject(&is_nil/1)
+  end
 
-  defp extract_fields(params) do
+  defp extract_fields(params, meta)
+  defp extract_fields(nil, _), do: []
+  defp extract_fields(params, meta) do
     Enum.map(
       params,
       fn
         "field=" <> f ->
           case String.split(f, ":") do
-            [name, type] ->
-              {:field, {name, type}}
+            [name] ->
+              settings = extract_field_meta(name, meta)
+              {:field, {name, nil, settings}}
+            [name| type] ->
+              settings = extract_field_meta(name, meta)
+              type = Enum.join(type, ":")
+              {:field, {name, type, settings}}
           end
 
         _ ->
@@ -140,9 +169,9 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     Enum.map(
       params,
       fn
-        "store=ecto" -> {:ecto, :storage}
-        "store=redis" -> {:redis, :storage}
-        "store=mnesia" -> {:mnesia, :storage}
+        "--store=ecto" -> {:ecto, :storage}
+        "--store=redis" -> {:redis, :storage}
+        "--store=mnesia" -> {:mnesia, :storage}
         _ -> nil
       end
     )
@@ -151,7 +180,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
   defp add_live(context_name, entity_name, table, fields) do
     ecto = Enum.map(fields,
-             fn {_, {field, type}} ->
+             fn {_, {field, type, _settings}} ->
                try do
                  m = String.to_existing_atom(type)
                  with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
@@ -169,7 +198,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
   defp add_ecto(context_name, entity_name, table, fields) do
     ecto = Enum.map(fields,
-             fn {_, {field, type}} ->
+             fn {_, {field, type, _settings}} ->
                try do
                  m = String.to_existing_atom(type)
                  with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
@@ -189,10 +218,10 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     app_name = app_name()
     sm = app_name <> "." <> context_name <> "." <> entity_name
     repo_module = app_name <> "." <> context_name
-    params = prep_params(params)
+    params = prep_params(params) |> IO.inspect
     # Sref, Fields, Storage
     sref = extract_sref(params[:sref])
-    fields = extract_fields(params[:field])
+    fields = extract_fields(params[:field], params[:field_meta])
     identifier_type = extract_identifier(params[:identifier]) || ":uuid"
     storage = extract_storage(params[:store])
 
@@ -201,13 +230,42 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     # Payload Snippet
     entity_fields =
-      Enum.map(fields, fn {_, {field, type}} ->
-        unless String.downcase(type) == type do
-          "field :#{field}, nil, #{type}"
-        else
-          "field :#{field}"
-        end
+      Enum.map(fields, fn {_, {field, type, settings}} ->
+        default = Enum.find_value(settings, "nil", fn
+          {"default", x} ->
+            x
+            |> String.split("\n")
+            |> Enum.join("\n    " <> String.repeat(" ", String.length("field :#{field}, ")))
+          _ -> nil
+        end)
+
+        attributes = Enum.map(settings, fn
+          {"default", x} -> nil
+          {type, value} ->
+            value = value
+                    |> String.split("\n")
+                    |> Enum.join("\n    " <> String.repeat(" ", String.length("@#{type} ")))
+            "@#{type} #{value}"
+        end)
+                     |> Enum.reject(&is_nil/1)
+                     |> Enum.join("\n")
+        attributes = attributes != "" && attributes <> "\n" || ""
+        ltype = String.downcase(type)
+        cond do
+          ltype in [
+            "integer", "float", "string", "boolean", "binary", "date", "time", "naive_datetime", "utc_datetime", "utc_datetime_usec", "uuid", "map", "array", "decimal", "json", "jsonb", "any"
+          ] ->
+            "#{attributes}field :#{field}, #{default}, :#{ltype}"
+          is_nil(ltype) ->
+            cond do
+              default != "nil" -> "#{attributes}field :#{field}, #{default}"
+              :else -> "#{attributes}field :#{field}"
+            end
+          :else ->
+            "#{attributes}field :#{field}, #{default}, #{type}"
+        end |> String.split("\n")
       end)
+      |> List.flatten()
       |> Enum.join("\n    ")
 
     entity_persistence =
