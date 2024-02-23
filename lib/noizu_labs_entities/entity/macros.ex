@@ -292,7 +292,11 @@ defmodule Noizu.Entity.Macros do
       Noizu.Entity.Macros.Json.extract_json(name)
       acl = {field, field_acl} = Noizu.Entity.Macros.ACL.extract_acl(name)
       Module.put_attribute(__MODULE__, :__nz_acl, acl)
-
+      reported_type = cond do
+        type in [nil, :nil] -> nil
+        type in [:integer, :float, :string, :boolean, :binary, :date, :time, :naive_datetime, :utc_datetime, :utc_datetime_usec, :uuid, :map, :array, :decimal, :json, :jsonb, :any] -> {:ecto, type}
+        :else -> type
+      end
       # Extract any storage attributes.
       store =
         case Noizu.Entity.Macros.extract_simple(:store, :store_default, []) do
@@ -343,7 +347,7 @@ defmodule Noizu.Entity.Macros do
             name: name,
             default: default,
             store: store,
-            type: type,
+            type: reported_type,
             pii: Noizu.Entity.Macros.extract_simple(:pii, :pii_default),
             transient: Noizu.Entity.Macros.extract_simple(:transient, :transient_default),
             acl: field_acl,
@@ -600,6 +604,18 @@ defmodule Noizu.Entity.Macros do
         end
       )
 
+    changeset_fields =
+      Enum.map(
+        v__nz_fields,
+        fn
+          {field, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, type})} ->
+            {field, type}
+          {field, x} ->
+            {field, :any}
+        end
+      ) |> Map.new()
+
+
     nz_meta = %{
       identifier: nz_entity__identifier,
       fields: nz_entity__fields,
@@ -607,7 +623,8 @@ defmodule Noizu.Entity.Macros do
       persistence: nz_entity__persistence,
       acl: acl,
       repo: v__nz_repo,
-      sref: v__nz_sref
+      sref: v__nz_sref,
+      changeset_fields: changeset_fields
     }
 
     # Module.put_attribute(module, :nz_meta, nz_meta)

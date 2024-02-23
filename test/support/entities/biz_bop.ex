@@ -91,8 +91,17 @@ defmodule Noizu.Support.Entities.BizBops.BizBop do
 
     @config misc: :apple
     field(:inserted_at)
+
+    field :ecto_hint, nil, :string
+    field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
   jason_encoder()
+
+  def changeset(%__MODULE__{} = entity, attrs) do
+    {entity, __MODULE__.__noizu_meta__()[:changeset_fields]}
+    |> Ecto.Changeset.cast(attrs, [:title, :title2, :ecto_hint, :name, :time_stamp])
+    |> Ecto.Changeset.validate_required([:name])
+  end
 
   # todo  all entity to pl logic
   # todo  ref, entity, id, -> Noizu.Entity.ref(module, ref, options) -> injected by derive with macro callback.

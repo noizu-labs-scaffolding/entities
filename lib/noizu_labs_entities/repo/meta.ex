@@ -12,6 +12,17 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  def create(%Ecto.Changeset{} = changeset, context, options) do
+    if changeset.valid? do
+      Enum.reduce(changeset.changes, changeset.data, fn {field, value}, acc ->
+        put_in(acc, [Access.key(field)], value)
+      end)
+      |> create(context, options)
+    else
+      {:error, changeset.errors}
+    end
+  end
+
   def create(entity, context, options) do
     with repo <- Noizu.Entity.Meta.repo(entity),
          {:ok, entity} <- apply(repo, :__before_create__, [entity, context, options]),
@@ -24,6 +35,16 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  def update(%Ecto.Changeset{} = changeset, context, options) do
+    if changeset.valid? do
+      Enum.reduce(changeset.changes, changeset.data, fn {field, value}, acc ->
+        put_in(acc, [Access.key(field)], value)
+      end)
+      |> update(context, options)
+    else
+      {:error, changeset.errors}
+    end
+  end
   def update(entity, context, options) do
     with repo <- Noizu.Entity.Meta.repo(entity),
          {:ok, entity} <- apply(repo, :__before_update__, [entity, context, options]),
@@ -106,7 +127,8 @@ defmodule Noizu.Repo.Meta do
           |> Enum.map(fn
             {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
               nil
-
+            {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
+              nil
             {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
               with {:ok, update} <-
                      apply(type, :type__before_create, [

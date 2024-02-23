@@ -129,6 +129,14 @@ else
               context,
               options
             )
+          {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: {:ecto, _}) = field_settings} ->
+            Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
+              get_in(entity, [Access.key(name)]),
+              field_settings,
+              settings,
+              context,
+              options
+            )
 
           {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
             {:ok, field_entry} =
@@ -250,7 +258,15 @@ else
               context,
               options
             )
-
+          {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) = field_settings} ->
+            Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_from_record(
+              nil,
+              record,
+              field_settings,
+              settings,
+              context,
+              options
+            )
           {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings} ->
             {:ok, stub} = apply(type, :stub, [])
 
