@@ -3,6 +3,10 @@ defmodule Noizu.Entity.Reference do
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour
 
+  def ecto_gen_string(name) do
+    {:ok, "#{name}:integer"}
+  end
+
   def id(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.id(reference)
   def ref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.ref(reference)
 

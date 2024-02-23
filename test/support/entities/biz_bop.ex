@@ -90,7 +90,7 @@ defmodule Noizu.Support.Entities.BizBops.BizBop do
     field(:json_template_specific2)
 
     @config misc: :apple
-    field(:created_on)
+    field(:inserted_at)
   end
   jason_encoder()
 

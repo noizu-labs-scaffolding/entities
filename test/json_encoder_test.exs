@@ -15,11 +15,11 @@ defmodule Noizu.JasonEncoderTest do
   @context Noizu.Context.system()
 
   test "Happy Path" do
-    {:ok, e} = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", created_on: DateTime.utc_now()}
+    {:ok, e} = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", inserted_at: DateTime.utc_now()}
                |> NoizuTest.EntityRepo.create(@context)
     json =  Jason.encode(e, user: [context: @context, options: []])
     assert json == {:ok,
-             "{\"created_on\":\"#{e.created_on |> DateTime.to_iso8601}\",\"identifier\":\"ref.biz-bop.#{ShortUUID.encode!(e.identifier)}\",\"vsn\":1.0}"}
+             "{\"identifier\":\"ref.biz-bop.#{ShortUUID.encode!(e.identifier)}\",\"inserted_at\":\"#{e.inserted_at |> DateTime.to_iso8601}\",\"vsn\":1.0}"}
   end
 
 end

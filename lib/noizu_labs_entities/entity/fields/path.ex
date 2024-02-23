@@ -13,6 +13,10 @@ defmodule Noizu.Entity.Path do
   }
   use Noizu.Entity.Field.Behaviour
 
+  def ecto_gen_string(name) do
+    {:ok, ["#{name}_depth:integer", "#{name}_a11:integer", "#{name}_a12:integer", "#{name}_a21:integer", "#{name}_a22:integer"]}
+  end
+
   def parent_path(nil), do: nil
 
   def parent_path(%{__struct__: __MODULE__} = this) do

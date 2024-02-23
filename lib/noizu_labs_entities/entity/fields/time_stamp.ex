@@ -1,25 +1,33 @@
 defmodule Noizu.Entity.TimeStamp do
-  defstruct created_on: nil,
-            modified_on: nil,
-            deleted_on: nil
+  defstruct inserted_at: nil,
+            updated_at: nil,
+            deleted_at: nil
 
   use Noizu.Entity.Field.Behaviour
+
+  def ecto_gen_string(name) do
+    unless name in ["time_stamp", "root"] do
+      {:ok, ["#{name}_inserted_at:utc_datetime_usec", "#{name}_updated_at:utc_datetime_usec", "#{name}_deleted_at:utc_datetime_usec"]}
+    else
+      {:ok, ["inserted_at:utc_datetime_usec", "updated_at:utc_datetime_usec", "deleted_at:utc_datetime_usec"]}
+    end
+  end
 
   def stub(), do: {:ok, %__MODULE__{}}
 
   def now(), do: now(DateTime.utc_now())
-  def now(now), do: %__MODULE__{created_on: now, modified_on: now}
+  def now(now), do: %__MODULE__{inserted_at: now, updated_at: now}
 
   def type_as_entity(nil, _context, options) do
     now = options[:current_time] || DateTime.utc_now()
-    {:ok, %__MODULE__{created_on: now, modified_on: now}}
+    {:ok, %__MODULE__{inserted_at: now, updated_at: now}}
   end
 
   def type_as_entity(%__MODULE__{} = this, _context, options) do
     now = options[:current_time] || DateTime.utc_now()
 
     {:ok,
-     %__MODULE__{this | created_on: this.created_on || now, modified_on: this.modified_on || now}}
+     %__MODULE__{this | inserted_at: this.inserted_at || now, updated_at: this.updated_at || now}}
   end
 end
 
@@ -44,15 +52,15 @@ defmodule Noizu.Entity.TimeStamp.TypeHelper do
 
     unless name in [:time_stamp, :root] do
       [
-        {:ok, {:"#{name}_created_on", field.created_on}},
-        {:ok, {:"#{name}_modified_on", field.modified_on}},
-        {:ok, {:"#{name}_deleted_on", field.deleted_on}}
+        {:ok, {:"#{name}_inserted_at", field.inserted_at}},
+        {:ok, {:"#{name}_updated_at", field.updated_at}},
+        {:ok, {:"#{name}_deleted_at", field.deleted_at}}
       ]
     else
       [
-        {:ok, {:created_on, field.created_on}},
-        {:ok, {:modified_on, field.modified_on}},
-        {:ok, {:deleted_on, field.deleted_on}}
+        {:ok, {:inserted_at, field.inserted_at}},
+        {:ok, {:updated_at, field.updated_at}},
+        {:ok, {:deleted_at, field.deleted_at}}
       ]
     end
   end
@@ -69,17 +77,17 @@ defmodule Noizu.Entity.TimeStamp.TypeHelper do
 
     unless as_name in [:time_stamp, :root] do
       field = %Noizu.Entity.TimeStamp{
-        created_on: get_in(record, [Access.key(:"#{name}_created_on")]),
-        modified_on: get_in(record, [Access.key(:"#{name}_modified_on")]),
-        deleted_on: get_in(record, [Access.key(:"#{name}_deleted_on")])
+        inserted_at: get_in(record, [Access.key(:"#{name}_inserted_at")]),
+        updated_at: get_in(record, [Access.key(:"#{name}_updated_at")]),
+        deleted_at: get_in(record, [Access.key(:"#{name}_deleted_at")])
       }
 
       {:ok, {name, field}}
     else
       field = %Noizu.Entity.TimeStamp{
-        created_on: get_in(record, [Access.key(:created_on)]),
-        modified_on: get_in(record, [Access.key(:modified_on)]),
-        deleted_on: get_in(record, [Access.key(:deleted_on)])
+        inserted_at: get_in(record, [Access.key(:inserted_at)]),
+        updated_at: get_in(record, [Access.key(:updated_at)]),
+        deleted_at: get_in(record, [Access.key(:deleted_at)])
       }
 
       {:ok, {name, field}}

@@ -4,6 +4,10 @@ defmodule Noizu.Entity.DerivedField do
 
   use Noizu.Entity.Field.Behaviour
 
+  def ecto_gen_string(name) do
+    {:error, :blank}
+  end
+
   def stub(), do: {:ok, %__MODULE__{}}
 end
 
