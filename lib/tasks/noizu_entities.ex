@@ -20,6 +20,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     entity_snake = Macro.underscore(entity_name)
     repo_filename = "lib/#{app_name}/#{repo_snake}.ex"
     entity_filename = "lib/#{app_name}/#{repo_snake}/#{entity_snake}.ex"
+    File.mkdir_p("lib/#{app_name}/#{repo_snake}")
     with false <- File.exists?(repo_filename) && {:error, "Repo exists: #{repo_filename}"},
          false <- File.exists?(entity_filename) && {:error, "Entity exists: #{entity_filename}"},
          {:ok, {context_contents, entity_contents}} <- entity_template(context_name, entity_name, params) do
@@ -51,10 +52,10 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
             end
           end
         else
-          error -> IO.inspect(error, label: "Error")
+          error -> IO.inspect(error, label: "#{entity_filename}: Error")
         end
       else
-        error -> IO.inspect(error, label: "Error")
+        error -> IO.inspect(error, label: "#{repo_filename}: Error")
       end
     end
   end
@@ -278,22 +279,22 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       |> Enum.join("\n   ")
 
     entity = """
-      #-------------------------------------------------------------------------------
-      # Author: #{@author}
-      # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
-      #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    # Author: #{@author}
+    # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
+    #-------------------------------------------------------------------------------
 
-      defmodule #{sm} do
-        use Noizu.Entities
+    defmodule #{sm} do
+      use Noizu.Entities
 
-        @vsn 1.0
-        #{(sref && "@sref \"#{sref}\"") || ""}
-        #{entity_persistence}
-        def_entity do
-          identifier #{identifier_type}
-          #{entity_fields}
-        end
+      @vsn 1.0
+      #{(sref && "@sref \"#{sref}\"") || ""}
+      #{entity_persistence}
+      def_entity do
+        identifier #{identifier_type}
+        #{entity_fields}
       end
+    end
     """
 
     singular = Inflex.singularize(entity_name)
@@ -302,60 +303,60 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     plural_snake = Macro.underscore(plural)
 
     repo = """
-      #-------------------------------------------------------------------------------
-      # Author: #{@author}
-      # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
-      #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    # Author: #{@author}
+    # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
+    #-------------------------------------------------------------------------------
 
-      defmodule #{repo_module} do
-        alias #{app_name}.#{context_name}.#{entity_name}
-        use Noizu.Repo
-        def_repo()
+    defmodule #{repo_module} do
+      alias #{app_name}.#{context_name}.#{entity_name}
+      use Noizu.Repo
+      def_repo()
 
-        @doc \"""
-        Returns the list of #{plural_snake}.
-        \"""
-        def list_#{plural_snake}(context) do
-          list(context)
-        end
-
-        @doc \"""
-        Gets a single #{singular_snake}.
-
-        \"""
-        def get_#{singular_snake}(id, context), do: get(id, context)
-
-        @doc \"""
-        Creates a #{singular_snake}.
-        \"""
-        def create_#{singular_snake}(#{singular_snake}, context) do
-          create(#{singular_snake}, context)
-        end
-
-        @doc \"""
-        Updates a #{singular_snake}.
-        \"""
-        def update_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs, context) do
-          #{singular_snake}
-          |> change_#{singular_snake}(attrs)
-          |> update(context)
-        end
-
-        @doc \"""
-        Deletes a #{singular_snake}.
-        \"""
-        def delete_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, context) do
-          delete(#{singular_snake}, context)
-        end
-
-        @doc \"""
-        Returns an Changeset for tracking #{singular_snake} changes.
-        \"""
-        def change_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs \\ %{}) do
-          # NYI: Implement custom changeset logic here.
-          #{singular_snake}
-        end
+      @doc \"""
+      Returns the list of #{plural_snake}.
+      \"""
+      def list_#{plural_snake}(context) do
+        list(context)
       end
+
+      @doc \"""
+      Gets a single #{singular_snake}.
+
+      \"""
+      def get_#{singular_snake}(id, context), do: get(id, context)
+
+      @doc \"""
+      Creates a #{singular_snake}.
+      \"""
+      def create_#{singular_snake}(#{singular_snake}, context) do
+        create(#{singular_snake}, context)
+      end
+
+      @doc \"""
+      Updates a #{singular_snake}.
+      \"""
+      def update_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs, context) do
+        #{singular_snake}
+        |> change_#{singular_snake}(attrs)
+        |> update(context)
+      end
+
+      @doc \"""
+      Deletes a #{singular_snake}.
+      \"""
+      def delete_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, context) do
+        delete(#{singular_snake}, context)
+      end
+
+      @doc \"""
+      Returns an Changeset for tracking #{singular_snake} changes.
+      \"""
+      def change_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs \\\\ %{}) do
+        # NYI: Implement custom changeset logic here.
+        #{singular_snake}
+      end
+    end
     """
     {:ok, {repo, entity}}
   end
