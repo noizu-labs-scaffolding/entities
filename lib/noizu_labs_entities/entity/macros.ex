@@ -292,11 +292,13 @@ defmodule Noizu.Entity.Macros do
       Noizu.Entity.Macros.Json.extract_json(name)
       acl = {field, field_acl} = Noizu.Entity.Macros.ACL.extract_acl(name)
       Module.put_attribute(__MODULE__, :__nz_acl, acl)
-      reported_type = cond do
-        type in [nil, :nil] -> nil
-        type in [:integer, :float, :string, :boolean, :binary, :date, :time, :naive_datetime, :utc_datetime, :utc_datetime_usec, :uuid, :map, :array, :decimal, :json, :jsonb, :any] -> {:ecto, type}
-        :else -> type
+      reported_type = case type do
+        nil -> nil
+        x when x in [:integer, :float, :string, :boolean, :binary, :date, :time, :naive_datetime, :utc_datetime, :utc_datetime_usec, :uuid, :map, :array, :decimal, :json, :jsonb, :any] -> {:ecto, x}
+        {:array, _} = x -> {:ecto, x}
+        _ -> type
       end
+
       # Extract any storage attributes.
       store =
         case Noizu.Entity.Macros.extract_simple(:store, :store_default, []) do

@@ -8,6 +8,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   @shortdoc "Setup new Entities"
   @author Application.compile_env(Mix.Project.config()[:app], :author, "General")
   @org Application.compile_env(Mix.Project.config()[:app], :group, "General")
+  @ecto_types ["integer", "float", "string", "boolean", "binary", "date", "time", "naive_datetime", "utc_datetime", "utc_datetime_usec", "uuid", "map", "array", "decimal", "json", "jsonb", "any"]
 
   def run([context_name, entity_name, table_name | params]) do
     create_entity(context_name, entity_name, table_name, params)
@@ -151,9 +152,9 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
             [name] ->
               settings = extract_field_meta(name, meta)
               {:field, {name, nil, settings}}
-            [name| type] ->
+            [name, type] ->
               settings = extract_field_meta(name, meta)
-              type = Enum.join(type, ":")
+              type = String.trim(type)
               {:field, {name, type, settings}}
           end
 
@@ -181,9 +182,14 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
   defp add_live(context_name, entity_name, table, fields) do
     ecto = Enum.map(fields,
-             fn {_, {field, type, _settings}} ->
+             fn
+               {_, {field, "{:array," <> _ = type, _settings}} ->
+                 "#{field}:#{type}"
+               {_, {field, type, _settings}} when type in @ecto_types ->
+                 "#{field}:#{type}"
+               {_, {field, type, _settings}} ->
                try do
-                 m = String.to_existing_atom(type)
+                 m = String.to_existing_atom("Elixir.#{type}")
                  with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
                    x
                  else
@@ -199,9 +205,14 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
   defp add_ecto(context_name, entity_name, table, fields) do
     ecto = Enum.map(fields,
-             fn {_, {field, type, _settings}} ->
+             fn
+               {_, {field, "{:array," <> _ = type, _settings}} ->
+                 "#{field}:#{type}"
+               {_, {field, type, _settings}} when type in @ecto_types ->
+                 "#{field}:#{type}"
+               {_, {field, type, _settings}} ->
                try do
-                 m = String.to_existing_atom(type)
+                 m = String.to_existing_atom("Elixir.#{type}")
                  with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
                    x
                  else
@@ -251,11 +262,9 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                      |> Enum.reject(&is_nil/1)
                      |> Enum.join("\n")
         attributes = attributes != "" && attributes <> "\n" || ""
-        ltype = String.downcase(type)
+        ltype = type && String.downcase(type)
         cond do
-          ltype in [
-            "integer", "float", "string", "boolean", "binary", "date", "time", "naive_datetime", "utc_datetime", "utc_datetime_usec", "uuid", "map", "array", "decimal", "json", "jsonb", "any"
-          ] ->
+          ltype in @ecto_types ->
             "#{attributes}field :#{field}, #{default}, :#{ltype}"
           is_nil(ltype) ->
             cond do
