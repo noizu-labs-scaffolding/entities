@@ -13,11 +13,11 @@ end
 defmodule Noizu.Entity.Meta.UUIDIdentifier do
   @handler Application.compile_env(
              :noizu_labs_entities,
-             :uuid_identifier,
+             :uuid_id,
              Noizu.Entity.Meta.UUIDIdentifier.Common
            )
 
-  defdelegate format_identifier(m, identifier, index), to: @handler
+  defdelegate format_id(m, id, index), to: @handler
   defdelegate uuid_string(id), to: @handler
   defdelegate kind(m, id), to: @handler
   defdelegate id(m, id), to: @handler
@@ -33,7 +33,7 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       # ----------------
       #
       # ----------------
-      def format_identifier(_, _, _),
+      def format_id(_, _, _),
         do: raise(Noizu.Entity.Identifier.Exception, message: "UUID Not Available")
 
       def kind(_m, _id),
@@ -53,13 +53,13 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       require Noizu.EntityReference.Records
       alias Noizu.EntityReference.Records, as: R
 
-      def format_identifier(m, identifier, index) do
+      def format_id(m, id, index) do
         with repo <- Noizu.Entity.Meta.repo(m) do
           <<e10, e11, e12>> = Integer.to_string(index, 16) |> String.pad_leading(3, "0")
 
           <<a1, a2, a3, a4, a5, a6, a7, a8, ?-, b1, b2, b3, b4, ?-, c1, c2, c3, c4, ?-, d1, d2,
             d3, d4, ?-, e1, e2, e3, e4, e5, e6, e7, e8, e9, _, _,
-            _>> = Noizu.UUID.uuid5(Noizu.UUID.uuid5(:dns, "#{repo}"), "#{identifier}", :default)
+            _>> = Noizu.UUID.uuid5(Noizu.UUID.uuid5(:dns, "#{repo}"), "#{id}", :default)
 
           <<a1, a2, a3, a4, a5, a6, a7, a8, ?-, b1, b2, b3, b4, ?-, c1, c2, c3, c4, ?-, d1, d2,
             d3, d4, ?-, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12>>
@@ -113,47 +113,47 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
           ),
           do: {:ok, id}
 
-      def id(m, R.ref(module: m, identifier: <<_::binary-size(16)>>) = ref),
-        do: {:ok, R.ref(ref, :identifier) |> uuid_string()}
+      def id(m, R.ref(module: m, id: <<_::binary-size(16)>>) = ref),
+        do: {:ok, R.ref(ref, :id) |> uuid_string()}
 
       def id(
             m,
             R.ref(
               module: m,
-              identifier:
+              id:
                 <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _,
                   _, _, _, _, _, _, _, _, _, _, _>>
             ) = ref
           ),
-          do: {:ok, R.ref(ref, :identifier)}
+          do: {:ok, R.ref(ref, :id)}
 
-      def id(m, R.ref(module: m, identifier: <<_::binary-size(16)>>) = ref),
-        do: {:ok, R.ref(ref, :identifier) |> uuid_string()}
+      def id(m, R.ref(module: m, id: <<_::binary-size(16)>>) = ref),
+        do: {:ok, R.ref(ref, :id) |> uuid_string()}
 
       def id(
             m,
             R.ref(
               module: m,
-              identifier:
+              id:
                 <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _,
                   _, _, _, _, _, _, _, _, _, _, _>>
             ) = ref
           ),
-          do: {:ok, R.ref(ref, :identifier)}
+          do: {:ok, R.ref(ref, :id)}
 
-      def id(m, %{__struct__: m, identifier: <<_::binary-size(16)>>} = ref),
-        do: {:ok, ref.identifier |> uuid_string()}
+      def id(m, %{__struct__: m, id: <<_::binary-size(16)>>} = ref),
+        do: {:ok, ref.id |> uuid_string()}
 
       def id(
             m,
             %{
               __struct__: m,
-              identifier:
+              id:
                 <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _,
                   _, _, _, _, _, _, _, _, _, _, _>>
             } = ref
           ),
-          do: {:ok, ref.identifier}
+          do: {:ok, ref.id}
 
       def id(m, "ref." <> _ = ref) do
         with sref <- Noizu.Entity.Meta.sref(m),
@@ -178,7 +178,7 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
 
       def ref(m, ref) do
         with {:ok, id} <- apply(m, :id, [ref]) do
-          {:ok, R.ref(module: m, identifier: id)}
+          {:ok, R.ref(module: m, id: id)}
         end
       end
 
@@ -191,14 +191,14 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
         end
       end
 
-      def entity(m, %{__struct__: m, identifier: <<_::binary-size(16)>>} = ref, _context),
+      def entity(m, %{__struct__: m, id: <<_::binary-size(16)>>} = ref, _context),
         do: {:ok, ref}
 
       def entity(
             m,
             %{
               __struct__: m,
-              identifier:
+              id:
                 <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _,
                   _, _, _, _, _, _, _, _, _, _, _>>
             } = ref,

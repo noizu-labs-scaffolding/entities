@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Nz.Gen.Entity do
   @moduledoc """
-  mix nz.gen.entity Repo Entity plural_snake identifier=uuid field=field_name:type --sref=reference --store=ecto
-  example: mix nz.gen.entity Users User users identifier=uuid field=name:string field=email:string field=password:string --store=ecto --live
+  mix nz.gen.entity Repo Entity plural_snake id=uuid field=field_name:type --sref=reference --store=ecto
+  example: mix nz.gen.entity Users User users id=uuid field=name:string field=email:string field=password:string --store=ecto --live
   use --no-live to prevent liveview generation
   """
   use Mix.Task
@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     repo_snake = Macro.underscore(context_name)
     entity_snake = Macro.underscore(entity_name)
-    repo_filename = "lib/#{app_name}/#{repo_snake}.ex"
+    repo_filename = "lib/#{app_name}/#{repo_snake}.ex" |> IO.inspect
     entity_filename = "lib/#{app_name}/#{repo_snake}/#{entity_snake}.ex"
     File.mkdir_p("lib/#{app_name}/#{repo_snake}")
     with false <- File.exists?(repo_filename) && {:error, "Repo exists: #{repo_filename}"},
@@ -31,8 +31,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
           IO.puts("#{entity_filename} Generated")
 
 
-          app_name = app_name()
-          live = Enum.find_value(params, & &1 == "--live" && :live)
+          # app_name = app_name()
           live = Enum.find_value(params, fn
             "--live" -> :live
             "--no-live" -> :no_live
@@ -52,10 +51,10 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
             end
           end
         else
-          error -> IO.inspect(error, label: "#{entity_filename}: Error")
+          error -> IO.inspect(error, label: "Error")
         end
       else
-        error -> IO.inspect(error, label: "#{repo_filename}: Error")
+        error -> IO.inspect(error, label: "Error")
       end
     end
   end
@@ -68,11 +67,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Enum.join("")
   end
 
-  defp entity_name(name, _) do
-    String.split(name, ".")
-    |> Enum.map(&String.capitalize(&1))
-    |> Enum.join(".")
-  end
+#  defp entity_name(name, _) do
+#    String.split(name, ".")
+#    |> Enum.map(&String.capitalize(&1))
+#    |> Enum.join(".")
+#  end
 
   defp prep_params(params) do
     Enum.group_by(params, fn param ->
@@ -80,7 +79,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         String.starts_with?(param, "--sref=") -> :sref
         String.starts_with?(param, "field=") -> :field
         String.starts_with?(param, "field.") -> :field_meta
-        String.starts_with?(param, "identifier=") -> :identifier
+        String.starts_with?(param, "id=") -> :id
         String.starts_with?(param, "--store=") -> :store
         :else -> :misc
       end
@@ -96,12 +95,12 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     end)
   end
 
-  defp extract_identifier(nil), do: nil
-  defp extract_identifier(params) do
+  defp extract_id(nil), do: nil
+  defp extract_id(params) do
     Enum.map(
       params,
       fn
-        "identifier=" <> f ->
+        "id=" <> f ->
           case f do
             "uuid" -> ":uuid"
             "integer" -> ":integer"
@@ -117,14 +116,15 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> List.first()
   end
 
-  defp extract_field_meta(field, nil), do: []
+  defp extract_field_meta(field, meta)
+  defp extract_field_meta(_, nil), do: []
   defp extract_field_meta(field, meta) do
     Enum.map(
       meta,
       fn
         "field." <> f ->
           cond do
-            Strings.starts_with?(f, field <> ".") ->
+            String.starts_with?(f, field <> ".") ->
               f = String.trim_leading(f, field <> ".")
               case String.split(f, "=") do
                 [name] -> {String.downcase(name), "true"}
@@ -223,7 +223,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     # Sref, Fields, Storage
     sref = extract_sref(params[:sref])
     fields = extract_fields(params[:field], params[:field_meta])
-    identifier_type = extract_identifier(params[:identifier]) || ":uuid"
+    id_type = extract_id(params[:id]) || ":uuid"
     storage = extract_storage(params[:store])
 
     # Ecto Setup
@@ -236,16 +236,16 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
           {"default", x} ->
             x
             |> String.split("\n")
-            |> Enum.join("\n    " <> String.repeat(" ", String.length("field :#{field}, ")))
+            |> Enum.join("\n    " <> String.duplicate(" ", String.length("field :#{field}, ")))
           _ -> nil
         end)
 
         attributes = Enum.map(settings, fn
-          {"default", x} -> nil
+          {"default", _} -> nil
           {type, value} ->
             value = value
                     |> String.split("\n")
-                    |> Enum.join("\n    " <> String.repeat(" ", String.length("@#{type} ")))
+                    |> Enum.join("\n    " <> String.duplicate(" ", String.length("@#{type} ")))
             "@#{type} #{value}"
         end)
                      |> Enum.reject(&is_nil/1)
@@ -276,25 +276,25 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
           "@persistence {#{inspect(store)}, #{inspect(settings)}}"
         end
       )
-      |> Enum.join("\n   ")
+      |> Enum.join("\n     ")
 
     entity = """
-    #-------------------------------------------------------------------------------
-    # Author: #{@author}
-    # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
-    #-------------------------------------------------------------------------------
+      #-------------------------------------------------------------------------------
+      # Author: #{@author}
+      # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
+      #-------------------------------------------------------------------------------
 
-    defmodule #{sm} do
-      use Noizu.Entities
+      defmodule #{sm} do
+        use Noizu.Entities
 
-      @vsn 1.0
-      #{(sref && "@sref \"#{sref}\"") || ""}
-      #{entity_persistence}
-      def_entity do
-        identifier #{identifier_type}
-        #{entity_fields}
+        @vsn 1.0
+        #{(sref && "@sref \"#{sref}\"") || ""}
+        #{entity_persistence}
+        def_entity do
+          id #{id_type}
+          #{entity_fields}
+        end
       end
-    end
     """
 
     singular = Inflex.singularize(entity_name)
@@ -303,60 +303,61 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     plural_snake = Macro.underscore(plural)
 
     repo = """
-    #-------------------------------------------------------------------------------
-    # Author: #{@author}
-    # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
-    #-------------------------------------------------------------------------------
+      #-------------------------------------------------------------------------------
+      # Author: #{@author}
+      # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
+      #-------------------------------------------------------------------------------
 
-    defmodule #{repo_module} do
-      alias #{app_name}.#{context_name}.#{entity_name}
-      use Noizu.Repo
-      def_repo()
+      defmodule #{repo_module} do
+        alias #{app_name}.#{context_name}.#{entity_name}
+        use Noizu.Repo
+        def_repo()
 
-      @doc \"""
-      Returns the list of #{plural_snake}.
-      \"""
-      def list_#{plural_snake}(context) do
-        list(context)
+        @doc \"""
+        Returns the list of #{plural_snake}.
+        \"""
+        def list_#{plural_snake}(context, options \\\\ []) do
+          # list(context)
+          []
+        end
+
+        @doc \"""
+        Gets a single #{singular_snake}.
+
+        \"""
+        def get_#{singular_snake}(id, context, options \\\\ []), do: get(id, context, options)
+
+        @doc \"""
+        Creates a #{singular_snake}.
+        \"""
+        def create_#{singular_snake}(#{singular_snake}, context, options \\\\ []) do
+          create(#{singular_snake}, context, options)
+        end
+
+        @doc \"""
+        Updates a #{singular_snake}.
+        \"""
+        def update_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs, context, options \\\\ []) do
+          #{singular_snake}
+          |> change_#{singular_snake}(attrs)
+          |> update(context, options)
+        end
+
+        @doc \"""
+        Deletes a #{singular_snake}.
+        \"""
+        def delete_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, context, options \\\\ []) do
+          delete(#{singular_snake}, context, options)
+        end
+
+        @doc \"""
+        Returns an Changeset for tracking #{singular_snake} changes.
+        \"""
+        def change_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs \\\\ %{}) do
+          # NYI: Implement custom changeset logic here.
+          #{singular_snake}
+        end
       end
-
-      @doc \"""
-      Gets a single #{singular_snake}.
-
-      \"""
-      def get_#{singular_snake}(id, context), do: get(id, context)
-
-      @doc \"""
-      Creates a #{singular_snake}.
-      \"""
-      def create_#{singular_snake}(#{singular_snake}, context) do
-        create(#{singular_snake}, context)
-      end
-
-      @doc \"""
-      Updates a #{singular_snake}.
-      \"""
-      def update_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs, context) do
-        #{singular_snake}
-        |> change_#{singular_snake}(attrs)
-        |> update(context)
-      end
-
-      @doc \"""
-      Deletes a #{singular_snake}.
-      \"""
-      def delete_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, context) do
-        delete(#{singular_snake}, context)
-      end
-
-      @doc \"""
-      Returns an Changeset for tracking #{singular_snake} changes.
-      \"""
-      def change_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs \\\\ %{}) do
-        # NYI: Implement custom changeset logic here.
-        #{singular_snake}
-      end
-    end
     """
     {:ok, {repo, entity}}
   end

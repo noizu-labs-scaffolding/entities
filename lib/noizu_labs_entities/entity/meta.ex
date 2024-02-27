@@ -14,7 +14,7 @@ defmodule Noizu.Entity.Meta do
 
   defmodule Identifier do
     require Record
-    Record.defrecord(:identifier_settings, name: nil, generate: true, universal: false, type: nil)
+    Record.defrecord(:id_settings, name: nil, generate: true, universal: false, type: nil)
   end
 
   defmodule Field do
@@ -103,7 +103,7 @@ defmodule Noizu.Entity.Meta do
 
   @callback meta() :: []
   @callback fields() :: []
-  @callback identifier() :: []
+  @callback id() :: []
   @callback persistence() :: []
   @callback json() :: []
   @callback json(template :: atom) :: []
@@ -144,7 +144,7 @@ defmodule Noizu.Entity.Meta do
   # ---------------
   #
   # ---------------
-  def identifier(m), do: meta(m)[:identifier]
+  def id(m), do: meta(m)[:id]
 
   # ---------------
   #

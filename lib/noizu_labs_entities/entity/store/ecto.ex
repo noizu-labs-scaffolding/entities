@@ -91,7 +91,7 @@ else
           _options
         ) do
       # 1. Get record
-      if current = apply(repo, :get, [table, record.identifier]) do
+      if current = apply(repo, :get, [table, record.id]) do
         cs = apply(table, :changeset, [current, Map.from_struct(record)])
         apply(repo, :update, [cs])
       end
@@ -176,8 +176,8 @@ else
           context,
           options
         ) do
-      with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
-           record <- apply(store, :get, [table, identifier]) do
+      with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity),
+           record <- apply(store, :get, [table, id]) do
         from_record(record, settings, context, options)
       end
     end
@@ -213,8 +213,8 @@ else
           _context,
           _options
         ) do
-      with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
-        apply(store, :delete, [struct(table, identifier: identifier)])
+      with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity) do
+        apply(store, :delete, [struct(table, id: id)])
       end
     end
 
@@ -229,9 +229,9 @@ else
                 options :: any
               ) :: {:ok, any} | {:error, details :: any}
     def from_record(
-          entity,
+          _entity,
           record,
-          Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings,
+          Noizu.Entity.Meta.Persistence.persistence_settings(kind: _kind) = settings,
           context,
           options
         ) do
@@ -327,7 +327,7 @@ else
   end
 
   defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
-    defmacro __deriving__(module, struct, options) do
+    defmacro __deriving__(module, _struct, _options) do
       quote do
         use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 

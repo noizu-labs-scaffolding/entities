@@ -30,7 +30,7 @@ defmodule Noizu.Support.Entities.Boos.Boo do
   def_entity do
     # Universal
     # Auto
-    identifier(:integer)
+    id(:integer)
 
     @restricted :user
     @restricted {:role, :supper_trooper}

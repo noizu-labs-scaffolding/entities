@@ -24,18 +24,19 @@ defmodule Noizu.Entity do
 end
 
 defprotocol Noizu.Entity.Protocol do
-  def layer_identifier(entity, layer)
+  def layer_id(entity, layer)
 end
 
 defimpl Noizu.Entity.Protocol, for: Any do
+  def layer_id(_entity, _layer), do: {:error, :not_supported}
   defmacro __deriving__(module, struct, options) do
     deriving(module, struct, options)
   end
-  def deriving(module, struct, options) do
+  def deriving(module, _struct, _options) do
     # we should be defining a provider rather than requiring these methods be defined for each struct
     quote do
-      defimpl  Noizu.EntityReference.Protocol, for: [unquote(module)] do
-        def layer_identifier(struct = %{identifier: x}, layer), do: {:ok, x}
+      defimpl  Noizu.Entity.Protocol, for: [unquote(module)] do
+        def layer_id(_struct = %{id: x}, _layer), do: {:ok, x}
       end
     end
   end

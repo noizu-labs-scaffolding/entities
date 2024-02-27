@@ -61,7 +61,10 @@ defmodule Noizu.Entities.MixProject do
       if Application.get_env(:noizu_labs_entities, :umbrella) do
         deps ++ [{:noizu_labs_core, in_umbrella: true}]
       else
-        deps ++ [{:noizu_labs_core, "~> 0.1"}]
+        deps ++ [
+          {:noizu_labs_core,
+            github: "noizu-labs-scaffolding/core", branch: "develop", override: true},
+        ]
       end
     end)
   end

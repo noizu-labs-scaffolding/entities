@@ -27,7 +27,7 @@ defmodule Noizu.Support.Entities.BizBops.BizBop do
   def_entity do
     # Universal
     # Auto
-    identifier(:uuid)
+    id(:uuid)
 
     @restricted :user
     @restricted {:role, :supper_trooper}

@@ -186,8 +186,3 @@ defmodule MyApp.Entity.Bar do
     end
 end
 ```
-
-
-
-
-

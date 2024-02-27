@@ -28,7 +28,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   # ---------------------------
   #
   # ---------------------------
-  def persist(%{__struct__: table} = record, _type, Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = settings, _context, _options) do
+  def persist(%{__struct__: table} = record, _type, Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = _settings, _context, _options) do
     with x = %{} <- apply(table, :write!, [record]) do
       {:ok, x}
     end
@@ -61,12 +61,12 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
           apply(table, :__info__, [:struct])
           |> Enum.map(
                fn
-                 (%{field: :identifier}) ->
-                   {:identifier, entity.identifier}
+                 (%{field: :id}) ->
+                   {:id, entity.id}
                  (%{field: :__meta__}) ->
                    nil
                  (%{field: field}) ->
-                   if settings = field_settings[field] do
+                   if field_settings[field] do
                      case get_in(entity, [Access.key(field)]) do
                        x = %DateTime{} -> {field, DateTime.to_unix(x)}
                        x = %{__struct__: _} ->
@@ -141,8 +141,8 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
         context,
         options
       ) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
-         record <- apply(table, :read!, [identifier]) do
+    with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity),
+         record <- apply(table, :read!, [id]) do
       from_record(record, settings, context, options)
     end
   end
@@ -169,15 +169,15 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
         _context,
         _options
       ) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
-      apply(table, :delete!, [identifier])
+    with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity) do
+      apply(table, :delete!, [id])
     end
   end
 
   # ---------------------------
   #
   # ---------------------------
-  def from_record(%{entity: entity}, _settings, context, options) do
+  def from_record(%{entity: entity}, _settings, context, _options) do
     unpack = Noizu.Entity.Meta.fields(entity)
              |> Enum.map(
                   fn
@@ -200,20 +200,21 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
     end
   end
 
+
+  def from_record(_, _settings, _context, _options) do
+    {:error, :invalid_record}
+  end
   def from_record(_, record, settings, context, options) do
     # @todo refresh entity with record
     from_record(record, settings, context, options)
   end
 
-  def from_record(_, _settings, _context, _options) do
-    {:error, :invalid_record}
-  end
 end
 
 defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Any] do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
-  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name, transient: true) = _field_settings, _persistence_settings, _context, _options) do
+  def field_as_record(_field, Noizu.Entity.Meta.Field.field_settings(name: name, transient: true) = _field_settings, _persistence_settings, _context, _options) do
     {:ok, {name, nil}}
   end
   def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name) = _field_settings, _persistence_settings, _context, _options) do
@@ -243,11 +244,15 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Noizu.Entity.UUIDRefere
 
   defdelegate as_entity(entity, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
+  defdelegate as_entity(entity, record, settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
 
   defdelegate from_record(record, settings, context, options),
+              to: Noizu.Entity.UUIDReference.TypeHelper
+  defdelegate from_record(entity, record, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
 end
 
@@ -256,7 +261,7 @@ defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Noizu.Entity.UUID
   require Noizu.Entity.Meta.Field
 
   require Noizu.EntityReference.Records
-  alias Noizu.EntityReference.Records, as: R
+  #alias Noizu.EntityReference.Records, as: R
 
   defdelegate field_from_record(
                 field,

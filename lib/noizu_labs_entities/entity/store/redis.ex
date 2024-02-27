@@ -179,7 +179,7 @@ end
 defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   require Noizu.Entity.Meta.Persistence
 
-  defmacro __deriving__(module, struct, options) do
+  defmacro __deriving__(module, _struct, _options) do
     quote do
       use Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
@@ -210,6 +210,10 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
       end
     end
   end
+
+
+  defdelegate key(record, settings, context, options),
+              to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
   defdelegate persist(record, action, settings, context, options),
     to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour

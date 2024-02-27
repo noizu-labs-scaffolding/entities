@@ -51,9 +51,9 @@ defimpl Noizu.Entity.Json.Protocol, for: [Any] do
       Enum.map(
         settings,
         fn
-          {:identifier, _} ->
+          {:id, _} ->
             with {:ok, sref} <- Noizu.EntityReference.Protocol.sref(term) do
-              {:identifier, sref}
+              {:id, sref}
             else _ -> nil
             end
           {field, field_settings} ->

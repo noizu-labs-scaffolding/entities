@@ -5,7 +5,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
-  def format_identifier(m, _, _) do
+  def format_id(m, _, _) do
     raise Noizu.Entity.Identifier.Exception,
       message: "#{m.__struct__} Generate Identifier with ref type not supported"
   end
@@ -13,8 +13,8 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # ----------------
   #
   # ----------------
-  def kind(m, R.ref(module: m)), do: {:ok, m}
-  def kind(m, R.ref(module: n)), do: {:ok, m}
+  #def kind(m, R.ref(module: m)), do: {:ok, m}
+  def kind(m, R.ref(module: _)), do: {:ok, m}
   def kind(m, %{__struct__: m}), do: {:ok, m}
 
   def kind(m, "ref." <> _ = ref) do
@@ -33,13 +33,13 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
 
   def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
 
-  def id(m, R.ref(module: n, identifier: _) = ref) when m != n, do: {:ok, ref}
+  def id(m, R.ref(module: n, id: _) = ref) when m != n, do: {:ok, ref}
 
-  def id(m, R.ref(module: m, identifier: R.ref(module: n, identifier: _)) = ref),
-    do: {:ok, R.ref(ref, :identifier)}
+  def id(m, R.ref(module: m, id: R.ref(module: _, id: _)) = ref),
+    do: {:ok, R.ref(ref, :id)}
 
-  def id(m, %{__struct__: m, identifier: R.ref(module: _, identifier: _)} = ref),
-    do: {:ok, ref.identifier}
+  def id(m, %{__struct__: m, id: R.ref(module: _, id: _)} = ref),
+    do: {:ok, ref.id}
 
   def id(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -62,13 +62,13 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
 
   def id(_m, ref), do: {:error, {:unsupported, {__MODULE__, :id, ref}}}
 
-  def ref(m, R.ref(module: n, identifier: _) = inner_ref) when m != n,
-    do: {:ok, R.ref(module: m, identifier: inner_ref)}
+  def ref(m, R.ref(module: n, id: _) = inner_ref) when m != n,
+    do: {:ok, R.ref(module: m, id: inner_ref)}
 
-  def ref(m, R.ref(module: m, identifier: R.ref(module: n, identifier: _)) = ref), do: {:ok, ref}
+  def ref(m, R.ref(module: m, id: R.ref(module: _, id: _)) = ref), do: {:ok, ref}
 
-  def ref(m, %{__struct__: m, identifier: R.ref(module: _, identifier: _)} = ref),
-    do: {:ok, R.ref(module: m, identifier: ref.identifier)}
+  def ref(m, %{__struct__: m, id: R.ref(module: _, id: _)} = ref),
+    do: {:ok, R.ref(module: m, id: ref.id)}
 
   def ref(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -78,7 +78,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
           inner_sref = String.trim_leading(ref, "ref.#{sref}.")
 
           with {:ok, inner_ref} <- Noizu.EntityReference.Protocol.ref(inner_sref) do
-            {:ok, R.ref(module: m, identifier: inner_ref)}
+            {:ok, R.ref(module: m, id: inner_ref)}
           else
             _ -> {:error, {:unsupported, {__MODULE__, :ref, ref}}}
           end
@@ -102,7 +102,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
     end
   end
 
-  def entity(m, %{__struct__: m} = ref, context) do
+  def entity(m, %{__struct__: m} = ref, _context) do
     {:ok, ref}
   end
 

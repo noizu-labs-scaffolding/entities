@@ -83,40 +83,40 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   def __before_create__(entity, context, options) do
     cond do
-      entity.identifier ->
+      entity.id ->
         {:ok, entity}
 
       :else ->
-        with {:ok, {identifier, index}} <-
+        with {:ok, {id, index}} <-
                Noizu.Entity.UID.generate(Module.concat([entity.__struct__, Repo]), node()) do
-          case Noizu.Entity.Meta.identifier(entity) do
-            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :integer)} ->
-              identifier =
-                Noizu.Entity.Meta.IntegerIdentifier.format_identifier(entity, identifier, index)
+          case Noizu.Entity.Meta.id(entity) do
+            {field, Noizu.Entity.Meta.Identifier.id_settings(type: :integer)} ->
+              id =
+                Noizu.Entity.Meta.IntegerIdentifier.format_id(entity, id, index)
 
-              {:ok, put_in(entity, [Access.key(field)], identifier)}
+              {:ok, put_in(entity, [Access.key(field)], id)}
 
-            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :uuid)} ->
-              identifier =
-                Noizu.Entity.Meta.UUIDIdentifier.format_identifier(entity, identifier, index)
+            {field, Noizu.Entity.Meta.Identifier.id_settings(type: :uuid)} ->
+              id =
+                Noizu.Entity.Meta.UUIDIdentifier.format_id(entity, id, index)
 
-              {:ok, put_in(entity, [Access.key(field)], identifier)}
+              {:ok, put_in(entity, [Access.key(field)], id)}
 
-            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :ref)} ->
-              identifier =
-                Noizu.Entity.Meta.RefIdentifier.format_identifier(entity, identifier, index)
+            {field, Noizu.Entity.Meta.Identifier.id_settings(type: :ref)} ->
+              id =
+                Noizu.Entity.Meta.RefIdentifier.format_id(entity, id, index)
 
-              {:ok, put_in(entity, [Access.key(field)], identifier)}
+              {:ok, put_in(entity, [Access.key(field)], id)}
 
-            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: :dual_ref)} ->
-              identifier =
-                Noizu.Entity.Meta.DualRefIdentifier.format_identifier(entity, identifier, index)
+            {field, Noizu.Entity.Meta.Identifier.id_settings(type: :dual_ref)} ->
+              id =
+                Noizu.Entity.Meta.DualRefIdentifier.format_id(entity, id, index)
 
-              {:ok, put_in(entity, [Access.key(field)], identifier)}
+              {:ok, put_in(entity, [Access.key(field)], id)}
 
-            {field, Noizu.Entity.Meta.Identifier.identifier_settings(type: user_defined)} ->
-              identifier = apply(user_defined, :format_identifier, [entity, identifier, index])
-              {:ok, put_in(entity, [Access.key(field)], identifier)}
+            {field, Noizu.Entity.Meta.Identifier.id_settings(type: user_defined)} ->
+              id = apply(user_defined, :format_id, [entity, id, index])
+              {:ok, put_in(entity, [Access.key(field)], id)}
           end
         end
     end
@@ -181,8 +181,8 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   def __before_update__(entity, context, options) do
     cond do
-      entity.identifier -> {:ok, entity}
-      :else -> {:error, :identifier_required}
+      entity.id -> {:ok, entity}
+      :else -> {:error, :id_required}
     end
     |> case do
       {:ok, entity} ->
@@ -275,7 +275,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   def __before_delete__(entity, _context, _options) do
     cond do
-      entity.identifier -> {:ok, entity}
+      entity.id -> {:ok, entity}
     end
   end
 

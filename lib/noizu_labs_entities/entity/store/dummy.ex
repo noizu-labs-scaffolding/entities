@@ -36,24 +36,24 @@ defmodule Noizu.Entity.Store.Dummy.StorageLayer do
     end
   end
 
-  def write(identifier, name_space, entity) do
-    # IO.inspect(entity, label:  "WRITE #{identifier}:#{name_space}")
+  def write(id, name_space, entity) do
+    # IO.inspect(entity, label:  "WRITE #{id}:#{name_space}")
     create_table()
-    key = {identifier, name_space}
+    key = {id, name_space}
     :ets.insert(@table_name, {key, entity})
   end
 
-  def delete(identifier, name_space) do
-    # IO.puts "delete #{identifier}:#{name_space}"
+  def delete(id, name_space) do
+    # IO.puts "delete #{id}:#{name_space}"
     create_table()
-    key = {identifier, name_space}
+    key = {id, name_space}
     :ets.delete(@table_name, key)
   end
 
-  def get(identifier, name_space) do
-    # IO.puts "get #{identifier}:#{name_space}"
+  def get(id, name_space) do
+    # IO.puts "get #{id}:#{name_space}"
     create_table()
-    key = {identifier, name_space}
+    key = {id, name_space}
 
     case :ets.lookup(@table_name, key) do
       [{_, entity}] -> {:ok, entity}
@@ -70,7 +70,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   #
   # ---------------------------
   def persist(
-        record = %{identifier: id},
+        record = %{id: id},
         _type,
         Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
         _context,
@@ -152,8 +152,8 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
         context,
         options
       ) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
-         {:ok, record} <- Noizu.Entity.Store.Dummy.StorageLayer.get(identifier, table) do
+    with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity),
+         {:ok, record} <- Noizu.Entity.Store.Dummy.StorageLayer.get(id, table) do
       from_record(record, settings, context, options)
     end
   end
@@ -180,8 +180,8 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
         _context,
         _options
       ) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
-      Noizu.Entity.Store.Dummy.StorageLayer.delete(identifier, table)
+    with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity) do
+      Noizu.Entity.Store.Dummy.StorageLayer.delete(id, table)
       :ok
     end
   end

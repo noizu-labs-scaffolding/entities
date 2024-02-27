@@ -11,15 +11,15 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
 
     quote do
       def kind(_), do: {:ok, unquote(entity)}
-      def id(%{identifier: identifier}), do: {:ok, identifier}
-      def ref(%{identifier: identifier}), do: apply(unquote(entity), :ref, [identifier])
-      def sref(%{identifier: identifier}), do: apply(unquote(entity), :sref, [identifier])
+      def id(%{id: id}), do: {:ok, id}
+      def ref(%{id: id}), do: apply(unquote(entity), :ref, [id])
+      def sref(%{id: id}), do: apply(unquote(entity), :sref, [id])
       def entity(ref, context), do: apply(unquote(entity), :entity, [ref, context])
     end
   end
 
-  def format_identifier(m, identifier, _) do
-    identifier
+  def format_id(_m, id, _) do
+    id
   end
 
   # ----------------
@@ -37,7 +37,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
           String.trim_leading(ref, "ref.#{sref}.")
           |> Integer.parse()
           |> case do
-            {identifier, ""} when is_integer(identifier) -> {:ok, m}
+            {id, ""} when is_integer(id) -> {:ok, m}
             _ -> {:error, {:unsupported, {__MODULE__, :kind, ref}}}
           end
 
@@ -49,9 +49,9 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
 
   def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
 
-  def id(m, id) when is_integer(id), do: {:ok, id}
-  def id(m, R.ref(module: m, identifier: id)) when is_integer(id), do: {:ok, id}
-  def id(m, %{__struct__: m, identifier: id}) when is_integer(id), do: {:ok, id}
+  def id(_m, id) when is_integer(id), do: {:ok, id}
+  def id(m, R.ref(module: m, id: id)) when is_integer(id), do: {:ok, id}
+  def id(m, %{__struct__: m, id: id}) when is_integer(id), do: {:ok, id}
 
   def id(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -61,7 +61,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
           String.trim_leading(ref, "ref.#{sref}.")
           |> Integer.parse()
           |> case do
-            {identifier, ""} when is_integer(identifier) -> {:ok, identifier}
+            {id, ""} when is_integer(id) -> {:ok, id}
             _ -> {:error, {:unsupported, {__MODULE__, :id, ref}}}
           end
 
@@ -73,13 +73,13 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
 
   def id(_m, ref), do: {:error, {:unsupported, {__MODULE__, :id, ref}}}
 
-  def ref(m, id) when is_integer(id), do: {:ok, R.ref(module: m, identifier: id)}
+  def ref(m, id) when is_integer(id), do: {:ok, R.ref(module: m, id: id)}
 
-  def ref(m, R.ref(module: m, identifier: id)) when is_integer(id),
-    do: {:ok, R.ref(module: m, identifier: id)}
+  def ref(m, R.ref(module: m, id: id)) when is_integer(id),
+    do: {:ok, R.ref(module: m, id: id)}
 
-  def ref(m, %{__struct__: m, identifier: id}) when is_integer(id),
-    do: {:ok, R.ref(module: m, identifier: id)}
+  def ref(m, %{__struct__: m, id: id}) when is_integer(id),
+    do: {:ok, R.ref(module: m, id: id)}
 
   def ref(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -89,8 +89,8 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
           String.trim_leading(ref, "ref.#{sref}.")
           |> Integer.parse()
           |> case do
-            {identifier, ""} when is_integer(identifier) ->
-              {:ok, R.ref(module: m, identifier: identifier)}
+            {id, ""} when is_integer(id) ->
+              {:ok, R.ref(module: m, id: id)}
 
             _ ->
               {:error, {:unsupported, {__MODULE__, :ref, ref}}}
@@ -111,14 +111,14 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
     end
   end
 
-  def sref(m, R.ref(module: m, identifier: id)) when is_integer(id) do
+  def sref(m, R.ref(module: m, id: id)) when is_integer(id) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       {:ok, "ref.#{sref}.#{id}"}
     end
   end
 
-  def sref(m, %{__struct__: m, identifier: id}) when is_integer(id) do
+  def sref(m, %{__struct__: m, id: id}) when is_integer(id) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       {:ok, "ref.#{sref}.#{id}"}
@@ -133,7 +133,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
           String.trim_leading(ref, "ref.#{sref}.")
           |> Integer.parse()
           |> case do
-            {identifier, ""} when is_integer(identifier) -> {:ok, "ref.#{sref}.#{identifier}"}
+            {id, ""} when is_integer(id) -> {:ok, "ref.#{sref}.#{id}"}
             _ -> {:error, {:unsupported, {__MODULE__, :sref, ref}}}
           end
 
@@ -146,16 +146,16 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   def sref(_m, ref), do: {:error, {:unsupported, {__MODULE__, :sref, ref}}}
 
   def entity(m, id, context) when is_integer(id),
-    do: apply(m, :entity, [R.ref(module: m, identifier: id), context])
+    do: apply(m, :entity, [R.ref(module: m, id: id), context])
 
-  def entity(m, R.ref(module: m, identifier: id) = ref, context) when is_integer(id) do
+  def entity(m, R.ref(module: m, id: id) = ref, context) when is_integer(id) do
     with repo <- Noizu.Entity.Meta.repo(ref),
          {:ok, repo} <- (repo && {:ok, repo}) || {:error, {m, :repo_not_found}} do
       apply(repo, :get, [ref, context, []])
     end
   end
 
-  def entity(m, %{__struct__: m, identifier: id} = ref, _context) when is_integer(id),
+  def entity(m, %{__struct__: m, id: id} = ref, _context) when is_integer(id),
     do: {:ok, ref}
 
   def entity(m, %{__struct__: record_type} = ref, context) do
@@ -165,7 +165,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
       stub = apply(m, :stub, [])
       apply(protocol, :as_entity, [stub, ref, settings, context, []])
     else
-      error -> {:error, {:unsupported, {__MODULE__, :entity, ref}}}
+      _ -> {:error, {:unsupported, {__MODULE__, :entity, ref}}}
     end
   end
 
@@ -177,8 +177,8 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
           String.trim_leading(ref, "ref.#{sref}.")
           |> Integer.parse()
           |> case do
-            {identifier, ""} when is_integer(identifier) ->
-              apply(m, :entity, [R.ref(module: m, identifier: identifier), context])
+            {id, ""} when is_integer(id) ->
+              apply(m, :entity, [R.ref(module: m, id: id), context])
 
             _ ->
               {:error, {:unsupported, {__MODULE__, :entity, ref}}}

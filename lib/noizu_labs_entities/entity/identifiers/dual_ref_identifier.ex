@@ -5,7 +5,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
-  def format_identifier(m, _, _) do
+  def format_id(m, _, _) do
     raise Noizu.Entity.Identifier.Exception,
       message: "#{m.__struct__} Generate Identifier with dual_ref type not supported"
   end
@@ -33,12 +33,12 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
 
   def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
 
-  def id(m, {R.ref(), R.ref()} = ref), do: {:ok, ref}
+  def id(_, {R.ref(), R.ref()} = ref), do: {:ok, ref}
 
-  def id(m, R.ref(module: m, identifier: {R.ref(), R.ref()}) = ref),
-    do: {:ok, R.ref(ref, :identifier)}
+  def id(m, R.ref(module: m, id: {R.ref(), R.ref()}) = ref),
+    do: {:ok, R.ref(ref, :id)}
 
-  def id(m, %{__struct__: m, identifier: {R.ref(), R.ref()}} = ref), do: {:ok, ref.identifier}
+  def id(m, %{__struct__: m, id: {R.ref(), R.ref()}} = ref), do: {:ok, ref.id}
 
   def id(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -61,11 +61,11 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
 
   def id(_m, ref), do: {:error, {:unsupported, {__MODULE__, :id, ref}}}
 
-  def ref(m, {R.ref(), R.ref()} = inner_ref), do: {:ok, R.ref(module: m, identifier: inner_ref)}
-  def ref(m, R.ref(module: m, identifier: {R.ref(), R.ref()}) = ref), do: {:ok, ref}
+  def ref(m, {R.ref(), R.ref()} = inner_ref), do: {:ok, R.ref(module: m, id: inner_ref)}
+  def ref(m, R.ref(module: m, id: {R.ref(), R.ref()}) = ref), do: {:ok, ref}
 
-  def ref(m, %{__struct__: m, identifier: {R.ref(), R.ref()}} = ref),
-    do: {:ok, R.ref(module: m, identifier: ref.identifier)}
+  def ref(m, %{__struct__: m, id: {R.ref(), R.ref()}} = ref),
+    do: {:ok, R.ref(module: m, id: ref.id)}
 
   def ref(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
@@ -74,7 +74,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
         String.starts_with?(ref, "ref.#{sref}.") ->
           #          inner_sref = String.trim_leading(ref, "ref.#{sref}.")
           #          with {:ok, inner_ref} <- Noizu.EntityReference.Protocol.ref(inner_sref) do
-          #            {:ok, R.ref(module: m, identifier: inner_ref)}
+          #            {:ok, R.ref(module: m, id: inner_ref)}
           #          else
           #            _ ->
           {:error, {:unsupported, {__MODULE__, :ref, ref}}}
@@ -100,7 +100,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
     end
   end
 
-  def entity(m, %{__struct__: m} = ref, context) do
+  def entity(m, %{__struct__: m} = ref, _context) do
     {:ok, ref}
   end
 

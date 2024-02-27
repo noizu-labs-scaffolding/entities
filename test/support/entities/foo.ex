@@ -31,7 +31,7 @@ defmodule Noizu.Support.Entities.Foos.Foo do
   def_entity do
     # Universal
     # Auto
-    identifier(:integer)
+    id(:integer)
     field(:time_stamp, nil, Noizu.Entity.TimeStamp)
     field(:special_field, nil, Noizu.Support.Entity.TestField)
 

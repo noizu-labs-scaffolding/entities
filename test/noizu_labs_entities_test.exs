@@ -88,8 +88,8 @@ defmodule Noizu.EntitiesTest do
     fields = Noizu.Entity.Meta.fields(Noizu.Support.Entities.Foos.Foo)
 
     assert_record(
-      fields[:identifier],
-      expected_field(name: :identifier, transient: false, pii: false, default: nil)
+      fields[:id],
+      expected_field(name: :id, transient: false, pii: false, default: nil)
     )
 
     assert_record(
@@ -459,10 +459,10 @@ defmodule Noizu.EntitiesTest do
 
   describe "Repo Crude" do
     test "Save and Get Record" do
-      identifier = :os.system_time(:millisecond) * 100 + 1
+      id = :os.system_time(:millisecond) * 100 + 1
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
+        id: id,
         name: "Henry",
         title: "Bob",
         description: "Sample Entity",
@@ -470,17 +470,17 @@ defmodule Noizu.EntitiesTest do
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
-      {:ok, sut} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
       assert sut.__struct__ == entity.__struct__
       assert sut.title == entity.title
       assert sut.time_stamp == entity.time_stamp
     end
 
     test "Delete Record" do
-      identifier = :os.system_time(:millisecond) * 100 + 2
+      id = :os.system_time(:millisecond) * 100 + 2
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
+        id: id,
         name: "Henry",
         title: "Bob",
         description: "Sample Entity",
@@ -489,16 +489,16 @@ defmodule Noizu.EntitiesTest do
 
       {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
       Noizu.Support.Entities.Foos.delete(entity, @context, nil)
-      {:error, :not_found} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
+      {:error, :not_found} = Noizu.Support.Entities.Foos.get(id, @context, nil)
     end
   end
 
   describe "Repo - Field Hooks" do
     test "Field PreCreate - entity" do
-      identifier = :os.system_time(:millisecond) * 100 + 1
+      id = :os.system_time(:millisecond) * 100 + 1
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
+        id: id,
         special_field: %Noizu.Support.Entity.TestField{sno: "Appa"},
         name: "Henry",
         title: "Bob",
@@ -507,18 +507,18 @@ defmodule Noizu.EntitiesTest do
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
-      {:ok, sut} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
-      assert entity.special_field.identifier == 31337
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
+      assert entity.special_field.id == 31337
       assert entity.special_field.sno == "Appa"
       assert sut.special_field == entity.special_field
     end
 
     test "Field PreCreate - entity exists" do
-      identifier = :os.system_time(:millisecond) * 100 + 1
+      id = :os.system_time(:millisecond) * 100 + 1
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
-        special_field: %Noizu.Support.Entity.TestField{identifier: 5, sno: "Appa"},
+        id: id,
+        special_field: %Noizu.Support.Entity.TestField{id: 5, sno: "Appa"},
         name: "Henry",
         title: "Bob",
         description: "Sample Entity",
@@ -526,17 +526,17 @@ defmodule Noizu.EntitiesTest do
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
-      {:ok, sut} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
-      assert entity.special_field.identifier == 5
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
+      assert entity.special_field.id == 5
       assert entity.special_field.sno == "Appa"
       assert sut.special_field == entity.special_field
     end
 
     test "Field PreCreate - short hand" do
-      identifier = :os.system_time(:millisecond) * 100 + 1
+      id = :os.system_time(:millisecond) * 100 + 1
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
+        id: id,
         special_field: "Oppa",
         name: "Henry",
         title: "Bob",
@@ -545,17 +545,17 @@ defmodule Noizu.EntitiesTest do
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
-      {:ok, sut} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
-      assert entity.special_field.identifier == 0xF00BA7
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
+      assert entity.special_field.id == 0xF00BA7
       assert entity.special_field.sno == "Oppa"
       assert sut.special_field == entity.special_field
     end
 
     test "Field PreUpdate - entity" do
-      identifier = :os.system_time(:millisecond) * 100 + 1
+      id = :os.system_time(:millisecond) * 100 + 1
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
+        id: id,
         special_field: %Noizu.Support.Entity.TestField{sno: "Appa"},
         name: "Henry",
         title: "Bob",
@@ -564,18 +564,18 @@ defmodule Noizu.EntitiesTest do
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.update(entity, @context, nil)
-      {:ok, sut} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
-      assert entity.special_field.identifier == nil
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
+      assert entity.special_field.id == nil
       assert entity.special_field.sno == "Appa_updated"
       assert sut.special_field == entity.special_field
     end
 
     test "Field PreUpdate - entity exists" do
-      identifier = :os.system_time(:millisecond) * 100 + 1
+      id = :os.system_time(:millisecond) * 100 + 1
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
-        special_field: %Noizu.Support.Entity.TestField{identifier: 5, sno: "Appa"},
+        id: id,
+        special_field: %Noizu.Support.Entity.TestField{id: 5, sno: "Appa"},
         name: "Henry",
         title: "Bob",
         description: "Sample Entity",
@@ -583,17 +583,17 @@ defmodule Noizu.EntitiesTest do
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.update(entity, @context, nil)
-      {:ok, sut} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
-      assert entity.special_field.identifier == 5
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
+      assert entity.special_field.id == 5
       assert entity.special_field.sno == "Appa_updated"
       assert sut.special_field == entity.special_field
     end
 
     test "Field PreUpdate - short hand" do
-      identifier = :os.system_time(:millisecond) * 100 + 1
+      id = :os.system_time(:millisecond) * 100 + 1
 
       entity = %Noizu.Support.Entities.Foos.Foo{
-        identifier: identifier,
+        id: id,
         special_field: "Oppa",
         name: "Henry",
         title: "Bob",
@@ -602,8 +602,8 @@ defmodule Noizu.EntitiesTest do
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.update(entity, @context, nil)
-      {:ok, sut} = Noizu.Support.Entities.Foos.get(identifier, @context, nil)
-      assert entity.special_field.identifier == 0xF00BA8
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
+      assert entity.special_field.id == 0xF00BA8
       assert entity.special_field.sno == "Oppa"
       assert sut.special_field == entity.special_field
     end
@@ -630,7 +630,7 @@ defmodule Noizu.EntitiesTest do
         initial = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", inserted_at: DateTime.utc_now()}
         cs = Noizu.Support.Entities.BizBops.BizBop.changeset(initial, %{ecto_hint: "string", name: "apple"})
         {:ok, e} = Noizu.Support.Entities.BizBops.create(cs, @context, [])
-        r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.identifier)
+        r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.id)
         assert is_integer(r.inserted_at)
         assert r.entity.name == "apple"
     end
@@ -640,7 +640,7 @@ defmodule Noizu.EntitiesTest do
       initial = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", inserted_at: DateTime.utc_now()}
       cs = Noizu.Support.Entities.BizBops.BizBop.changeset(initial, %{ecto_hint: "string", name: "apple"})
       {:ok, e} = NoizuTest.EntityRepo.create(cs, @context)
-      r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.identifier)
+      r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.id)
       assert is_integer(r.inserted_at)
       assert r.entity.name == "apple"
     end

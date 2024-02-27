@@ -19,7 +19,7 @@ defmodule Noizu.JasonEncoderTest do
                |> NoizuTest.EntityRepo.create(@context)
     json =  Jason.encode(e, user: [context: @context, options: []])
     assert json == {:ok,
-             "{\"identifier\":\"ref.biz-bop.#{ShortUUID.encode!(e.identifier)}\",\"inserted_at\":\"#{e.inserted_at |> DateTime.to_iso8601}\",\"vsn\":1.0}"}
+             "{\"id\":\"ref.biz-bop.#{ShortUUID.encode!(e.id)}\",\"inserted_at\":\"#{e.inserted_at |> DateTime.to_iso8601}\",\"vsn\":1.0}"}
   end
 
 end
