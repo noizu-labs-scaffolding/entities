@@ -19,9 +19,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     repo_snake = Macro.underscore(context_name)
     entity_snake = Macro.underscore(entity_name)
-    repo_filename = "lib/#{app_name}/#{repo_snake}.ex" |> IO.inspect
+    repo_filename = "lib/#{app_name}/#{repo_snake}.ex"
     entity_filename = "lib/#{app_name}/#{repo_snake}/#{entity_snake}.ex"
+    extracted_params = prep_params(params) |> IO.inspect(label: :params)
     File.mkdir_p("lib/#{app_name}/#{repo_snake}")
+
     with false <- File.exists?(repo_filename) && {:error, "Repo exists: #{repo_filename}"},
          false <- File.exists?(entity_filename) && {:error, "Entity exists: #{entity_filename}"},
          {:ok, {context_contents, entity_contents}} <- entity_template(context_name, entity_name, params) do
@@ -39,16 +41,24 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
             _ -> nil
           end)
 
-          params = prep_params(params)
-          fields = extract_fields(params[:field], params[:field_meta])
-          storage = extract_storage(params[:store])
+          ecto = Enum.find_value(params, fn
+            "--ecto" -> :ecto
+            "--no-ecto" -> :no_ecto
+            _ -> nil
+          end)
+
+
+          fields = extract_fields(extracted_params[:field], extracted_params[:field_meta])
+          storage = extract_storage(extracted_params[:store])
 
           unless live == :no_live do
             add_live(context_name, entity_name, table_name, fields)
           else
-            # Ecto Setup
-            if storage[:ecto] do
-              add_ecto(context_name, entity_name, table_name, fields)
+            unless ecto == :no_ecto do
+              # Ecto Setup
+              if storage[:ecto] do
+                add_ecto(context_name, entity_name, table_name, fields)
+              end
             end
           end
         else
@@ -58,6 +68,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         error -> IO.inspect(error, label: "Error")
       end
     end
+  rescue e -> IO.inspect(e, label: "Error")
   end
 
   defp app_name() do
@@ -68,11 +79,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Enum.join("")
   end
 
-#  defp entity_name(name, _) do
-#    String.split(name, ".")
-#    |> Enum.map(&String.capitalize(&1))
-#    |> Enum.join(".")
-#  end
+  #  defp entity_name(name, _) do
+  #    String.split(name, ".")
+  #    |> Enum.map(&String.capitalize(&1))
+  #    |> Enum.join(".")
+  #  end
 
   defp prep_params(params) do
     Enum.group_by(params, fn param ->
@@ -182,46 +193,56 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   end
 
   defp add_live(context_name, entity_name, table, fields) do
+    IO.inspect(fields, label: :fields)
     ecto = Enum.map(fields,
              fn
-               {_, {field, "{:array," <> _ = type, _settings}} ->
-                 "#{field}:#{type}"
+               {_, {field, "{:array," <> type, _settings}} ->
+                 type = String.trim(type)
+                 type = String.trim_trailing(type, "}")
+                 type = String.trim_leading(type, ":")
+                 "#{field}:array:#{type}"
                {_, {field, type, _settings}} when type in @ecto_types ->
                  "#{field}:#{type}"
                {_, {field, type, _settings}} ->
-               try do
-                 m = String.to_existing_atom("Elixir.#{type}")
-                 with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
-                   x
-                 else
-                   _ -> nil
+                 try do
+                   IO.inspect(type, label: :type)
+                   m = String.to_existing_atom("Elixir.#{type}") |> IO.inspect
+                   with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
+                     x
+                   else
+                     _ -> nil
+                   end
+                 rescue
+                   e ->
+                     IO.inspect(e, label: :error)
+                     "#{field}:#{type}"
                  end
-               rescue
-                 _ -> "#{field}:#{type}"
-               end
              end) |> Enum.reject(&is_nil/1) |> List.flatten()
-    ecto = ["Schema" <> "." <> context_name, entity_name, table | ecto]
+    ecto = ["Schema" <> "." <> context_name, entity_name, table | ecto] |> IO.inspect(label: "mix phx.gen.live")
     apply(Mix.Tasks.Phx.Gen.Live, :run, [ecto])
   end
 
   defp add_ecto(context_name, entity_name, table, fields) do
     ecto = Enum.map(fields,
              fn
-               {_, {field, "{:array," <> _ = type, _settings}} ->
-                 "#{field}:#{type}"
+               {_, {field, "{:array," <> type, _settings}} ->
+                 type = String.trim(type)
+                 type = String.trim_trailing(type, "}")
+                 type = String.trim_leading(type, ":")
+                 "#{field}:array:#{type}"
                {_, {field, type, _settings}} when type in @ecto_types ->
                  "#{field}:#{type}"
                {_, {field, type, _settings}} ->
-               try do
-                 m = String.to_existing_atom("Elixir.#{type}")
-                 with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
-                   x
-                 else
-                   _ -> nil
+                 try do
+                   m = String.to_existing_atom("Elixir.#{type}")
+                   with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
+                     x
+                   else
+                     _ -> nil
+                   end
+                 rescue
+                   _ -> "#{field}:#{type}"
                  end
-               rescue
-                 _ -> "#{field}:#{type}"
-               end
              end) |> Enum.reject(&is_nil/1) |> List.flatten()
     ecto = ["Schema" <> "." <> context_name <> "." <> entity_name, table | ecto]
     apply(Mix.Tasks.Phx.Gen.Schema, :run, [ecto])
@@ -231,7 +252,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     app_name = app_name()
     sm = app_name <> "." <> context_name <> "." <> entity_name
     repo_module = app_name <> "." <> context_name
-    params = prep_params(params) |> IO.inspect
+    params = prep_params(params)
     # Sref, Fields, Storage
     sref = extract_sref(params[:sref])
     fields = extract_fields(params[:field], params[:field_meta])
@@ -277,7 +298,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         end |> String.split("\n")
       end)
       |> List.flatten()
-      |> Enum.join("\n    ")
+      |> Enum.join("\n      ")
 
     entity_persistence =
       Enum.map(
@@ -286,7 +307,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
           "@persistence {#{inspect(store)}, #{inspect(settings)}}"
         end
       )
-      |> Enum.join("\n     ")
+      |> Enum.join("\n    ")
 
     entity = """
       #-------------------------------------------------------------------------------
@@ -370,5 +391,9 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       end
     """
     {:ok, {repo, entity}}
+  rescue
+    e ->
+      IO.inspect(Exception.format(:error, e, __STACKTRACE__), label: :error)
   end
+
 end
