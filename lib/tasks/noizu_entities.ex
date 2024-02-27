@@ -152,8 +152,9 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
             [name] ->
               settings = extract_field_meta(name, meta)
               {:field, {name, nil, settings}}
-            [name, type] ->
+            [name| type] ->
               settings = extract_field_meta(name, meta)
+              type = Enum.join(type, ":")
               type = String.trim(type)
               {:field, {name, type, settings}}
           end
