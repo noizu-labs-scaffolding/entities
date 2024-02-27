@@ -9,7 +9,7 @@ defmodule Noizu.Entity.TimeStamp do
     unless name in ["time_stamp", "root"] do
       {:ok, ["#{name}_inserted_at:utc_datetime_usec", "#{name}_updated_at:utc_datetime_usec", "#{name}_deleted_at:utc_datetime_usec"]}
     else
-      {:ok, ["inserted_at:utc_datetime_usec", "updated_at:utc_datetime_usec", "deleted_at:utc_datetime_usec"]}
+      {:ok, ["deleted_at:utc_datetime_usec"]}
     end
   end
 
