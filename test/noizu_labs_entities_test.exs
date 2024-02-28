@@ -493,6 +493,38 @@ defmodule Noizu.EntitiesTest do
     end
   end
 
+  describe "Extended.UUIDReference field" do
+    test "Save and Get Record" do
+      id = :os.system_time(:millisecond) * 100 + 1
+
+
+
+      foo = %Noizu.Support.Entities.Foos.Foo{
+        id: id,
+        name: "Henry 1",
+        title: "Bob",
+        description: "Sample Entity",
+        time_stamp: Noizu.Entity.TimeStamp.now()
+      }
+
+      {:ok, foo_entity} = Noizu.Support.Entities.Foos.create(foo, @context, nil)
+      {:ok, foo_ref} = Noizu.Support.Entities.Foos.Foo.ref(foo_entity)
+
+      id = :os.system_time(:millisecond) * 100 + 3
+      entity = %Noizu.Support.Entities.Foos.Foo{
+        id: id,
+        name: "Henry",
+        reference_field: foo_ref,
+      }
+
+      {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
+      {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
+      assert sut.__struct__ == entity.__struct__
+      assert sut.title == entity.title
+      assert sut.reference_field.name == "Henry 1"
+    end
+  end
+
   describe "Repo - Field Hooks" do
     test "Field PreCreate - entity" do
       id = :os.system_time(:millisecond) * 100 + 1

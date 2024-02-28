@@ -7,4 +7,5 @@
 # General application configuration
 import Config
 config :noizu_labs_entities,
-       legacy_mode: false
+       legacy_mode: false,
+       uid_provider: Noizu.Entity.Test.UIDProvider

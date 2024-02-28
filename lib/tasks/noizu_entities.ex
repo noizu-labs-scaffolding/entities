@@ -196,6 +196,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     IO.inspect(fields, label: :fields)
     ecto = Enum.map(fields,
              fn
+               {_, {field, nil, _settings}} -> nil
                {_, {field, "{:array," <> type, _settings}} ->
                  type = String.trim(type)
                  type = String.trim_trailing(type, "}")
@@ -225,6 +226,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   defp add_ecto(context_name, entity_name, table, fields) do
     ecto = Enum.map(fields,
              fn
+               {_, {field, nil, _settings}} -> nil
                {_, {field, "{:array," <> type, _settings}} ->
                  type = String.trim(type)
                  type = String.trim_trailing(type, "}")

@@ -11,5 +11,7 @@ defmodule Noizu.Support.Entity.ETS.DummyRecord do
             json_template_specific2: nil,
             time_stamp: nil,
             special_field_id: nil,
-            special_field_sno: nil
+            special_field_sno: nil,
+            reference_field_ref: nil,
+            reference_field_ref_type: nil
 end

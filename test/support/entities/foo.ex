@@ -45,6 +45,8 @@ defmodule Noizu.Support.Entities.Foos.Foo do
     @pii :low
     field(:name)
 
+    field :reference_field, nil, Noizu.Entity.Extended.UUIDReference
+
     pii do
       @json false
       field(:passport_number)
