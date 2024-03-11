@@ -15,6 +15,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   end
 
   def create_entity(context_name, entity_name, table_name, params) do
+    Mix.Task.run("app.config", [])
     app_name = Mix.Project.config()[:app] |> Atom.to_string()
 
     repo_snake = Macro.underscore(context_name)
