@@ -335,7 +335,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     entity_module = entity_name
     entity_alias = String.split(entity_name, ".") |> List.last()
-    entity_name_escaped = String.replace(entity_name, ".", "_")
+    entity_name_escaped = entity_name |> String.replace(".", "")
     singular = Inflex.singularize(entity_name_escaped)
     plural = Inflex.pluralize(entity_name_escaped)
     singular_snake = Macro.underscore(singular)
