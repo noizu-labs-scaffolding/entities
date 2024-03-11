@@ -24,8 +24,8 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     entity_filename = "lib/#{app_name}/#{repo_snake}/#{entity_snake}.ex"
     extracted_params = prep_params(params) |> IO.inspect(label: :params)
     File.mkdir_p("lib/#{app_name}/#{repo_snake}")
-    repo_dir = String.split(repo_filename, "/") |> Enum.slice(0..-2//1) |> Enum.join("/")
-    File.mkdir_p(repo_dir)
+    entity_dir = String.split(entity_filename, "/") |> Enum.slice(0..-2//1) |> Enum.join("/")
+    File.mkdir_p(entity_dir)
 
     with false <- File.exists?(repo_filename) && {:error, "Repo exists: #{repo_filename}"},
          false <- File.exists?(entity_filename) && {:error, "Entity exists: #{entity_filename}"},
