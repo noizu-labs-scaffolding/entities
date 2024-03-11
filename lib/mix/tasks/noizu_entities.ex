@@ -24,6 +24,8 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     entity_filename = "lib/#{app_name}/#{repo_snake}/#{entity_snake}.ex"
     extracted_params = prep_params(params) |> IO.inspect(label: :params)
     File.mkdir_p("lib/#{app_name}/#{repo_snake}")
+    repo_dir = String.split(repo_filename, "/") |> Enum.drop_last(1) |> Enum.join("/")
+    File.mkdir_p(repo_dir)
 
     with false <- File.exists?(repo_filename) && {:error, "Repo exists: #{repo_filename}"},
          false <- File.exists?(entity_filename) && {:error, "Entity exists: #{entity_filename}"},
@@ -331,8 +333,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       end
     """
 
-    singular = Inflex.singularize(entity_name)
-    plural = Inflex.pluralize(entity_name)
+    entity_module = entity_name
+    entity_alias = String.split(entity_name, ".") |> List.last()
+    entity_name_escaped = String.replace(entity_name, ".", "_")
+    singular = Inflex.singularize(entity_name_escaped)
+    plural = Inflex.pluralize(entity_name_escaped)
     singular_snake = Macro.underscore(singular)
     plural_snake = Macro.underscore(plural)
 
@@ -343,7 +348,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       #-------------------------------------------------------------------------------
 
       defmodule #{repo_module} do
-        alias #{app_name}.#{context_name}.#{entity_name}
+        alias #{app_name}.#{context_name}.#{entity_module}
         use Noizu.Repo
         def_repo()
 
@@ -371,7 +376,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         @doc \"""
         Updates a #{singular_snake}.
         \"""
-        def update_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs, context, options \\\\ []) do
+        def update_#{singular_snake}(%#{entity_alias}{} = #{singular_snake}, attrs, context, options \\\\ []) do
           #{singular_snake}
           |> change_#{singular_snake}(attrs)
           |> update(context, options)
@@ -380,14 +385,14 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         @doc \"""
         Deletes a #{singular_snake}.
         \"""
-        def delete_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, context, options \\\\ []) do
+        def delete_#{singular_snake}(%#{entity_alias}{} = #{singular_snake}, context, options \\\\ []) do
           delete(#{singular_snake}, context, options)
         end
 
         @doc \"""
         Returns an Changeset for tracking #{singular_snake} changes.
         \"""
-        def change_#{singular_snake}(%#{entity_name}{} = #{singular_snake}, attrs \\\\ %{}) do
+        def change_#{singular_snake}(%#{entity_alias}{} = #{singular_snake}, attrs \\\\ %{}) do
           # NYI: Implement custom changeset logic here.
           #{singular_snake}
         end
