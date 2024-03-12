@@ -88,7 +88,7 @@ defmodule Noizu.Repo.Meta do
 
       :else ->
         with {:ok, {id, index}} <-
-               Noizu.Entity.UID.generate(Module.concat([entity.__struct__, Repo]), node()) do
+               Noizu.Entity.UID.generate(entity.__struct__.__noizu_meta__()[:repo], node()) do
           case Noizu.Entity.Meta.id(entity) do
             {field, Noizu.Entity.Meta.Identifier.id_settings(type: :integer)} ->
               id =
@@ -121,35 +121,35 @@ defmodule Noizu.Repo.Meta do
         end
     end
     |> case do
-      {:ok, entity} ->
-        entity =
-          Noizu.Entity.Meta.fields(entity)
-          |> Enum.map(fn
-            {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
-              nil
-            {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
-              nil
-            {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
-              with {:ok, update} <-
-                     apply(type, :type__before_create, [
-                       get_in(entity, [Access.key(field)]),
-                       field_settings,
-                       context,
-                       options
-                     ]) do
-                {field, update}
-              else
-                _ -> nil
-              end
-          end)
-          |> Enum.filter(& &1)
-          |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
+         {:ok, entity} ->
+           entity =
+             Noizu.Entity.Meta.fields(entity)
+             |> Enum.map(fn
+               {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
+                 nil
+               {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
+                 nil
+               {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
+                 with {:ok, update} <-
+                        apply(type, :type__before_create, [
+                          get_in(entity, [Access.key(field)]),
+                          field_settings,
+                          context,
+                          options
+                        ]) do
+                   {field, update}
+                 else
+                   _ -> nil
+                 end
+             end)
+             |> Enum.filter(& &1)
+             |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
 
-        {:ok, entity}
+           {:ok, entity}
 
-      v ->
-        v
-    end
+         v ->
+           v
+       end
   end
 
   # -------------------
@@ -185,34 +185,34 @@ defmodule Noizu.Repo.Meta do
       :else -> {:error, :id_required}
     end
     |> case do
-      {:ok, entity} ->
-        entity =
-          Noizu.Entity.Meta.fields(entity)
-          |> Enum.map(fn
-            {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
-              nil
+         {:ok, entity} ->
+           entity =
+             Noizu.Entity.Meta.fields(entity)
+             |> Enum.map(fn
+               {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
+                 nil
 
-            {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
-              with {:ok, update} <-
-                     apply(type, :type__before_update, [
-                       get_in(entity, [Access.key(field)]),
-                       field_settings,
-                       context,
-                       options
-                     ]) do
-                {field, update}
-              else
-                _ -> nil
-              end
-          end)
-          |> Enum.filter(& &1)
-          |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
+               {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
+                 with {:ok, update} <-
+                        apply(type, :type__before_update, [
+                          get_in(entity, [Access.key(field)]),
+                          field_settings,
+                          context,
+                          options
+                        ]) do
+                   {field, update}
+                 else
+                   _ -> nil
+                 end
+             end)
+             |> Enum.filter(& &1)
+             |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
 
-        {:ok, entity}
+           {:ok, entity}
 
-      v ->
-        v
-    end
+         v ->
+           v
+       end
   end
 
   # -------------------
