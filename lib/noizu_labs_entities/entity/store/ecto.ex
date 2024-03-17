@@ -178,7 +178,7 @@ else
           options
         ) do
       with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity),
-           record <- apply(store, :get, [table, id]) do
+           record = %{} <- apply(store, :get, [table, id]) do
         from_record(record, settings, context, options)
       end
     end

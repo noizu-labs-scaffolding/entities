@@ -142,7 +142,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
         options
       ) do
     with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity),
-         record <- apply(table, :read!, [id]) do
+         record = %{} <- apply(table, :read!, [id]) do
       from_record(record, settings, context, options)
     end
   end
