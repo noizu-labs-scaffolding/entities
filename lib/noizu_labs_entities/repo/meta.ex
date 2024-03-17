@@ -191,7 +191,8 @@ defmodule Noizu.Repo.Meta do
              |> Enum.map(fn
                {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
                  nil
-
+               {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
+                 nil
                {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
                  with {:ok, update} <-
                         apply(type, :type__before_update, [
@@ -302,7 +303,8 @@ defmodule Noizu.Repo.Meta do
     |> Enum.map(fn
       {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
         nil
-
+      {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
+        nil
       {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
         with {:ok, update} <-
                apply(type, :type__after_delete, [
