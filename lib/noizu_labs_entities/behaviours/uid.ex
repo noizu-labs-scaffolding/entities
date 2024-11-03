@@ -5,6 +5,7 @@
 defmodule Noizu.Entity.UID do
   @handler Application.compile_env(:noizu_labs_entities, :uid_provider, Noizu.Entity.UID.Stub)
   @callback generate(any, any) :: any
+  @callback ref(any) :: {:ok, any} | {:error, any}
   def generate(r, n), do: apply(@handler, :generate, [r, n])
   def ref(id), do: apply(@handler, :ref, [id])
 end
