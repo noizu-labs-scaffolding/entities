@@ -48,8 +48,8 @@ defmodule Noizu.EntityRepoBehaviour do
           if Semaphore.acquire({:sref_handlers, :lock}, 1) do
             handlers = rebuild_sref_handlers()
             :persistent_term.put({__MODULE__, :handlers}, handlers)
-            handlers
             Semaphore.release({:sref_handlers, :lock})
+            handlers
           else
             %{}
           end
