@@ -22,6 +22,7 @@ defmodule Noizu.EntityRepoBehaviour do
          end
        )
     |> Enum.map(fn(m) ->
+      Code.ensure_loaded?(m)
       if function_exported?(m, :__noizu_meta__, 0)  do
         if sref = apply(m, :__noizu_meta__, [])[:sref] do
           {sref, m}
