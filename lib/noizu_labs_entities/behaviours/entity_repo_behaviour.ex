@@ -73,7 +73,7 @@ defmodule Noizu.EntityRepoBehaviour do
             {:error, {:no_repo, kind}}
           end
         else
-          {:error, :no_kind}
+          _ -> {:error, :no_kind}
         end
       end
 
