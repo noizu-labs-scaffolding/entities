@@ -36,8 +36,8 @@ defmodule Noizu.EntityRepoBehaviour do
     options[:application] || raise "No Application Provided"
     options[:module] || raise "No Module Provided"
     quote do
-      @behaviour Noizu.EntityRepo
-      import Noizu.EntityRepo
+      @behaviour Noizu.EntityRepoBehaviour
+      import Noizu.EntityRepoBehaviour
 
       def rebuild_sref_handlers() do
         rebuild_sref_handlers(unquote(options[:application]), unquote(options[:module]))
