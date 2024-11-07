@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                               (options.args[:schema] == false && "--no-schema")
                             ]
                             |> Enum.reject(&is_nil/1)
-            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
 
             #Mix.Shell.cmd("mix app phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
             Mix.Project.in_project(
@@ -70,7 +70,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                               (options.args[:schema] == false && "--no-schema")
                             ]
                             |> Enum.reject(&is_nil/1)
-            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
             Mix.Project.in_project(
               options.app,
               "#{options.config[:apps_path]}/#{options.app}",
@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                               (options.args[:schema] == false && "--no-schema")
                             ]
                             |> Enum.reject(&is_nil/1)
-            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
             Mix.Shell.IO.info("Running: mix phx.gen.live in #{Enum.join(command, " ")}")
             Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
           ecto ->
@@ -98,7 +98,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                               (options.args[:schema] == false && "--no-schema")
                             ]
                             |> Enum.reject(&is_nil/1)
-            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
             Mix.Shell.IO.info("Running: mix phx.gen.live in #{Enum.join(command, " ")}")
             Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
           :else ->
