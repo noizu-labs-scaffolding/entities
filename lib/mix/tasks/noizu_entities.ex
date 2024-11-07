@@ -1,407 +1,536 @@
 defmodule Mix.Tasks.Nz.Gen.Entity do
   @moduledoc """
-  mix nz.gen.entity Repo Entity plural_snake id=uuid field=field_name:type --sref=reference --store=ecto
-  example: mix nz.gen.entity Users User users id=uuid field=name:string field=email:string field=password:string --store=ecto --live
-  use --no-live to prevent liveview generation
+  mix nz.gen.entity Repo Entity schema --sref=reference --store=ecto --id=uuid --field=field_name:type
+  use --no-live to prevent live view generation
+  use --no-ecto to prevent context and entity generation
   """
   use Mix.Task
-  @shortdoc "Setup new Entities"
-  @author Application.compile_env(Mix.Project.config()[:app], :author, "General")
-  @org Application.compile_env(Mix.Project.config()[:app], :group, "General")
-  @ecto_types ["integer", "float", "string", "boolean", "binary", "date", "time", "naive_datetime", "utc_datetime", "utc_datetime_usec", "uuid", "map", "array", "decimal", "json", "jsonb", "any"]
+  @ecto_types ["integer", "float", "string", "boolean", "binary", "date", "time", "naive_datetime", "utc_datetime", "utc_datetime_usec", "uuid", "map", "array", "decimal", "json", "jsonb", "enum", "any"]
 
-  def run([context_name, entity_name, table_name | params]) do
-    create_entity(context_name, entity_name, table_name, params)
+  defp extract_args(argv) do
+    OptionParser.parse(
+      argv || [],
+      switches: [
+        app: :string,
+        sref: :string,
+        id: :string,
+        store: :keep,
+        live: :boolean,
+        ecto: :boolean,
+        field: :keep,
+        meta: :keep
+      ]
+    )
   end
 
-  def create_entity(context_name, entity_name, table_name, params) do
-    Mix.Task.run("app.config", [])
-    app_name = Mix.Project.config()[:app] |> Atom.to_string()
+  def run(args) do
+    options = gen_options(args)
+    check_files(options)
+    setup_directories(options)
 
-    repo_snake = Macro.underscore(context_name)
-    entity_snake = Macro.underscore(entity_name)
-    repo_filename = "lib/#{app_name}/#{repo_snake}.ex"
-    entity_filename = "lib/#{app_name}/#{repo_snake}/#{entity_snake}.ex"
-    extracted_params = prep_params(params) |> IO.inspect(label: :params)
-    File.mkdir_p("lib/#{app_name}/#{repo_snake}")
-    entity_dir = String.split(entity_filename, "/") |> Enum.slice(0..-2//1) |> Enum.join("/")
-    File.mkdir_p(entity_dir)
-
-    with false <- File.exists?(repo_filename) && {:error, "Repo exists: #{repo_filename}"},
-         false <- File.exists?(entity_filename) && {:error, "Entity exists: #{entity_filename}"},
-         {:ok, {context_contents, entity_contents}} <- entity_template(context_name, entity_name, params) do
-      with :ok <- File.write(repo_filename, context_contents) do
-        IO.puts("#{repo_filename} Generated")
-
-        with :ok <- File.write(entity_filename, entity_contents) do
-          IO.puts("#{entity_filename} Generated")
-
-
-          # app_name = app_name()
-          live = Enum.find_value(params, fn
-            "--live" -> :live
-            "--no-live" -> :no_live
-            _ -> nil
-          end)
-
-          ecto = Enum.find_value(params, fn
-            "--ecto" -> :ecto
-            "--no-ecto" -> :no_ecto
-            _ -> nil
-          end)
-
-
-          fields = extract_fields(extracted_params[:field], extracted_params[:field_meta])
-          storage = extract_storage(extracted_params[:store])
-
-          unless live == :no_live do
-            add_live(context_name, entity_name, table_name, fields)
-          else
-            unless ecto == :no_ecto do
-              # Ecto Setup
-              if storage[:ecto] do
-                add_ecto(context_name, entity_name, table_name, fields)
-              end
-            end
-          end
-        else
-          error -> IO.inspect(error, label: "Error")
-        end
-      else
-        error -> IO.inspect(error, label: "Error")
-      end
+    ecto = is_nil(args[:ecto]) || args[:ecto]
+    live = is_nil(args[:live]) || args[:live]
+    ecto_gen_fields = if (ecto || live) do
+      ecto_gen(options)
     end
-  rescue e -> IO.inspect(e, label: "Error")
-  end
 
-  defp app_name() do
-    Mix.Project.config()[:app]
-    |> Atom.to_string()
-    |> String.split("_")
-    |> Enum.map(&String.capitalize(&1))
-    |> Enum.join("")
-  end
+    # Generate Context and Entity Files
+    with {:ok, context_body} <- context_template(options),
+         {:ok, entity_body} <- entity_template(options) do
+      Mix.Shell.IO.info("Entity: #{entity_body}")
+      #File.write(options.context.file, context_body)
+      #File.write(options.entity.file, entity_body)
+      if Mix.Project.umbrella?(options.config) do
 
-  #  defp entity_name(name, _) do
-  #    String.split(name, ".")
-  #    |> Enum.map(&String.capitalize(&1))
-  #    |> Enum.join(".")
-  #  end
 
-  defp prep_params(params) do
-    Enum.group_by(params, fn param ->
-      cond do
-        String.starts_with?(param, "--sref=") -> :sref
-        String.starts_with?(param, "field=") -> :field
-        String.starts_with?(param, "field.") -> :field_meta
-        String.starts_with?(param, "id=") -> :id
-        String.starts_with?(param, "--store=") -> :store
-        :else -> :misc
-      end
-    end)
-  end
-
-  defp extract_sref(params) do
-    Enum.find_value(params, fn param ->
-      case String.split(param, "=") do
-        ["--sref", x] -> x
-        _ -> nil
-      end
-    end)
-  end
-
-  defp extract_id(nil), do: nil
-  defp extract_id(params) do
-    Enum.map(
-      params,
-      fn
-        "id=" <> f ->
-          case f do
-            "uuid" -> ":uuid"
-            "integer" -> ":integer"
-            "ref" -> ":ref"
-            "dual_ref" -> ":dual_ref"
-            _ -> f
-          end
-        _ ->
-          nil
-      end
-    )
-    |> Enum.filter(& &1)
-    |> List.first()
-  end
-
-  defp extract_field_meta(field, meta)
-  defp extract_field_meta(_, nil), do: []
-  defp extract_field_meta(field, meta) do
-    Enum.map(
-      meta,
-      fn
-        "field." <> f ->
-          cond do
-            String.starts_with?(f, field <> ".") ->
-              f = String.trim_leading(f, field <> ".")
-              case String.split(f, "=") do
-                [name] -> {String.downcase(name), "true"}
-                [name | value] -> {String.downcase(name), Enum.join(value, "=")}
-                _ -> nil
-              end
-            :else -> nil
-          end
-        _ ->
-          nil
-      end
-    )
-    |> Enum.reject(&is_nil/1)
-  end
-
-  defp extract_fields(params, meta)
-  defp extract_fields(nil, _), do: []
-  defp extract_fields(params, meta) do
-    Enum.map(
-      params,
-      fn
-        "field=" <> f ->
-          case String.split(f, ":") do
-            [name] ->
-              settings = extract_field_meta(name, meta)
-              {:field, {name, nil, settings}}
-            [name| type] ->
-              settings = extract_field_meta(name, meta)
-              type = Enum.join(type, ":")
-              type = String.trim(type)
-              {:field, {name, type, settings}}
-          end
-
-        _ ->
-          nil
-      end
-    )
-    |> Enum.filter(& &1)
-  end
-
-  defp extract_storage(nil), do: []
-
-  defp extract_storage(params) do
-    Enum.map(
-      params,
-      fn
-        "--store=ecto" -> {:ecto, :storage}
-        "--store=redis" -> {:redis, :storage}
-        "--store=mnesia" -> {:mnesia, :storage}
-        _ -> nil
-      end
-    )
-    |> Enum.filter(& &1)
-  end
-
-  defp add_live(context_name, entity_name, table, fields) do
-    IO.inspect(fields, label: :fields)
-    ecto = Enum.map(fields,
-             fn
-               {_, {field, nil, _settings}} -> nil
-               {_, {field, "{:array," <> type, _settings}} ->
-                 type = String.trim(type)
-                 type = String.trim_trailing(type, "}")
-                 type = String.trim_leading(type, ":")
-                 "#{field}:array:#{type}"
-               {_, {field, type, _settings}} when type in @ecto_types ->
-                 "#{field}:#{type}"
-               {_, {field, type, _settings}} ->
-                 try do
-                   IO.inspect(type, label: :type)
-                   m = String.to_existing_atom("Elixir.#{type}") |> IO.inspect
-                   with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
-                     x
-                   else
-                     _ -> nil
-                   end
-                 rescue
-                   e ->
-                     IO.inspect(e, label: :error)
-                     "#{field}:#{type}"
-                 end
-             end) |> Enum.reject(&is_nil/1) |> List.flatten()
-    ecto = ["Schema" <> "." <> context_name, entity_name, table | ecto] |> IO.inspect(label: "mix phx.gen.live")
-    apply(Mix.Tasks.Phx.Gen.Live, :run, [ecto])
-  end
-
-  defp add_ecto(context_name, entity_name, table, fields) do
-    ecto = Enum.map(fields,
-             fn
-               {_, {field, nil, _settings}} -> nil
-               {_, {field, "{:array," <> type, _settings}} ->
-                 type = String.trim(type)
-                 type = String.trim_trailing(type, "}")
-                 type = String.trim_leading(type, ":")
-                 "#{field}:array:#{type}"
-               {_, {field, type, _settings}} when type in @ecto_types ->
-                 "#{field}:#{type}"
-               {_, {field, type, _settings}} ->
-                 try do
-                   m = String.to_existing_atom("Elixir.#{type}")
-                   with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
-                     x
-                   else
-                     _ -> nil
-                   end
-                 rescue
-                   _ -> "#{field}:#{type}"
-                 end
-             end) |> Enum.reject(&is_nil/1) |> List.flatten()
-    ecto = ["Schema" <> "." <> context_name <> "." <> entity_name, table | ecto]
-    apply(Mix.Tasks.Phx.Gen.Schema, :run, [ecto])
-  end
-
-  def entity_template(context_name, entity_name, params) do
-    app_name = app_name()
-    sm = app_name <> "." <> context_name <> "." <> entity_name
-    repo_module = app_name <> "." <> context_name
-    params = prep_params(params)
-    # Sref, Fields, Storage
-    sref = extract_sref(params[:sref])
-    fields = extract_fields(params[:field], params[:field_meta])
-    id_type = extract_id(params[:id]) || ":uuid"
-    storage = extract_storage(params[:store])
-
-    # Ecto Setup
-    # storage[:ecto] && add_ecto(name, fields)
-
-    # Payload Snippet
-    entity_fields =
-      Enum.map(fields, fn {_, {field, type, settings}} ->
-        default = Enum.find_value(settings, "nil", fn
-          {"default", x} ->
-            x
-            |> String.split("\n")
-            |> Enum.join("\n    " <> String.duplicate(" ", String.length("field :#{field}, ")))
-          _ -> nil
-        end)
-
-        attributes = Enum.map(settings, fn
-          {"default", _} -> nil
-          {type, value} ->
-            value = value
-                    |> String.split("\n")
-                    |> Enum.join("\n    " <> String.duplicate(" ", String.length("@#{type} ")))
-            "@#{type} #{value}"
-        end)
-                     |> Enum.reject(&is_nil/1)
-                     |> Enum.join("\n")
-        attributes = attributes != "" && attributes <> "\n" || ""
-        ltype = type && String.downcase(type)
         cond do
-          ltype in @ecto_types ->
-            "#{attributes}field :#{field}, #{default}, :#{ltype}"
-          is_nil(ltype) ->
-            cond do
-              default != "nil" -> "#{attributes}field :#{field}, #{default}"
-              :else -> "#{attributes}field :#{field}"
-            end
-          :else ->
-            "#{attributes}field :#{field}, #{default}, #{type}"
-        end |> String.split("\n")
-      end)
-      |> List.flatten()
-      |> Enum.join("\n      ")
-
-    entity_persistence =
-      Enum.map(
-        storage,
-        fn {store, settings} ->
-          "@persistence {#{inspect(store)}, #{inspect(settings)}}"
+          live ->
+            app = :"#{options.app}_web"
+            app_dir = "#{app}"
+            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields]
+            #Mix.Shell.cmd("mix app phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
+            Mix.Project.in_project(
+              app,
+              "#{options.config[:apps_path]}/#{app_dir}",
+              fn module ->
+                Mix.Shell.IO.info("Running: mix phx.gen.live in #{module} #{Enum.join(command, " ")}")
+                Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
+              end)
+          ecto ->
+            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields]
+            Mix.Project.in_project(
+              options.app,
+              "#{options.config[:apps_path]}/#{options.app}",
+              fn module ->
+                Mix.Shell.IO.info("Running: mix phx.gen.context in #{module} #{Enum.join(command, " ")}")
+                Mix.Shell.cmd("mix phx.gen.context #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
+              end)
+          :else -> :nop
         end
-      )
-      |> Enum.join("\n    ")
 
-    entity = """
-      #-------------------------------------------------------------------------------
-      # Author: #{@author}
-      # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
-      #-------------------------------------------------------------------------------
-
-      defmodule #{sm} do
-        use Noizu.Entities
-
-        @vsn 1.0
-        #{(sref && "@sref \"#{sref}\"") || ""}
-        #{entity_persistence}
-        def_entity do
-          id #{id_type}
-          #{entity_fields}
+      else
+        cond do
+          live ->
+            Mix.Shell.IO.info("LIVE")
+          ecto ->
+            Mix.Shell.IO.info("Ecto")
+          :else ->
+            Mix.Shell.IO.info("Skipping Ecto Setup")
+            :nop
         end
       end
-    """
 
-    entity_module = entity_name
-    entity_alias = String.split(entity_name, ".") |> List.last()
-    entity_name_escaped = entity_name |> String.replace(".", "")
-    singular = Inflex.singularize(entity_name_escaped)
-    plural = Inflex.pluralize(entity_name_escaped)
-    singular_snake = Macro.underscore(singular)
-    plural_snake = Macro.underscore(plural)
+    end
+  end
 
-    repo = """
+
+  def ecto_gen(options) do
+    meta = extract_meta(options)
+    fields = Keyword.get_values(options.args, :field)
+             |> Enum.map(
+                  fn
+                    x ->
+                      case String.split(x, ":") do
+                        [field] ->
+                          # @TODO also check if meta attribute for ecto was set @ecto type: value
+                          # temp work around
+                          if t = meta[field] && get_in(meta[field], ["ecto.type"]) do
+                            "#{field}:#{t}"
+                          end
+                        [field | type] ->
+                          type = Enum.join(type, ":") |> String.trim()
+                          case type do
+                            "array:" <> _ -> "#{field}:#{type}"
+                            "enum:" <> _ -> "#{field}:#{type}"
+                            t when t in @ecto_types -> "#{field}:#{type}"
+                            x ->
+                              try do
+                                # @TODO also check if meta attribute for ecto was set @ecto type: value
+                                # temp work around
+                                if t = meta[field] && get_in(meta[field], ["ecto.type"]) do
+                                  "#{field}:#{t}"
+                                else
+                                  m = String.to_existing_atom("Elixir.#{type}")
+                                  with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
+                                    x
+                                  else
+                                    _ -> nil
+                                  end
+                                end
+                              rescue
+                                _ ->
+                                  Mix.Shell.IO.warn("Failed to determine Type #{type} for field #{field}")
+                                  exit(1)
+                              end
+                          end
+                      end
+                  end
+                )
+             |> Enum.reject(&is_nil/1)
+             |> List.flatten()
+  end
+
+
+  def context_template(options) do
+    author = cond do
+      authors = options.config[:authors] -> Enum.join(authors, ", ")
+      :else -> options.app_name
+    end
+    org = options.config[:organization] || options.app_name
+
+    app = options.app_name
+    context = options.context.name
+    entity = options.entity.name
+    x = entity |> String.replace(".", "")
+    singular = Macro.underscore(Inflex.singularize(x))
+    plural = Macro.underscore(Inflex.pluralize(x))
+    entity_alias = "Entity"
+    template = """
       #-------------------------------------------------------------------------------
-      # Author: #{@author}
-      # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
+      # Author: #{author}
+      # Copyright (C) #{DateTime.utc_now().year} #{org} All rights reserved.
       #-------------------------------------------------------------------------------
 
-      defmodule #{repo_module} do
-        alias #{app_name}.#{context_name}.#{entity_module}
+      defmodule #{app}.#{context} do
+        @moduledoc \"""
+        Context for #{app}.#{context}.#{entity}
+        \"""
+        alias #{app}.#{context}.#{entity}, as: #{entity_alias}
         use Noizu.Repo
         def_repo()
 
         @doc \"""
-        Returns the list of #{plural_snake}.
+        Returns the list of #{plural}.
         \"""
-        def list_#{plural_snake}(context, options \\\\ []) do
+        def list_#{plural}(context, options \\\\ []) do
           # list(context)
           []
         end
 
         @doc \"""
-        Gets a single #{singular_snake}.
+        Gets a single #{singular}.
 
         \"""
-        def get_#{singular_snake}(id, context, options \\\\ []), do: get(id, context, options)
+        def get_#{singular}(id, context, options \\\\ []), do: get(id, context, options)
 
         @doc \"""
-        Creates a #{singular_snake}.
+        Creates a #{singular}.
         \"""
-        def create_#{singular_snake}(#{singular_snake}, context, options \\\\ []) do
-          create(#{singular_snake}, context, options)
+        def create_#{singular}(#{singular}, context, options \\\\ []) do
+          create(#{singular}, context, options)
         end
 
         @doc \"""
-        Updates a #{singular_snake}.
+        Updates a #{singular}.
         \"""
-        def update_#{singular_snake}(%#{entity_alias}{} = #{singular_snake}, attrs, context, options \\\\ []) do
-          #{singular_snake}
-          |> change_#{singular_snake}(attrs)
+        def update_#{singular}(%#{entity_alias}{} = #{singular}, attrs, context, options \\\\ []) do
+          #{singular}
+          |> change_#{singular}(attrs)
           |> update(context, options)
         end
 
         @doc \"""
-        Deletes a #{singular_snake}.
+        Deletes a #{singular}.
         \"""
-        def delete_#{singular_snake}(%#{entity_alias}{} = #{singular_snake}, context, options \\\\ []) do
-          delete(#{singular_snake}, context, options)
+        def delete_#{singular}(%#{entity_alias}{} = #{singular}, context, options \\\\ []) do
+          delete(#{singular}, context, options)
         end
 
         @doc \"""
-        Returns an Changeset for tracking #{singular_snake} changes.
+        Returns an Changeset for tracking #{singular} changes.
         \"""
-        def change_#{singular_snake}(%#{entity_alias}{} = #{singular_snake}, attrs \\\\ %{}) do
+        def change_#{singular}(%#{entity_alias}{} = #{singular}, attrs \\\\ %{}) do
           # NYI: Implement custom changeset logic here.
-          #{singular_snake}
+          #{singular}
         end
       end
     """
-    {:ok, {repo, entity}}
-  rescue
-    e ->
-      IO.inspect(Exception.format(:error, e, __STACKTRACE__), label: :error)
+    {:ok, template}
+  end
+
+  def entity_template(options) do
+    author = cond do
+      authors = options.config[:authors] -> Enum.join(authors, ", ")
+      :else -> options.app_name
+    end
+    org = options.config[:organization] || options.app_name
+    app = options.app_name
+    context = options.context.name
+    entity = options.entity.name
+    x = entity |> String.replace(".", "")
+    singular = Macro.underscore(Inflex.singularize(x))
+    plural = Macro.underscore(Inflex.pluralize(x))
+
+    meta = extract_meta(options)
+    {field_order, fields} = extract_fields(meta, options)
+    stores = extract_stores(options)
+    id_type = extract_id(options)
+    sref = extract_sref(options)
+    sref_block = cond do
+      is_nil(sref) -> ""
+      true -> "@sref #{sref}"
+    end
+
+    persistence_block = cond do
+      stores == [] -> nil
+      is_list(stores) ->
+        Enum.map(stores,
+          fn
+            store ->
+              store = store
+                      |> indent(String.length("@persistence "))
+                      |> String.lstrip()
+              "@persistence #{store}"
+          end
+        ) |> Enum.join("\n")
+    end
+
+    field_block = Enum.map(field_order || [],
+                    fn
+                      field ->
+
+                        settings = fields[field]
+                        type = settings.type
+                        default = cond do
+                          default = settings.meta["default"] -> default
+                          :else -> "nil"
+                        end
+                        field_indent = String.duplicate(" ", String.length("field :#{field}, "))
+                        default_block = indent(default, field_indent) |> String.lstrip()
+
+                        attribute_block = Enum.map(settings.meta || [],
+                                            fn
+                                              {flag, _} when flag in ["default","ecto.type"] -> nil
+                                              {attribute, value} ->
+                                                value = value
+                                                        |> indent(String.length("@#{attribute} "))
+                                                        |> String.lstrip()
+                                                "@#{attribute} #{value}"
+                                            end)
+                                          |> Enum.reject(&is_nil/1)
+                                          |> Enum.join("\n")
+
+                        type_indent = case String.split(default_block, "\n") do
+                          [x] ->
+                            field_indent <> String.duplicate(" ", String.length(x) + String.length(", "))
+                          l when is_list(x) ->
+                            x = List.last(l)
+                            String.duplicate(" ", String.length(x) + String.length(", "))
+                        end
+
+                        type_block = case type do
+                                       nil -> ""
+                                       "array:" <> type -> ", {:array, :#{type}}"
+                                       t when t in @ecto_types -> ", :#{t}"
+                                       x -> ", " <> x
+                                     end
+                                     |> indent(type_indent)
+                                     |> String.lstrip()
+
+                        if attribute_block == "" do
+                          """
+                          field :#{field}, #{default}#{type_block}
+                          """ |> String.strip()
+                        else
+                          """
+                          #{attribute_block}
+                          field :#{field}, #{default}#{type_block}
+                          """ |> String.strip()
+                        end
+                    end) |> Enum.join("\n")
+
+    template = """
+    #-------------------------------------------------------------------------------
+    # Author: #{@author}
+    # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
+    #-------------------------------------------------------------------------------
+
+    defmodule #{app}.#{context}.#{entity} do
+      use Noizu.Entities
+
+      @vsn 1.0
+      @repo #{app}.#{context}
+      #{sref_block}
+      #{persistence_block && persistence_block |> indent("  ") |> String.lstrip()}
+      def_entity do
+        id #{id_type}
+        #{field_block |> indent("    ") |> String.lstrip()}
+      end
+    end
+    """
+    {:ok, template}
+  end
+
+  def indent(string, indent \\ "  ")
+  def indent(string, indent) when is_integer(indent) do
+    indent(string, String.duplicate(" ", indent))
+  end
+  def indent(string, indent) do
+    string
+    |> String.split("\n")
+    |> Enum.map(fn x -> indent <> x end)
+    |> Enum.join("\n")
+  end
+
+  def dedent(string) do
+    lines = String.split(string, "\n")
+    first_line = Enum.at(lines, 0)
+    dedent = String.length(first_line) - String.length(String.trim(first_line))
+    strip = String.duplicate(" ", dedent)
+
+    lines
+    |> Enum.map(&String.lstrip(&1, strip))
+    |> Enum.join("\n")
+  end
+
+
+  def extract_sref(options) do
+    cond do
+      sref = options.args[:sref] -> sref
+      :else -> nil
+    end
+  end
+
+
+  def extract_id(options) do
+    case options.args[:id] do
+      "atom" -> ":atom"
+      "uuid" -> ":uuid"
+      "integer" -> ":integer"
+      "ref" -> ":ref"
+      "dual_ref" -> ":dual_ref"
+      x when is_bitstring(x) -> x
+      nil -> ":uuid"
+    end
+  end
+
+  def extract_stores(options) do
+    Keyword.get_values(options.args, :store)
+    |> Enum.map(
+         fn
+           "ecto" -> "{:ecto, :storage}"
+           "redis" -> "{:redis, :storage}"
+           "amnesia" -> "{:amnesia, :storage}"
+           "mnesia" -> "{:mnesia, :storage}"
+           x when is_bitstring(x) -> x
+         end
+       )
+  end
+
+  def extract_fields(meta, options) do
+
+    fields = Keyword.get_values(options.args, :field)
+
+    order = fields
+            |> Enum.map(
+                 fn
+                   x ->
+                     case String.split(x, ":") do
+                       [field] -> field
+                       [field | _] -> field
+                     end
+                 end)
+            |> Enum.uniq()
+    fields = fields
+             |> Enum.map(
+                  fn
+                    x ->
+                      case String.split(x, ":") do
+                        [field] ->
+                          m = meta[field] || %{}
+                          {field, %{type: nil, meta: m}}
+                        [field | type] ->
+                          m = meta[field] || %{}
+                          type = Enum.join(type, ":") |> String.trim()
+                          type = case type do
+                            "array:" <> _ -> "{:array, :#{type}}"
+                            "enum:" <> values ->
+                              values = Enum.split(values, ":")
+                                       |> Enum.map(&":#{String.strip(&1)}")
+                                       |> Enum.join(", ")
+                              "{:enum, [#{values}]}"
+                            t when t in @ecto_types -> ":#{t}"
+                            x -> x
+                          end
+                          {field, %{type: type, meta: m}}
+                      end
+                  end
+                )
+             |> Map.new()
+    {order, fields}
+  end
+
+  def extract_meta(options) do
+    Keyword.get_values(options.args, :meta)
+    |> Enum.map(
+         fn
+           x ->
+             case String.split(x, ":") do
+               [field | meta] ->
+                 meta = Enum.join(meta, ":")
+                 case String.split(meta, "=") do
+                   [k] -> {field, {k, "true"}}
+                   [k|v] -> {field, {k, Enum.join(v, "=")}}
+                 end
+             end
+         end)
+    |> Enum.group_by(&elem(&1,0))
+    |> Enum.map(
+         fn
+           {field,x} ->
+             v = x
+                 |> Enum.map(&elem(&1,1))
+                 |> Map.new()
+             {field, v}
+         end)
+    |> Map.new()
+  end
+
+
+  def usage do
+    """
+    mix nz.gen.entity Repo Entity schema --sref=reference --store=ecto --id=uuid --field=field_name:type --meta=field_name:opt --meta=field_name:opt=value
+    use --no-live to prevent live view generation
+    use --no-ecto to prevent context and entity generation
+    """
+  end
+
+  def gen_options([context, entity, table | argv]) do
+    Mix.Task.run("app.config", [])
+    {args, params, errors} = extract_args(argv)
+    unless errors == [] do
+      Mix.Shell.IO.warn("Invalid arguments: #{inspect(errors)}")
+      Mix.Shell.IO.info(usage())
+      exit(1)
+    end
+    unless params == [] do
+      Mix.Shell.IO.warn("Invalid arguments: #{inspect(params)}")
+      Mix.Shell.IO.info(usage())
+      exit(1)
+    end
+
+    config = Mix.Project.config()
+    path = path(args, config)
+    context_snake = Macro.underscore(context)
+    context_file = "#{path}/entities/#{context_snake}.ex"
+    entity_snake = Macro.underscore(entity)
+    entity_file = "#{path}/entities/#{context_snake}/#{entity_snake}.ex"
+
+    options = %{
+      app_name: app_name(args, config),
+      app: app_atom(args, config),
+      args: args,
+      config: config,
+      path: path,
+      context: %{name: context, snake: context_snake, file: context_file},
+      entity: %{name: entity, snake: entity_snake, file: entity_file},
+      table: %{name: table},
+    }
+  end
+
+  defp setup_directories(options) do
+    dir = String.split(options.entity.file, "/") |> Enum.slice(0..-2//1) |> Enum.join("/")
+    File.mkdir_p(dir)
+  end
+
+  defp check_files(options) do
+    if File.exists?(options.context.file) do
+      Mix.Shell.IO.warn("Context File Already Exists: #{options.context.file}")
+      exit(1)
+    end
+    if File.exists?(options.entity.file) do
+      Mix.Shell.IO.warn("Entity File Already Exists: #{options.entity.file}")
+      exit(1)
+    end
+  end
+
+  defp path(args, config) do
+    cond do
+      Mix.Project.umbrella?(config) ->
+        app_path = config[:apps_path] || "apps"
+        if app = args[:app] do
+          "#{app_path}/#{app}/lib/#{app}"
+        else
+          Mix.Shell.IO.warn("--app argument required for umbrella project")
+          exit(1)
+        end
+      app = config[:app] -> "lib/#{app}"
+    end
+  end
+
+  defp app_atom(args, config) do
+    cond do
+      Mix.Project.umbrella?(config) -> String.to_atom(args[:app])
+      app = config[:app] -> app
+    end
+  end
+
+  defp app_name(args, config) do
+    app_atom(args, config)
+    |> Atom.to_string()
+    |> String.split("_")
+    |> Enum.map(&String.capitalize(&1))
+    |> Enum.join("")
   end
 
 end
