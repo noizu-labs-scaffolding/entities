@@ -433,7 +433,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                           m = meta[field] || %{}
                           type = Enum.join(type, ":") |> String.trim()
                           type = case type do
-                            "array:" <> _ -> "{:array, :#{type}}"
+                            "array:" <> t -> "{:array, :#{t}}"
                             "enum:" <> values ->
                               values = Enum.split(values, ":")
                                        |> Enum.map(&":#{String.strip(&1)}")
