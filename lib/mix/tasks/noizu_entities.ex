@@ -156,8 +156,8 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                       end
                   end
                 )
-             |> Enum.reject(&is_nil/1)
              |> List.flatten()
+             |> Enum.reject(&is_nil/1)
   end
 
 
@@ -258,7 +258,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     sref = extract_sref(options)
     sref_block = cond do
       is_nil(sref) -> ""
-      true -> "@sref #{sref}"
+      true -> "@sref \"#{sref}\""
     end
 
     persistence_block = cond do
