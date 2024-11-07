@@ -157,7 +157,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                   end
                 )
              |> List.flatten()
-             |> Enum.reject(&is_nil/1)
+             |> Enum.filter(&(&1))
   end
 
 
