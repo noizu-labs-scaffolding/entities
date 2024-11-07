@@ -18,7 +18,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         live: :boolean,
         ecto: :boolean,
         field: :keep,
-        meta: :keep
+        meta: :keep,
+        context: :boolean,
+        schema: :boolean,
+        context_app: :string,
+        web: :string,
       ]
     )
   end
@@ -37,17 +41,21 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     # Generate Context and Entity Files
     with {:ok, context_body} <- context_template(options),
          {:ok, entity_body} <- entity_template(options) do
-      Mix.Shell.IO.info("Entity: #{entity_body}")
-      #File.write(options.context.file, context_body)
-      #File.write(options.entity.file, entity_body)
       if Mix.Project.umbrella?(options.config) do
-
-
         cond do
           live ->
             app = :"#{options.app}_web"
             app_dir = "#{app}"
-            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields]
+
+            optional_args = [
+                              (options.args[:context_app] && "--context-app=#{options.args[:context_app]}"),
+                              (options.args[:web] && "--web=#{options.args[:web]}"),
+                              (options.args[:context] == false && "--no-context"),
+                              (options.args[:schema] == false && "--no-schema")
+                            ]
+                            |> Enum.reject(&is_nil/1)
+            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+
             #Mix.Shell.cmd("mix app phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
             Mix.Project.in_project(
               app,
@@ -57,7 +65,12 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                 Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
               end)
           ecto ->
-            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields]
+            optional_args = [
+                              (options.args[:context] == false && "--no-context"),
+                              (options.args[:schema] == false && "--no-schema")
+                            ]
+                            |> Enum.reject(&is_nil/1)
+            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
             Mix.Project.in_project(
               options.app,
               "#{options.config[:apps_path]}/#{options.app}",
@@ -67,18 +80,35 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
               end)
           :else -> :nop
         end
-
       else
         cond do
           live ->
-            Mix.Shell.IO.info("LIVE")
+            optional_args = [
+                              (options.args[:web] && "--web=#{options.args[:web]}"),
+                              (options.args[:context] == false && "--no-context"),
+                              (options.args[:schema] == false && "--no-schema")
+                            ]
+                            |> Enum.reject(&is_nil/1)
+            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            Mix.Shell.IO.info("Running: mix phx.gen.live in #{Enum.join(command, " ")}")
+            Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
           ecto ->
-            Mix.Shell.IO.info("Ecto")
+            optional_args = [
+                              (options.args[:context] == false && "--no-context"),
+                              (options.args[:schema] == false && "--no-schema")
+                            ]
+                            |> Enum.reject(&is_nil/1)
+            command = ["Schema.#{options.context.name}.#{options.entity.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            Mix.Shell.IO.info("Running: mix phx.gen.live in #{Enum.join(command, " ")}")
+            Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
           :else ->
-            Mix.Shell.IO.info("Skipping Ecto Setup")
             :nop
         end
       end
+
+      # Write Entity Files
+      File.write(options.context.file, context_body)
+      File.write(options.entity.file, entity_body)
 
     end
   end
