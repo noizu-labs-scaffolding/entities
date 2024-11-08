@@ -160,6 +160,25 @@ defmodule Noizu.Entity.Macros do
       alias Noizu.Entity.Meta, as: Meta
 
       case unquote(ids) do
+
+        [{:id, Meta.Identifier.id_settings(type: :uuid)}] ->
+          def kind(ref), do: Noizu.Entity.Meta.UUIDIdentifier.kind(__MODULE__, ref)
+          def id(ref), do: Noizu.Entity.Meta.UUIDIdentifier.id(__MODULE__, ref)
+          def ref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.ref(__MODULE__, ref)
+          def sref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.sref(__MODULE__, ref)
+
+          def entity(ref, context),
+              do: Noizu.Entity.Meta.UUIDIdentifier.entity(__MODULE__, ref, context)
+
+          def stub(), do: {:ok, %__MODULE__{}}
+
+          def stub(ref, _context, _options) do
+            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+              {:ok, %__MODULE__{id: id}}
+            end
+          end
+
+
         [{:id, Meta.Identifier.id_settings(type: :integer)}] ->
           def kind(ref), do: Noizu.Entity.Meta.IntegerIdentifier.kind(__MODULE__, ref)
           def id(ref), do: Noizu.Entity.Meta.IntegerIdentifier.id(__MODULE__, ref)
@@ -168,6 +187,23 @@ defmodule Noizu.Entity.Macros do
 
           def entity(ref, context),
             do: Noizu.Entity.Meta.IntegerIdentifier.entity(__MODULE__, ref, context)
+
+          def stub(), do: {:ok, %__MODULE__{}}
+
+          def stub(ref, _context, _options) do
+            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+              {:ok, %__MODULE__{id: id}}
+            end
+          end
+
+        [{:id, Meta.Identifier.id_settings(type: :atom)}] ->
+          def kind(ref), do: Noizu.Entity.Meta.AtomIdentifier.kind(__MODULE__, ref)
+          def id(ref), do: Noizu.Entity.Meta.AtomIdentifier.id(__MODULE__, ref)
+          def ref(ref), do: Noizu.Entity.Meta.AtomIdentifier.ref(__MODULE__, ref)
+          def sref(ref), do: Noizu.Entity.Meta.AtomIdentifier.sref(__MODULE__, ref)
+
+          def entity(ref, context),
+              do: Noizu.Entity.Meta.AtomIdentifier.entity(__MODULE__, ref, context)
 
           def stub(), do: {:ok, %__MODULE__{}}
 
@@ -202,23 +238,6 @@ defmodule Noizu.Entity.Macros do
 
           def entity(ref, context),
             do: Noizu.Entity.Meta.DualRefIdentifier.entity(__MODULE__, ref, context)
-
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{id: id}}
-            end
-          end
-
-        [{:id, Meta.Identifier.id_settings(type: :uuid)}] ->
-          def kind(ref), do: Noizu.Entity.Meta.UUIDIdentifier.kind(__MODULE__, ref)
-          def id(ref), do: Noizu.Entity.Meta.UUIDIdentifier.id(__MODULE__, ref)
-          def ref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.ref(__MODULE__, ref)
-          def sref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.sref(__MODULE__, ref)
-
-          def entity(ref, context),
-            do: Noizu.Entity.Meta.UUIDIdentifier.entity(__MODULE__, ref, context)
 
           def stub(), do: {:ok, %__MODULE__{}}
 
