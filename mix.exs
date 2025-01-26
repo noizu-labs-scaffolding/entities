@@ -5,7 +5,7 @@ defmodule Noizu.Entities.MixProject do
     [
       app: :noizu_labs_entities,
       name: "NoizuLabs Entities",
-      version: "0.1.3",
+      version: "0.2.0",
       elixir: "~> 1.14",
       package: package(),
       description: description(),
@@ -24,9 +24,6 @@ defmodule Noizu.Entities.MixProject do
       licenses: ["MIT"],
       links: %{
         project: "https://github.com/noizu-labs-scaffolding/entities",
-        noizu_labs: "https://github.com/noizu-labs",
-        noizu_labs_ml: "https://github.com/noizu-labs-ml",
-        noizu_labs_scaffolding: "https://github.com/noizu-labs-scaffolding",
         developer: "https://github.com/noizu"
       }
     ]
@@ -46,11 +43,14 @@ defmodule Noizu.Entities.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+
+      # @TODO - prepare hex releases (or abandon) jason and amnesi
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:jason, github: "noizu-labs-scaffolding/jason", branch: "user_options", override: true},
       {:mimic, "~> 1.0.0", only: :test},
       {:ecto_sql, "~> 3.6"},
       {:amnesia, git: "https://github.com/noizu/amnesia.git", tag: "0.2.8", optional: true},
+
       {:shortuuid, "~> 3.0"},
       {:elixir_uuid, "~> 1.2", optional: true},
       {:inflex, "~> 2.0.0"}
@@ -62,8 +62,8 @@ defmodule Noizu.Entities.MixProject do
         deps ++ [{:noizu_labs_core, in_umbrella: true}]
       else
         deps ++ [
-          {:noizu_labs_core,
-            github: "noizu-labs-scaffolding/core", branch: "develop", override: true},
+          {:noizu_labs_core, "~> 0.1.3"}
+          # {:noizu_labs_core,            github: "noizu-labs-scaffolding/core", branch: "develop", override: true},
         ]
       end
     end)

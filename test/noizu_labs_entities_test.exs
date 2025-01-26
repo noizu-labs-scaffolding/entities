@@ -153,8 +153,8 @@ defmodule Noizu.EntitiesTest do
       templates =
         Noizu.Entity.Meta.json(Noizu.Support.Entities.Foos.Foo)
         |> Map.keys()
-
-      assert templates == [:admin, :admin2, :api, :bar, :brief, :default, :foo, :special]
+      
+      assert Enum.sort(templates)  == Enum.sort([:admin, :admin2, :api, :bar, :brief, :default, :foo, :special])
     end
 
     test "not_set template" do
