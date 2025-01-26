@@ -9,19 +9,47 @@ defmodule Noizu.Repo.Macros do
   require Noizu.Entity.Meta.Json
   require Noizu.Entity.Meta.ACL
 
+  defmacro jason_repo_encoder(_opts \\ nil) do
+    quote do
+      defimpl Jason.Encoder do
+        def encode(s, opts) do
+          %{entities: s.entities, length: s.length}
+          |> Jason.Encode.map(opts)
+        end
+      end
+    end
+  end
+
   # ----------------------------------------
   # def_repo
   # ----------------------------------------
-  defmacro def_repo() do
+  defmacro def_repo(options \\ []) do
     quote do
       require Noizu.EntityReference.Records
       alias Noizu.EntityReference.Records, as: R
 
-      @entity __MODULE__
-              |> Module.split()
-              |> Enum.slice(0..-2)
-              |> Module.concat()
-      @poly false
+
+      @entity (cond do
+        x = unquote(options[:entity]) -> x
+        Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
+          __MODULE__
+          |> Module.split()
+          |> Enum.slice(0..-2)
+          |> Module.concat()
+        :else ->
+          __MODULE__
+          |> Module.split()
+          |> then(
+               fn(l) ->
+                 l ++ [Inflex.singularize(List.last(l))]
+               end)
+          |> Module.concat()
+      end)
+
+      @poly (cond do
+        x = unquote(options[:poly]) -> x
+        :else -> false
+      end)
 
       defstruct entities: [],
                 length: 0,
@@ -90,25 +118,35 @@ defmodule Noizu.Repo.Macros do
       defdelegate __do_delete__(entity, context, options), to: Noizu.Repo.Meta
       defdelegate __after_delete__(entity, context, options), to: Noizu.Repo.Meta
 
+      def __noizu_meta__() do
+        [
+          entity: @entity,
+          poly: @poly,
+        ]
+      end
+
       # ================================
       #
       # ================================
-      defoverridable create: 3,
-                     update: 3,
-                     get: 3,
-                     delete: 3,
-                     __before_create__: 3,
-                     __do_create__: 3,
-                     __after_create__: 3,
-                     __before_update__: 3,
-                     __do_update__: 3,
-                     __after_update__: 3,
-                     __before_get__: 3,
-                     __do_get__: 3,
-                     __after_get__: 3,
-                     __before_delete__: 3,
-                     __do_delete__: 3,
-                     __after_delete__: 3
+      defoverridable [
+        create: 3,
+        update: 3,
+        get: 3,
+        delete: 3,
+        __before_create__: 3,
+        __do_create__: 3,
+        __after_create__: 3,
+        __before_update__: 3,
+        __do_update__: 3,
+        __after_update__: 3,
+        __before_get__: 3,
+        __do_get__: 3,
+        __after_get__: 3,
+        __before_delete__: 3,
+        __do_delete__: 3,
+        __after_delete__: 3,
+        __noizu_meta__: 0
+      ]
     end
   end
 end

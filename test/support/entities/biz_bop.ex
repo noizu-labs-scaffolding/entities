@@ -2,7 +2,13 @@
 # Author: Keith Brings <keith.brings@noizu.com>
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
-defmodule Noizu.Support.Entities.BizBopEntity do
+
+defmodule Noizu.Support.Entities.BizBops do
+  use Noizu.Repo
+  def_repo()
+end
+
+defmodule Noizu.Support.Entities.BizBops.BizBop do
   use Noizu.Entity
 
   @vsn 1.0
@@ -17,11 +23,11 @@ defmodule Noizu.Support.Entities.BizBopEntity do
   # todo index name, type, settings
   # todo invalidate cache on update
   # todo fragmented key library - own repo
-  @persistence amnesia_store(NoizuEntityTestDb.BizBopTable, NoizuTest.EntityRepo)
+  @persistence amnesia_store(NoizuEntityTestDb.BizBops.BizBopTable, NoizuTest.EntityRepo)
   def_entity do
     # Universal
     # Auto
-    identifier(:integer)
+    id(:uuid)
 
     @restricted :user
     @restricted {:role, :supper_trooper}
@@ -84,12 +90,17 @@ defmodule Noizu.Support.Entities.BizBopEntity do
     field(:json_template_specific2)
 
     @config misc: :apple
-    field(:created_on)
-  end
+    field(:inserted_at)
 
-  defmodule Repo do
-    use Noizu.Repo
-    def_repo()
+    field :ecto_hint, nil, :string
+    field :time_stamp, nil, Noizu.Entity.TimeStamp
+  end
+  jason_encoder()
+
+  def changeset(%__MODULE__{} = entity, attrs) do
+    {entity, __MODULE__.__noizu_meta__()[:changeset_fields]}
+    |> Ecto.Changeset.cast(attrs, [:title, :title2, :ecto_hint, :name, :time_stamp])
+    |> Ecto.Changeset.validate_required([:name])
   end
 
   # todo  all entity to pl logic

@@ -3,7 +3,13 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 
-defmodule Noizu.Support.Entities.Foo do
+
+defmodule Noizu.Support.Entities.Foos do
+  use Noizu.Repo
+  def_repo()
+end
+
+defmodule Noizu.Support.Entities.Foos.Foo do
   use Noizu.Entity
 
   @vsn 1.0
@@ -25,7 +31,7 @@ defmodule Noizu.Support.Entities.Foo do
   def_entity do
     # Universal
     # Auto
-    identifier(:integer)
+    id(:integer)
     field(:time_stamp, nil, Noizu.Entity.TimeStamp)
     field(:special_field, nil, Noizu.Support.Entity.TestField)
 
@@ -38,6 +44,8 @@ defmodule Noizu.Support.Entities.Foo do
     @restricted [{:path, [{Access, :key, [:a]}, {Access, :key, [:b]}], {:role, :role_y}}]
     @pii :low
     field(:name)
+
+    field :reference_field, nil, Noizu.Entity.Extended.UUIDReference
 
     pii do
       @json false
@@ -88,10 +96,6 @@ defmodule Noizu.Support.Entities.Foo do
     field(:json_template_specific2)
   end
 
-  defmodule Repo do
-    use Noizu.Repo
-    def_repo()
-  end
 
   # todo  REPO - own module
   # todo  all entity to pl logic

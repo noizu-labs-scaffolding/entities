@@ -3,7 +3,7 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 
-defmodule Noizu.AmnesiaEntitiesTest do
+defmodule Noizu.JasonEncoderTest do
   use ExUnit.Case
   require Noizu.Support.Entities.Foos.Foo
   require Noizu.Entity.Macros
@@ -14,14 +14,12 @@ defmodule Noizu.AmnesiaEntitiesTest do
 
   @context Noizu.Context.system()
 
-  test "smoke test" do
+  test "Happy Path" do
     {:ok, e} = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", inserted_at: DateTime.utc_now()}
                |> NoizuTest.EntityRepo.create(@context)
-    r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.id)
-    assert is_integer(r.inserted_at)
-    fields = Noizu.Entity.Meta.fields(e)
-    Noizu.Entity.Meta.Field.field_settings(options: o) = fields[:title2]
-    assert o == [auto: false]
+    json =  Jason.encode(e, user: [context: @context, options: []])
+    assert json == {:ok,
+             "{\"id\":\"ref.biz-bop.#{ShortUUID.encode!(e.id)}\",\"inserted_at\":\"#{e.inserted_at |> DateTime.to_iso8601}\",\"vsn\":1.0}"}
   end
 
 end

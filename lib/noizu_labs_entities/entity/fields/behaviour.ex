@@ -1,4 +1,5 @@
 defmodule Noizu.Entity.Field.Behaviour do
+  @callback ecto_gen_string(any) :: {:ok, any} | {:error, any}
   @callback as_record(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
   @callback as_entity(entity :: any, settings :: any, context :: any, options :: any) ::
@@ -34,6 +35,7 @@ defmodule Noizu.Entity.Field.Behaviour do
   defmacro __using__(_options \\ nil) do
     quote do
       @behaviour Noizu.Entity.Field.Behaviour
+      def ecto_gen_string(prefix), do: {:error, {:ecto_gen_string, :unsupported}}
       def as_record(_, _, _, _), do: {:error, {:as_record, :unsupported}}
       def as_entity(_, _, _, _), do: {:error, {:as_entity, :unsupported}}
       def delete_record(_, _, _, _), do: {:error, {:delete_record, :unsupported}}
@@ -55,7 +57,8 @@ defmodule Noizu.Entity.Field.Behaviour do
       def field_as_record(_, _, _, _), do: {:error, :field_as_record}
       def field_from_record(_, _, _, _), do: {:error, :field_from_record}
 
-      defoverridable as_record: 4,
+      defoverridable ecto_gen_string: 1,
+                     as_record: 4,
                      as_entity: 4,
                      delete_record: 4,
                      from_record: 4,

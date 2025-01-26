@@ -3,6 +3,10 @@ defmodule Noizu.Entity.Reference do
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour
 
+  def ecto_gen_string(name) do
+    {:ok, "#{name}:integer"}
+  end
+
   def id(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.id(reference)
   def ref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.ref(reference)
 
@@ -67,8 +71,8 @@ defmodule Noizu.Entity.Reference do
   end
 
   def dump(v) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(v) do
-      {:ok, identifier}
+    with {:ok, id} <- Noizu.EntityReference.Protocol.id(v) do
+      {:ok, id}
     else
       _ ->
         {:ok, 0}
@@ -99,8 +103,10 @@ defmodule Noizu.Entity.Reference.TypeHelper do
   def persist(_, _, _, _, _), do: {:error, :not_supported}
   def as_record(_, _, _, _), do: {:error, :not_supported}
   def as_entity(_, _, _, _), do: {:error, :not_supported}
+  def as_entity(_, _, _, _, _), do: {:error, :not_supported}
   def delete_record(_, _, _, _), do: {:error, :not_supported}
   def from_record(_, _, _, _), do: {:error, :not_supported}
+  def from_record(_, _, _, _, _), do: {:error, :not_supported}
 
   def field_as_record(
         field,
@@ -153,12 +159,15 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.Reference] do
 
   defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
   defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
+  defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Entity.Reference.TypeHelper
+  defdelegate from_record(entity, record, settings, context, options),
+              to: Noizu.Entity.Reference.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Entity.Reference] do
@@ -182,9 +191,13 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.Reference] d
 
   defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
   defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
+  defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Entity.Reference.TypeHelper
+
+  defdelegate from_record(entity, record, settings, context, options),
+              to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Entity.Reference.TypeHelper

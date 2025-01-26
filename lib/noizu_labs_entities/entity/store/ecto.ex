@@ -29,33 +29,33 @@ end
 unless Code.ensure_loaded?(Ecto) do
   defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
     def persist(entity, type, settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
 
     def as_record(entity, settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
 
     def as_entity(entity, settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
 
     def as_entity(entity, record, settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
 
     def delete_record(entity, settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
 
     def from_record(record, settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
 
     def from_record(entity, record, settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
   end
 
   defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Any] do
     def field_as_record(field, field_settings, persistence_settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
 
     def field_from_record(field, record, field_settings, persistence_settings, context, options),
-      do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
+        do: raise(Noizu.Entity.Store.Ecto.Exception, message: "Ecto Not Available")
   end
 else
   defmodule Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour do
@@ -91,7 +91,7 @@ else
           _options
         ) do
       # 1. Get record
-      if current = apply(repo, :get, [table, record.identifier]) do
+      if current = apply(repo, :get, [table, record.id]) do
         cs = apply(table, :changeset, [current, Map.from_struct(record)])
         apply(repo, :update, [cs])
       end
@@ -119,9 +119,17 @@ else
 
       #     Record.defrecord(:field_settings, [name: nil, store: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
       fields =
-        Noizu.Entity.Meta.fields(entity)
+        Noizu.Entity.Meta.fields(entity) |> IO.inspect(label: "AS_RECORD")
         |> Enum.map(fn
           {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings} ->
+            Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
+              get_in(entity, [Access.key(name)]),
+              field_settings,
+              settings,
+              context,
+              options
+            )
+          {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: {:ecto, _}) = field_settings} ->
             Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
               get_in(entity, [Access.key(name)]),
               field_settings,
@@ -133,6 +141,7 @@ else
           {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
             {:ok, field_entry} =
               apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
+
 
             Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
               field_entry,
@@ -168,8 +177,8 @@ else
           context,
           options
         ) do
-      with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
-           record <- apply(store, :get, [table, identifier]) do
+      with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity),
+           record = %{} <- apply(store, :get, [table, id]) do
         from_record(record, settings, context, options)
       end
     end
@@ -205,8 +214,8 @@ else
           _context,
           _options
         ) do
-      with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
-        apply(store, :delete, [struct(table, identifier: identifier)])
+      with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity) do
+        apply(store, :delete, [struct(table, id: id)])
       end
     end
 
@@ -221,9 +230,9 @@ else
                 options :: any
               ) :: {:ok, any} | {:error, details :: any}
     def from_record(
-          entity,
+          _entity,
           record,
-          Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings,
+          Noizu.Entity.Meta.Persistence.persistence_settings(kind: _kind) = settings,
           context,
           options
         ) do
@@ -250,7 +259,15 @@ else
               context,
               options
             )
-
+          {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) = field_settings} ->
+            Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_from_record(
+              nil,
+              record,
+              field_settings,
+              settings,
+              context,
+              options
+            )
           {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings} ->
             {:ok, stub} = apply(type, :stub, [])
 
@@ -279,25 +296,25 @@ else
       quote do
         @behaviour Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
         defdelegate persist(record, action, settings, context, options),
-          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defdelegate as_record(record, settings, context, options),
-          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defdelegate as_entity(record, settings, context, options),
-          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defdelegate as_entity(entity, record, settings, context, options),
-          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defdelegate delete_record(record, settings, context, options),
-          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defdelegate from_record(record, settings, context, options),
-          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defdelegate from_record(entity, record, settings, context, options),
-          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defoverridable persist: 5,
                        as_record: 4,
@@ -311,55 +328,55 @@ else
   end
 
   defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
-    defmacro __deriving__(module, struct, options) do
+    defmacro __deriving__(module, _struct, _options) do
       quote do
         use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
         defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [unquote(module)] do
           def persist(record, action, settings, context, options),
-            do: apply(unquote(module), :persist, [record, action, settings, context, options])
+              do: apply(unquote(module), :persist, [record, action, settings, context, options])
 
           def as_record(record, settings, context, options),
-            do: apply(unquote(module), :as_record, [record, settings, context, options])
+              do: apply(unquote(module), :as_record, [record, settings, context, options])
 
           def as_entity(record, settings, context, options),
-            do: apply(unquote(module), :as_entity, [record, settings, context, options])
+              do: apply(unquote(module), :as_entity, [record, settings, context, options])
 
           def as_entity(entity, record, settings, context, options),
-            do: apply(unquote(module), :as_entity, [entity, record, settings, context, options])
+              do: apply(unquote(module), :as_entity, [entity, record, settings, context, options])
 
           def delete_record(record, settings, context, options),
-            do: apply(unquote(module), :delete_record, [record, settings, context, options])
+              do: apply(unquote(module), :delete_record, [record, settings, context, options])
 
           def from_record(record, settings, context, options),
-            do: apply(unquote(module), :from_record, [record, settings, context, options])
+              do: apply(unquote(module), :from_record, [record, settings, context, options])
 
           def from_record(entity, record, settings, context, options),
-            do: apply(unquote(module), :from_record, [entity, record, settings, context, options])
+              do: apply(unquote(module), :from_record, [entity, record, settings, context, options])
         end
       end
     end
 
     defdelegate persist(record, action, settings, context, options),
-      to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
     defdelegate as_record(record, settings, context, options),
-      to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
     defdelegate as_entity(record, settings, context, options),
-      to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
     defdelegate as_entity(entity, record, settings, context, options),
-      to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
     defdelegate delete_record(record, settings, context, options),
-      to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
     defdelegate from_record(record, settings, context, options),
-      to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
     defdelegate from_record(entity, record, settings, context, options),
-      to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+                to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
   end
 
   defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Any] do

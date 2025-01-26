@@ -13,6 +13,27 @@ defmodule Noizu.Entity.Macros do
   require Noizu.Entity.Macros.Json
   require Noizu.Entity.Macros.ACL
 
+  defmacro jason_encoder(_opts \\ nil) do
+    quote do
+      defimpl Jason.Encoder do
+        def encode(s, {_,_,user_settings} = opts) do
+          json_format = user_settings[:json_format] || :default
+          settings = cond do
+            x = Noizu.Entity.Meta.json(s)[json_format] -> x
+            x = Noizu.Entity.Meta.json(s)[:default] -> x
+          end
+          Noizu.Entity.Json.Protocol.prep(s, settings, user_settings[:context], user_settings[:settings])
+          |> Jason.Encode.map(opts)
+        end
+        def encode(s, {_,_} = opts) do
+          settings = Noizu.Entity.Meta.fields(s)
+          Noizu.Entity.Json.Protocol.prep(s, settings, Noizu.Context.system(), [])
+          |> Jason.Encode.map(opts)
+        end
+      end
+    end
+  end
+
   # ----------------------------------------
   # def_entity
   # ----------------------------------------
@@ -20,15 +41,17 @@ defmodule Noizu.Entity.Macros do
     quote do
       import Noizu.Entity.Macros,
         only: [
-          {:identifier, 1},
-          {:identifier, 2},
+          {:id, 1},
+          {:id, 2},
           {:field, 1},
           {:field, 2},
           {:field, 3},
           {:field, 4},
           {:transient, 1},
           {:pii, 1},
-          {:pii, 2}
+          {:pii, 2},
+          {:jason_encoder, 0},
+          {:jason_encoder, 1}
         ]
 
       require Noizu.Entity.Meta.Identifier
@@ -84,7 +107,7 @@ defmodule Noizu.Entity.Macros do
       # --------------------------
       {vsn, nz_meta} =
         Noizu.Entity.Macros.inject_entity_impl(
-          @__nz_identifiers,
+          @__nz_ids,
           @__nz_persistence,
           @__nz_fields,
           @__nz_json,
@@ -99,7 +122,7 @@ defmodule Noizu.Entity.Macros do
       def __noizu_meta__(), do: @nz_meta
 
       # ERP Hooks
-      Noizu.Entity.Macros.erp(@__nz_identifiers)
+      Noizu.Entity.Macros.erp(@__nz_ids)
     end
   end
 
@@ -128,16 +151,35 @@ defmodule Noizu.Entity.Macros do
   # ==========================================================
 
   @doc """
-  Todo support different identifier types
+  Todo support different id types
   """
-  defmacro erp(identifiers) do
+  defmacro erp(ids) do
     quote do
       require Noizu.Entity.Meta
       require Noizu.Entity.Meta.Identifier
       alias Noizu.Entity.Meta, as: Meta
 
-      case unquote(identifiers) do
-        [{:identifier, Meta.Identifier.identifier_settings(type: :integer)}] ->
+      case unquote(ids) do
+
+        [{:id, Meta.Identifier.id_settings(type: :uuid)}] ->
+          def kind(ref), do: Noizu.Entity.Meta.UUIDIdentifier.kind(__MODULE__, ref)
+          def id(ref), do: Noizu.Entity.Meta.UUIDIdentifier.id(__MODULE__, ref)
+          def ref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.ref(__MODULE__, ref)
+          def sref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.sref(__MODULE__, ref)
+
+          def entity(ref, context),
+              do: Noizu.Entity.Meta.UUIDIdentifier.entity(__MODULE__, ref, context)
+
+          def stub(), do: {:ok, %__MODULE__{}}
+
+          def stub(ref, _context, _options) do
+            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+              {:ok, %__MODULE__{id: id}}
+            end
+          end
+
+
+        [{:id, Meta.Identifier.id_settings(type: :integer)}] ->
           def kind(ref), do: Noizu.Entity.Meta.IntegerIdentifier.kind(__MODULE__, ref)
           def id(ref), do: Noizu.Entity.Meta.IntegerIdentifier.id(__MODULE__, ref)
           def ref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.ref(__MODULE__, ref)
@@ -150,11 +192,28 @@ defmodule Noizu.Entity.Macros do
 
           def stub(ref, _context, _options) do
             with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{identifier: id}}
+              {:ok, %__MODULE__{id: id}}
             end
           end
 
-        [{:identifier, Meta.Identifier.identifier_settings(type: :ref)}] ->
+        [{:id, Meta.Identifier.id_settings(type: :atom)}] ->
+          def kind(ref), do: Noizu.Entity.Meta.AtomIdentifier.kind(__MODULE__, ref)
+          def id(ref), do: Noizu.Entity.Meta.AtomIdentifier.id(__MODULE__, ref)
+          def ref(ref), do: Noizu.Entity.Meta.AtomIdentifier.ref(__MODULE__, ref)
+          def sref(ref), do: Noizu.Entity.Meta.AtomIdentifier.sref(__MODULE__, ref)
+
+          def entity(ref, context),
+              do: Noizu.Entity.Meta.AtomIdentifier.entity(__MODULE__, ref, context)
+
+          def stub(), do: {:ok, %__MODULE__{}}
+
+          def stub(ref, _context, _options) do
+            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
+              {:ok, %__MODULE__{id: id}}
+            end
+          end
+
+        [{:id, Meta.Identifier.id_settings(type: :ref)}] ->
           def kind(ref), do: Noizu.Entity.Meta.RefIdentifier.kind(__MODULE__, ref)
           def id(ref), do: Noizu.Entity.Meta.RefIdentifier.id(__MODULE__, ref)
           def ref(ref), do: Noizu.Entity.Meta.RefIdentifier.ref(__MODULE__, ref)
@@ -167,11 +226,11 @@ defmodule Noizu.Entity.Macros do
 
           def stub(ref, _context, _options) do
             with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{identifier: id}}
+              {:ok, %__MODULE__{id: id}}
             end
           end
 
-        [{:identifier, Meta.Identifier.identifier_settings(type: :dual_ref)}] ->
+        [{:id, Meta.Identifier.id_settings(type: :dual_ref)}] ->
           def kind(ref), do: Noizu.Entity.Meta.DualRefIdentifier.kind(__MODULE__, ref)
           def id(ref), do: Noizu.Entity.Meta.DualRefIdentifier.id(__MODULE__, ref)
           def ref(ref), do: Noizu.Entity.Meta.DualRefIdentifier.ref(__MODULE__, ref)
@@ -184,28 +243,11 @@ defmodule Noizu.Entity.Macros do
 
           def stub(ref, _context, _options) do
             with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{identifier: id}}
+              {:ok, %__MODULE__{id: id}}
             end
           end
 
-        [{:identifier, Meta.Identifier.identifier_settings(type: :uuid)}] ->
-          def kind(ref), do: Noizu.Entity.Meta.UUIDIdentifier.kind(__MODULE__, ref)
-          def id(ref), do: Noizu.Entity.Meta.UUIDIdentifier.id(__MODULE__, ref)
-          def ref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.ref(__MODULE__, ref)
-          def sref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.sref(__MODULE__, ref)
-
-          def entity(ref, context),
-            do: Noizu.Entity.Meta.UUIDIdentifier.entity(__MODULE__, ref, context)
-
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{identifier: id}}
-            end
-          end
-
-        [{:identifier, Meta.Identifier.identifier_settings(type: user_provided)}] ->
+        [{:id, Meta.Identifier.id_settings(type: user_provided)}] ->
           def kind(ref), do: apply(user_provided, :kind, [__MODULE__, ref])
           def id(ref), do: apply(user_provided, :id, [__MODULE__, ref])
           def ref(ref), do: apply(user_provided, :ref, [__MODULE__, ref])
@@ -215,7 +257,7 @@ defmodule Noizu.Entity.Macros do
 
           def stub(ref, _context, _options) do
             with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{identifier: id}}
+              {:ok, %__MODULE__{id: id}}
             end
           end
       end
@@ -237,17 +279,17 @@ defmodule Noizu.Entity.Macros do
   end
 
   # ----------------------------------------
-  # identifier
+  # id
   # ----------------------------------------
-  defmacro identifier(type, opts \\ []) do
-    name = opts[:name] || :identifier
+  defmacro id(type, opts \\ []) do
+    name = opts[:name] || :id
 
     quote do
       Module.put_attribute(
         __MODULE__,
-        :__nz_identifiers,
+        :__nz_ids,
         {unquote(name),
-         Noizu.Entity.Meta.Identifier.identifier_settings(
+         Noizu.Entity.Meta.Identifier.id_settings(
            name: unquote(name),
            type: unquote(type)
          )}
@@ -269,6 +311,12 @@ defmodule Noizu.Entity.Macros do
       Noizu.Entity.Macros.Json.extract_json(name)
       acl = {field, field_acl} = Noizu.Entity.Macros.ACL.extract_acl(name)
       Module.put_attribute(__MODULE__, :__nz_acl, acl)
+      reported_type = case type do
+        nil -> nil
+        x when x in [:integer, :float, :string, :boolean, :binary, :date, :time, :naive_datetime, :utc_datetime, :utc_datetime_usec, :uuid, :map, :array, :decimal, :json, :jsonb, :any] -> {:ecto, x}
+        {:array, _} = x -> {:ecto, x}
+        _ -> type
+      end
 
       # Extract any storage attributes.
       store =
@@ -320,7 +368,7 @@ defmodule Noizu.Entity.Macros do
             name: name,
             default: default,
             store: store,
-            type: type,
+            type: reported_type,
             pii: Noizu.Entity.Macros.extract_simple(:pii, :pii_default),
             transient: Noizu.Entity.Macros.extract_simple(:transient, :transient_default),
             acl: field_acl,
@@ -447,7 +495,15 @@ defmodule Noizu.Entity.Macros do
           Module.put_attribute(__MODULE__, :__nz_repo, v)
 
         _ ->
-          Module.put_attribute(__MODULE__, :__nz_repo, Module.concat([__MODULE__, Repo]))
+          cond do
+            Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
+              Module.put_attribute(__MODULE__, :__nz_repo, Module.concat([__MODULE__, Repo]))
+            :else ->
+              repo = Module.split(__MODULE__)
+                     |> Enum.slice(0..-2//1)
+                     |> Module.concat()
+              Module.put_attribute(__MODULE__, :__nz_repo, repo)
+          end
       end
     end
   end
@@ -471,7 +527,7 @@ defmodule Noizu.Entity.Macros do
   #
   # ----------------------------------------
   def register_attributes(mod) do
-    Module.register_attribute(mod, :__nz_identifiers, accumulate: true)
+    Module.register_attribute(mod, :__nz_ids, accumulate: true)
     Module.register_attribute(mod, :__nz_fields, accumulate: true)
     Module.register_attribute(mod, :__nz_persistence, accumulate: false)
     Module.register_attribute(mod, :__nz_repo, accumulate: false)
@@ -502,7 +558,7 @@ defmodule Noizu.Entity.Macros do
   #
   # ----------------------------------------
   def inject_entity_impl(
-        v__nz_identifiers,
+        v__nz_ids,
         v__nz_persistence,
         v__nz_fields,
         v__nz_json,
@@ -517,9 +573,9 @@ defmodule Noizu.Entity.Macros do
     # __noizu_meta__\0
     nz_entity__persistence = Enum.reverse(v__nz_persistence)
     nz_entity__fields = Enum.reverse(v__nz_fields)
-    # v__nz_identifiers = Module.get_attribute(module, :__nz_identifiers, [])
-    nz_entity__identifier =
-      case(v__nz_identifiers) do
+    # v__nz_ids = Module.get_attribute(module, :__nz_ids, [])
+    nz_entity__id =
+      case(v__nz_ids) do
         [x] -> x
         x -> Enum.reverse(x)
       end
@@ -569,14 +625,27 @@ defmodule Noizu.Entity.Macros do
         end
       )
 
+    changeset_fields =
+      Enum.map(
+        v__nz_fields,
+        fn
+          {field, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, type})} ->
+            {field, type}
+          {field, _} ->
+            {field, :any}
+        end
+      ) |> Map.new()
+
+
     nz_meta = %{
-      identifier: nz_entity__identifier,
+      id: nz_entity__id,
       fields: nz_entity__fields,
       json: nz_entity__json,
       persistence: nz_entity__persistence,
       acl: acl,
       repo: v__nz_repo,
-      sref: v__nz_sref
+      sref: v__nz_sref,
+      changeset_fields: changeset_fields
     }
 
     # Module.put_attribute(module, :nz_meta, nz_meta)

@@ -1,19 +1,19 @@
 defmodule Noizu.Support.Entity.TestField do
   @derive Noizu.EntityReference.Protocol
-  defstruct identifier: nil,
+  defstruct id: nil,
             sno: nil
 
   use Noizu.Entity.Field.Behaviour
 
-  def id(%__MODULE__{identifier: identifier}), do: {:ok, identifier}
-  def ref(%__MODULE__{identifier: identifier}), do: {:ok, {:ref, __MODULE__, identifier}}
+  def id(%__MODULE__{id: id}), do: {:ok, id}
+  def ref(%__MODULE__{id: id}), do: {:ok, {:ref, __MODULE__, id}}
   def entity(%__MODULE__{} = this, _), do: {:ok, this}
 
   def type__before_create(nil, _, _, _), do: nil
 
   def type__before_create(sno, _, _, _) when is_bitstring(sno) do
     entity = %__MODULE__{
-      identifier: 0xF00BA7,
+      id: 0xF00BA7,
       sno: sno
     }
 
@@ -22,8 +22,8 @@ defmodule Noizu.Support.Entity.TestField do
 
   def type__before_create(%__MODULE__{} = this, _, _, _) do
     cond do
-      this.identifier -> {:ok, this}
-      :else -> {:ok, %{this | identifier: 31337}}
+      this.id -> {:ok, this}
+      :else -> {:ok, %{this | id: 31337}}
     end
   end
 
@@ -31,7 +31,7 @@ defmodule Noizu.Support.Entity.TestField do
 
   def type__before_update(sno, _, _, _) when is_bitstring(sno) do
     entity = %__MODULE__{
-      identifier: 0xF00BA8,
+      id: 0xF00BA8,
       sno: sno
     }
 
@@ -52,8 +52,10 @@ defmodule Noizu.Support.Entity.TestField.TypeHelper do
   def persist(_, _, _, _, _), do: {:error, :not_supported}
   def as_record(_, _, _, _), do: {:error, :not_supported}
   def as_entity(_, _, _, _), do: {:error, :not_supported}
+  def as_entity(_, _, _, _, _), do: {:error, :not_supported}
   def delete_record(_, _, _, _), do: {:error, :not_supported}
   def from_record(_, _, _, _), do: {:error, :not_supported}
+  def from_record(_, _, _, _, _), do: {:error, :not_supported}
 
   def field_as_record(
         field,
@@ -66,7 +68,7 @@ defmodule Noizu.Support.Entity.TestField.TypeHelper do
 
     # We need to do a universal ecto conversion
     [
-      {:ok, {:"#{as_name}_identifier", field.identifier}},
+      {:ok, {:"#{as_name}_id", field.id}},
       {:ok, {:"#{as_name}_sno", field.sno}}
     ]
   end
@@ -80,10 +82,10 @@ defmodule Noizu.Support.Entity.TestField.TypeHelper do
         _options
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
-    identifier = Map.get(record, :"#{as_name}_identifier")
+    id = Map.get(record, :"#{as_name}_id")
     sno = Map.get(record, :"#{as_name}_sno")
 
-    {:ok, {name, %Noizu.Support.Entity.TestField{identifier: identifier, sno: sno}}}
+    {:ok, {name, %Noizu.Support.Entity.TestField{id: id, sno: sno}}}
   end
 end
 
@@ -97,11 +99,17 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Support.Entity.TestF
   defdelegate as_entity(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
+  defdelegate as_entity(entity, record, settings, context, options),
+              to: Noizu.Support.Entity.TestField.TypeHelper
+
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
+
+  defdelegate from_record(entity, record, settings, context, options),
+              to: Noizu.Support.Entity.TestField.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Support.Entity.TestField] do
@@ -129,8 +137,14 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Support.Entity.Test
   defdelegate as_entity(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
+  defdelegate as_entity(entity, record, settings, context, options),
+              to: Noizu.Support.Entity.TestField.TypeHelper
+
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
+
+  defdelegate from_record(entity, record, settings, context, options),
+              to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper

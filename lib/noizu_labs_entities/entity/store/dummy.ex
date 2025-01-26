@@ -36,24 +36,24 @@ defmodule Noizu.Entity.Store.Dummy.StorageLayer do
     end
   end
 
-  def write(identifier, name_space, entity) do
-    # IO.inspect(entity, label:  "WRITE #{identifier}:#{name_space}")
+  def write(id, name_space, entity) do
+    # IO.inspect(entity, label:  "WRITE #{id}:#{name_space}")
     create_table()
-    key = {identifier, name_space}
+    key = {id, name_space}
     :ets.insert(@table_name, {key, entity})
   end
 
-  def delete(identifier, name_space) do
-    # IO.puts "delete #{identifier}:#{name_space}"
+  def delete(id, name_space) do
+    # IO.puts "delete #{id}:#{name_space}"
     create_table()
-    key = {identifier, name_space}
+    key = {id, name_space}
     :ets.delete(@table_name, key)
   end
 
-  def get(identifier, name_space) do
-    # IO.puts "get #{identifier}:#{name_space}"
+  def get(id, name_space) do
+    # IO.puts "get #{id}:#{name_space}"
     create_table()
-    key = {identifier, name_space}
+    key = {id, name_space}
 
     case :ets.lookup(@table_name, key) do
       [{_, entity}] -> {:ok, entity}
@@ -70,7 +70,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   #
   # ---------------------------
   def persist(
-        record = %{identifier: id},
+        record = %{id: id},
         _type,
         Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
         _context,
@@ -103,6 +103,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
       Noizu.Entity.Meta.fields(entity)
       |> Enum.map(fn
         {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings} ->
+
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
             get_in(entity, [Access.key(name)]),
             field_settings,
@@ -110,10 +111,17 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
             context,
             options
           )
+        {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: {:ecto, _}) = field_settings} ->
 
+          Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
+            get_in(entity, [Access.key(name)]),
+            field_settings,
+            settings,
+            context,
+            options
+          )
         {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
-          {:ok, field_entry} =
-            apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
+          {:ok, field_entry} = apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
 
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
             field_entry,
@@ -124,6 +132,12 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
           )
       end)
       |> List.flatten()
+      |> Enum.map(
+           fn
+             {:ok, v} -> v
+             _ -> nil
+           end)
+      |> Enum.reject(&is_nil/1)
 
     record = struct(table, fields)
     {:ok, record}
@@ -138,8 +152,8 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
         context,
         options
       ) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity),
-         {:ok, record} <- Noizu.Entity.Store.Dummy.StorageLayer.get(identifier, table) do
+    with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity),
+         {:ok, record} <- Noizu.Entity.Store.Dummy.StorageLayer.get(id, table) do
       from_record(record, settings, context, options)
     end
   end
@@ -166,8 +180,8 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
         _context,
         _options
       ) do
-    with {:ok, identifier} <- Noizu.EntityReference.Protocol.id(entity) do
-      Noizu.Entity.Store.Dummy.StorageLayer.delete(identifier, table)
+    with {:ok, id} <- Noizu.EntityReference.Protocol.id(entity) do
+      Noizu.Entity.Store.Dummy.StorageLayer.delete(id, table)
       :ok
     end
   end
@@ -198,7 +212,15 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
             context,
             options
           )
-
+        {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) = field_settings} ->
+          Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_from_record(
+            nil,
+            record,
+            field_settings,
+            settings,
+            context,
+            options
+          )
         {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings} ->
           {:ok, stub} = apply(type, :stub, [])
 
@@ -213,6 +235,12 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
           )
       end)
       |> List.flatten()
+      |> Enum.map(
+           fn
+             {:ok, v} -> v
+             _ -> nil
+           end)
+      |> Enum.reject(&is_nil/1)
 
     entity = struct(kind, fields)
     {:ok, entity}
@@ -234,7 +262,7 @@ defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Any] do
         _options
       ) do
     name = field_store[table][:name] || field_store[store][:name] || name
-    {name, field}
+    {:ok, {name, field}}
   end
 
   # ---------------------------
@@ -249,6 +277,6 @@ defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Any] do
         _options
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
-    {name, get_in(record, [Access.key(as_name)])}
+    {:ok, {name, get_in(record, [Access.key(as_name)])}}
   end
 end

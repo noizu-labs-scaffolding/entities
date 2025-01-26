@@ -9,7 +9,12 @@ defmodule Noizu.Repo do
   defmacro __using__(_options \\ nil) do
     quote do
       require Noizu.Repo.Macros
-      import Noizu.Repo.Macros, only: [{:def_repo, 0}]
+      import Noizu.Repo.Macros,
+             only: [
+               {:def_repo, 0},
+               {:jason_repo_encoder, 0},
+               {:jason_repo_encoder, 1}
+             ]
       import Noizu.Core.Helpers
       import NoizuLabs.Entities.Helpers
     end
