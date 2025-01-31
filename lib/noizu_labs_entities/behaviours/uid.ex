@@ -3,6 +3,9 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 defmodule Noizu.Entity.UID do
+  @moduledoc """
+  Wrapper around UUID generator: to allow custom uuid generator logic.
+  """
   @handler Application.compile_env(:noizu_labs_entities, :uid_provider, Noizu.Entity.UID.Stub)
   @callback generate(any, any) :: any
   @callback ref(any) :: {:ok, any} | {:error, any}

@@ -1,13 +1,55 @@
 defmodule Noizu.Entity.Field.Behaviour do
-  @callback ecto_gen_string(any) :: {:ok, any} | {:error, any}
+  @moduledoc """
+  Defines Entiy.Field behavior used for marshalling from/to peristence layers and managing complex/compound types that compose/break fields up into layer specific fields.
+  """
+  
+  
+  @typedoc """
+  Field Entry Name
+  """
+  @type field_name :: atom
+  
+  
+  @type field_settings :: Noizu.Entity.Meta.Field.field_settings
+  
+  
+  @doc """
+  Generate ecto generator field entries for given field.
+  Used by Mix.Tasks.Nz.Gen.Entity
+  """
+  @callback ecto_gen_string(name :: field_name) :: {:ok, any} | {:error, any}
+  
+  @doc """
+  Convert entity.field to a record for persistence.
+  # TODO - I don't believe this is needed, or is only needed for complex fields.
+  """
   @callback as_record(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+              
+  @doc """
+  Convert records.field(s) to entity field. Usual 1-2-1 mapping although composite fields liek TimeStamp, Path, etc. combine multiple fields into a single entity field.
+  """
   @callback as_entity(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+              
+  @doc """
+  Delete Record
+  TODO - not sure if this is used.
+  """
   @callback delete_record(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+              
+              
+  @doc """
+  Convert record field(s) to entity field(s)
+  """
   @callback from_record(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+              
+  @doc """
+  Persist entity.
+  TODO - not sure if this is used.
+  """
   @callback persist(
               entity :: any,
               action_type :: atom,
@@ -16,19 +58,44 @@ defmodule Noizu.Entity.Field.Behaviour do
               options :: any
             ) :: any
 
+  @doc """
+  Pre Create Hook for Entity Field.
+  """
   @callback type__before_create(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+  
+  @doc """
+  Pre Update Hook for Entity Field.
+  """
   @callback type__before_update(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+  
+  @doc """
+  Pre Delete Hook for Entity Field.
+  """
   @callback type__after_delete(entity :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
-
+  
+  @doc """
+  Convert Type to Entity
+  """
   @callback type_as_entity(entity :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+  
+  @doc """
+  Type stub for protocol matching.
+  """
   @callback stub() :: {:ok, any} | {:error, any}
-
+  
+  @doc """
+  Field as record (unpack entity field to record field(s)
+  """
   @callback field_as_record(field :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
+              
+  @doc """
+  Field from record fields (combine record field(s) to entity.field(s).
+  """
   @callback field_from_record(field :: any, settings :: any, context :: any, options :: any) ::
               {:ok, any} | {:error, any}
 

@@ -237,7 +237,7 @@ defmodule Noizu.Entity.Path.TypeHelper do
     a21 = Map.get(record, :"#{as_name}_a21")
     a22 = Map.get(record, :"#{as_name}_a22")
     entity = Noizu.Entity.Path.new(%{a11: a11, a12: a12, a21: a21, a22: a22, depth: depth})
-    (entity && {:ok, {name, entity}}) || {:ok, {name, nil}}
+    {:ok,{name, entity}}
   end
 end
 

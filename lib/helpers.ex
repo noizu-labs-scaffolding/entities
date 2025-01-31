@@ -1,15 +1,17 @@
 defmodule NoizuLabs.Entities.Helpers do
+  @moduledoc """
+  Helper utilities for entities.
+  """
+  
+  @doc """
+  Wait until condition lambda returns an ok tuple or timeout exceeded.
+  """
   def wait_for_condition(condition, timeout \\ 5_000, options \\ nil)
 
   def wait_for_condition(condition, timeout, options) do
     reference = make_ref()
     task = Task.async(fn -> wait_loop(condition, reference, options) end)
-    result = Task.yield(task, timeout)
-
-    case result do
-      :ok ->
-        :ok
-
+    case Task.yield(task, timeout) do
       {:ok, response} ->
         {:ok, response}
 

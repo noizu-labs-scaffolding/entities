@@ -1,17 +1,14 @@
 # -------------------------------------------------------------------------------
 # Author: Keith Brings <keith.brings@noizu.com>
-# Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
+# Copyright (C) 2025 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
-defmodule Noizu.Entity.ACL.Exception do
-  defexception [:details]
-
-  def message(e) do
-    "#{inspect(e.details)}"
-  end
-end
 
 defprotocol Noizu.Entity.ACL.Protocol do
+  @moduledoc """
+  ACL protocol is used to strip/removed fields context user does not have access to.
+  """
   @fallback_to_any true
+  @spec restrict(for :: term, entity :: term, settings :: term, context :: term, options :: term) :: {:ok, any} | {:error, any}
   def restrict(for, entity, acl_settings, context, options)
 end
 

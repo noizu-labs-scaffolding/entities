@@ -4,8 +4,15 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity do
+  @moduledoc """
+  Load def_entity context.
+  """
+  
+  # entity vsn number
   @callback vsn() :: float
-  @callback __noizu_meta__() :: Map.t()
+  
+  # entity meta data
+  @callback __noizu_meta__() :: map()
 
   defmacro __using__(_options \\ nil) do
     quote do
@@ -23,7 +30,13 @@ defmodule Noizu.Entity do
   end
 end
 
+
+
 defprotocol Noizu.Entity.Protocol do
+  @moduledoc """
+  Unique Identifier for Persistence Layer
+  """
+  # TODO Determine if this is still needed. Possibly consolidate.
   def layer_id(entity, layer)
 end
 

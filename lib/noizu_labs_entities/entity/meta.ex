@@ -4,103 +4,13 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Meta do
+  @moduledoc """
+  Module for checking and encoding entity metadata.
+  """
+  
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
-
-  defmodule ACL do
-    require Record
-    Record.defrecord(:acl_settings, target: nil, type: nil, requirement: nil)
-  end
-
-  defmodule Identifier do
-    require Record
-    Record.defrecord(:id_settings, name: nil, generate: true, universal: false, type: nil)
-  end
-
-  defmodule Field do
-    require Record
-    Record.defrecord(:field_settings,
-      name: nil,
-      store: [],
-      type: nil,
-      transient: false,
-      pii: false,
-      default: nil,
-      acl: nil,
-      options: nil
-    )
-  end
-
-  defmodule Persistence do
-    require Record
-    Record.defrecord(:persistence_settings, table: :auto, kind: nil, store: nil, type: nil)
-
-    def by_table(module, table) do
-      Enum.find_value(
-        Noizu.Entity.Meta.persistence(module),
-        fn
-          settings = persistence_settings(table: ^table) -> {:ok, settings}
-          _ -> nil
-        end
-      ) || {:error, :not_found}
-    end
-
-    def by_type(module, type) do
-      Enum.find_value(
-        Noizu.Entity.Meta.persistence(module),
-        fn
-          settings = persistence_settings(type: ^type) -> {:ok, settings}
-          _ -> nil
-        end
-      ) || {:error, :not_found}
-    end
-
-    def by_store(module, store) do
-      Enum.find_value(
-        Noizu.Entity.Meta.persistence(module),
-        fn
-          settings = persistence_settings(store: ^store) -> {:ok, settings}
-          _ -> nil
-        end
-      ) || {:error, :not_found}
-    end
-
-    def ecto_store(table, store) do
-      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Ecto)
-    end
-
-    def mnesia_store(table, store) do
-      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Mnesia)
-    end
-
-    def amnesia_store(table, store) do
-      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Amnesia)
-    end
-
-    def redis_store(table, store) do
-      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Redis)
-    end
-
-    def dummy_store(table, store) do
-      persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Dummy)
-    end
-  end
-
-  defmodule Json do
-    require Record
-
-    Record.defrecord(:json_settings,
-      template: nil,
-      field: nil,
-      as: {:nz, :inherit},
-      omit: {:nz, :inherit},
-      error: {:nz, :inherit}
-    )
-
-    # Record.defrecord(:field_settings, [field: nil, settings: nil])
-    # Record.defrecord(:template_field_settings, [template: nil, field_settings: nil])
-  end
-
+  
   @callback meta() :: []
   @callback fields() :: []
   @callback id() :: []
@@ -109,7 +19,7 @@ defmodule Noizu.Entity.Meta do
   @callback json(template :: atom) :: []
 
   # ---------------
-  #
+  # meta/1
   # ---------------
   def meta(%{__struct__: m}), do: meta(m)
   def meta(R.ref(module: m)), do: meta(m)
@@ -127,38 +37,59 @@ defmodule Noizu.Entity.Meta do
       )
 
   # ---------------
-  #
+  # sref/1
   # ---------------
+  @doc """
+  Entity Sref meta data.
+  """
   def sref(m), do: meta(m)[:sref]
 
   # ---------------
-  #
+  # persistence/1
   # ---------------
+  @doc """
+  Entity Persistence meta data.
+  """
   def persistence(m), do: meta(m)[:persistence]
 
   # ---------------
-  #
+  # repo/1
   # ---------------
+  @doc """
+  Entity Repo meta data.
+  """
   def repo(m), do: meta(m)[:repo]
 
   # ---------------
-  #
+  # id/1
   # ---------------
+  @doc """
+  Entity id meta data.
+  """
   def id(m), do: meta(m)[:id]
 
   # ---------------
-  #
+  # field/1
   # ---------------
+  @doc """
+  Entity field meta data.
+  """
   def fields(m), do: meta(m)[:fields]
 
   # ---------------
-  #
+  # json/1
   # ---------------
+  @doc """
+  Entity json meta data.
+  """
   def json(m), do: meta(m)[:json]
 
   # ---------------
-  #
+  # json/2
   # ---------------
+  @doc """
+  Entity json for json_format type meta data.
+  """
   def json(m, s) do
     meta = meta(m)
     json = meta[:json]
@@ -166,16 +97,15 @@ defmodule Noizu.Entity.Meta do
   end
 
   # ---------------
-  #
+  # acl/1
   # ---------------
+  @doc """
+  Entity ACL meta data.
+  """
   def acl(m), do: meta(m)[:acl]
 
   # ---------------
-  #
-  # ---------------
-
-  # ---------------
-  #
+  # __using__/1
   # ---------------
   defmacro __using__(_options \\ nil) do
     quote do

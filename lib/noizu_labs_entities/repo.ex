@@ -4,7 +4,11 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Repo do
-  @callback __noizu_meta__() :: Map.t()
+  @moduledoc """
+  Load def_repo context.
+  """
+  
+  @callback __noizu_meta__() :: map()
 
   defmacro __using__(_options \\ nil) do
     quote do
