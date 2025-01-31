@@ -158,110 +158,38 @@ defmodule Noizu.Entity.Macros do
       require Noizu.Entity.Meta
       require Noizu.Entity.Meta.Identifier
       alias Noizu.Entity.Meta, as: Meta
-
-      case unquote(ids) do
-
-        [{:id, Meta.Identifier.id_settings(type: :uuid)}] ->
-          def kind(ref), do: Noizu.Entity.Meta.UUIDIdentifier.kind(__MODULE__, ref)
-          def id(ref), do: Noizu.Entity.Meta.UUIDIdentifier.id(__MODULE__, ref)
-          def ref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.ref(__MODULE__, ref)
-          def sref(ref), do: Noizu.Entity.Meta.UUIDIdentifier.sref(__MODULE__, ref)
-
-          def entity(ref, context),
-              do: Noizu.Entity.Meta.UUIDIdentifier.entity(__MODULE__, ref, context)
-
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{id: id}}
-            end
-          end
-
-
-        [{:id, Meta.Identifier.id_settings(type: :integer)}] ->
-          def kind(ref), do: Noizu.Entity.Meta.IntegerIdentifier.kind(__MODULE__, ref)
-          def id(ref), do: Noizu.Entity.Meta.IntegerIdentifier.id(__MODULE__, ref)
-          def ref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.ref(__MODULE__, ref)
-          def sref(ref), do: Noizu.Entity.Meta.IntegerIdentifier.sref(__MODULE__, ref)
-
-          def entity(ref, context),
-            do: Noizu.Entity.Meta.IntegerIdentifier.entity(__MODULE__, ref, context)
-
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{id: id}}
-            end
-          end
-
-        [{:id, Meta.Identifier.id_settings(type: :atom)}] ->
-          def kind(ref), do: Noizu.Entity.Meta.AtomIdentifier.kind(__MODULE__, ref)
-          def id(ref), do: Noizu.Entity.Meta.AtomIdentifier.id(__MODULE__, ref)
-          def ref(ref), do: Noizu.Entity.Meta.AtomIdentifier.ref(__MODULE__, ref)
-          def sref(ref), do: Noizu.Entity.Meta.AtomIdentifier.sref(__MODULE__, ref)
-
-          def entity(ref, context),
-              do: Noizu.Entity.Meta.AtomIdentifier.entity(__MODULE__, ref, context)
-
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{id: id}}
-            end
-          end
-
-        [{:id, Meta.Identifier.id_settings(type: :ref)}] ->
-          def kind(ref), do: Noizu.Entity.Meta.RefIdentifier.kind(__MODULE__, ref)
-          def id(ref), do: Noizu.Entity.Meta.RefIdentifier.id(__MODULE__, ref)
-          def ref(ref), do: Noizu.Entity.Meta.RefIdentifier.ref(__MODULE__, ref)
-          def sref(ref), do: Noizu.Entity.Meta.RefIdentifier.sref(__MODULE__, ref)
-
-          def entity(ref, context),
-            do: Noizu.Entity.Meta.RefIdentifier.entity(__MODULE__, ref, context)
-
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{id: id}}
-            end
-          end
-
-        [{:id, Meta.Identifier.id_settings(type: :dual_ref)}] ->
-          def kind(ref), do: Noizu.Entity.Meta.DualRefIdentifier.kind(__MODULE__, ref)
-          def id(ref), do: Noizu.Entity.Meta.DualRefIdentifier.id(__MODULE__, ref)
-          def ref(ref), do: Noizu.Entity.Meta.DualRefIdentifier.ref(__MODULE__, ref)
-          def sref(ref), do: Noizu.Entity.Meta.DualRefIdentifier.sref(__MODULE__, ref)
-
-          def entity(ref, context),
-            do: Noizu.Entity.Meta.DualRefIdentifier.entity(__MODULE__, ref, context)
-
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{id: id}}
-            end
-          end
-
-        [{:id, Meta.Identifier.id_settings(type: user_provided)}] ->
-          def kind(ref), do: apply(user_provided, :kind, [__MODULE__, ref])
-          def id(ref), do: apply(user_provided, :id, [__MODULE__, ref])
-          def ref(ref), do: apply(user_provided, :ref, [__MODULE__, ref])
-          def sref(ref), do: apply(user_provided, :sref, [__MODULE__, ref])
-          def entity(ref, context), do: apply(user_provided, :entity, [__MODULE__, ref, context])
-          def stub(), do: {:ok, %__MODULE__{}}
-
-          def stub(ref, _context, _options) do
-            with {:ok, id} <- apply(__MODULE__, :id, [ref]) do
-              {:ok, %__MODULE__{id: id}}
-            end
-          end
+      
+      @erp_type_handlers %{
+        uuid: Noizu.Entity.Meta.UUIDIdentifier,
+        integer: Noizu.Entity.Meta.IntegerIdentifier,
+        atom: Noizu.Entity.Meta.AtomIdentifier,
+        ref: Noizu.Entity.Meta.RefIdentifier,
+        dual_ref: Noizu.Entity.Meta.DualRefIdentifier,
+      }
+      
+      @erp_type_handler (case unquote(ids) do
+          [{:id, Meta.Identifier.id_settings(type: type)}]  ->
+            @erp_type_handlers[type] || type
+        end)
+      
+      def kind(ref),
+          do: @erp_type_handler.kind(__MODULE__, ref)
+      def id(ref),
+          do: @erp_type_handler.id(__MODULE__, ref)
+      def ref(ref),
+          do: @erp_type_handler.ref(__MODULE__, ref)
+      def sref(ref),
+          do: @erp_type_handler.sref(__MODULE__, ref)
+      def entity(ref, context),
+          do: @erp_type_handler.entity(__MODULE__, ref, context)
+      def stub(),
+          do: {:ok, %__MODULE__{}}
+      def stub(ref, _, _) do
+        with {:ok, id} <- __MODULE__.id(ref) do
+          {:ok, %__MODULE__{id: id}}
+        end
       end
-
+      
       defoverridable kind: 1,
                      id: 1,
                      ref: 1,
@@ -313,7 +241,26 @@ defmodule Noizu.Entity.Macros do
       Module.put_attribute(__MODULE__, :__nz_acl, acl)
       reported_type = case type do
         nil -> nil
-        x when x in [:integer, :float, :string, :boolean, :binary, :date, :time, :naive_datetime, :utc_datetime, :utc_datetime_usec, :uuid, :map, :array, :decimal, :json, :jsonb, :any] -> {:ecto, x}
+        x when x in [
+          :integer,
+          :float,
+          :string,
+          :boolean,
+          :binary,
+          :date,
+          :time,
+          :naive_datetime,
+          :utc_datetime,
+          :utc_datetime_usec,
+          :uuid,
+          :map,
+          :array,
+          :decimal,
+          :json,
+          :jsonb,
+          :any
+        ] -> {:ecto, x}
+        {:enum, values} = x-> {:ecto, x}
         {:array, _} = x -> {:ecto, x}
         _ -> type
       end

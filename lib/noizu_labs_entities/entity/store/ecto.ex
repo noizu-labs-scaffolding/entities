@@ -119,7 +119,7 @@ else
 
       #     Record.defrecord(:field_settings, [name: nil, store: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
       fields =
-        Noizu.Entity.Meta.fields(entity) |> IO.inspect(label: "AS_RECORD")
+        Noizu.Entity.Meta.fields(entity)
         |> Enum.map(fn
           {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings} ->
             Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(

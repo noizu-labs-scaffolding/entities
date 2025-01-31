@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------------
 # Author: Keith Brings <keith.brings@noizu.com>
-# Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
+# Copyright (C) 2025 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 
 defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
@@ -177,17 +177,42 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   # ---------------------------
   #
   # ---------------------------
-  def from_record(%{entity: entity}, _settings, context, _options) do
+  def from_record(%{entity: entity} = record, settings, context, options) do
     unpack = Noizu.Entity.Meta.fields(entity)
              |> Enum.map(
                   fn
-                    ({field, Noizu.Entity.Meta.Field.field_settings(options: field_options)}) ->
+                    ({field, field_settings = Noizu.Entity.Meta.Field.field_settings(options: field_options)}) ->
                       with true <- field_options[:auto],
                            {:ok, unpacked} <- Noizu.EntityReference.Protocol.entity(get_in(entity, [Access.key(field)]), context)
                         do
                         {field, unpacked}
                       else
-                         _ -> nil
+                         _ ->
+                           case field_settings do
+                                               Noizu.Entity.Meta.Field.field_settings(name: _name, type: nil) ->
+                        nil
+                             Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) ->
+                               nil
+                             Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) ->
+                               {:ok, stub} = apply(type, :stub, [])
+                                                         
+                                                         with {:ok, x}  <- Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_from_record(
+                                 # used for matching
+                                 stub,
+                                 record,
+                                 field_settings,
+                                 settings,
+                                 context,
+                                 options
+                               )
+                               do
+                                 x
+                               else
+                               _ -> nil
+                               end
+                           end
+                           
+                         
                       end
                     (_) -> nil
                   end)

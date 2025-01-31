@@ -16,6 +16,7 @@ defmodule Noizu.Repo do
       import Noizu.Repo.Macros,
              only: [
                {:def_repo, 0},
+               {:def_repo, 1},
                {:jason_repo_encoder, 0},
                {:jason_repo_encoder, 1}
              ]
