@@ -2,11 +2,15 @@ defmodule Noizu.Entity.UUIDReference do
   @derive Noizu.EntityReference.Protocol
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour
-
+  
+  
+  # ----------------
+  # ecto_gen_string
+  # ----------------
   def ecto_gen_string(name) do
     {:ok, "#{name}:uuid"}
   end
-
+  
   def id(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.id(reference)
   def ref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.ref(reference)
 
@@ -127,21 +131,26 @@ defmodule Noizu.Entity.UUIDReference.TypeHelper do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
-  def persist(_, _, _, _, _), do: {:error, :not_supported}
-  def as_record(_, _, _, _), do: {:error, :not_supported}
-  def as_record(_, _, _, _, _), do: {:error, :not_supported}
-  def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
-  def as_entity(_, _, _, _, _), do: {:error, :not_supported}
-  def delete_record(_, _, _, _), do: {:error, :not_supported}
-  def from_record(_, _, _, _), do: {:error, :not_supported}
-  def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
-
+  def field_as_record(field, field_settings, persistence_settings, context, options)
+  def field_as_record(
+        field,
+        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table, type: Noizu.Entity.Store.Amnesia),
+        _,
+        _
+      ) do
+    name = field_store[table][:name] || field_store[store][:name] || name
+    # We need to do a universal ecto conversion
+    with {:ok, ref} <- Noizu.EntityReference.Protocol.ref(field) do
+      {:ok, {name, ref}}
+    end
+  end
   def field_as_record(
         field,
         Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
         Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
-        _context,
-        _options
+        _,
+        _
       ) do
     name = field_store[table][:name] || field_store[store][:name] || name
     # We need to do a universal ecto conversion
@@ -153,7 +162,7 @@ defmodule Noizu.Entity.UUIDReference.TypeHelper do
   def field_from_record(
         _,
         record,
-        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
+        Noizu.Entity.Meta.Field.field_settings(options: field_options, name: name, store: field_store),
         Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
         context,
         _options
@@ -165,16 +174,37 @@ defmodule Noizu.Entity.UUIDReference.TypeHelper do
         {:ok, v}
 
       v = R.ref() ->
-        Noizu.EntityReference.Protocol.entity(v, context)
+        if field_options[:auto] do
+          Noizu.EntityReference.Protocol.entity(v, context)
+        else
+          Noizu.EntityReference.Protocol.ref(v)
+        end
+      
+        
 
       v = <<_::binary-size(16)>> ->
-        Noizu.Entity.UID.ref(v) |> Noizu.EntityReference.Protocol.entity(context)
-
+        v = Noizu.Entity.UID.ref(v)
+        
+        if field_options[:auto] do
+          Noizu.EntityReference.Protocol.entity(v, context)
+        else
+          Noizu.EntityReference.Protocol.ref(v)
+        end
+        
+        
+        
       v =
           <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _,
             _, _, _, _, _, _, _, _, _>> ->
-        Noizu.Entity.UID.ref(v) |> Noizu.EntityReference.Protocol.entity(context)
-
+        v = Noizu.Entity.UID.ref(v)
+        
+        if field_options[:auto] do
+          Noizu.EntityReference.Protocol.entity(v, context)
+        else
+          Noizu.EntityReference.Protocol.ref(v)
+        end
+      
+      
       v ->
         v
     end
@@ -186,78 +216,30 @@ defmodule Noizu.Entity.UUIDReference.TypeHelper do
   end
 end
 
-defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.UUIDReference] do
-  defdelegate persist(entity, type, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
 
-  defdelegate as_record(entity, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
 
-  defdelegate fetch_as_entity(entity, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
+for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity.Store.Ecto, Noizu.Entity.Store.Mnesia, Noizu.Entity.Store.Redis] do
+  entity_protocol = Module.concat(store, EntityProtocol)
+  entity_field_protocol = Module.concat(store, Entity.FieldProtocol)
+  type_helper = Noizu.Entity.UUIDReference.TypeHelper
 
-  defdelegate as_entity(entity, record, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
+  defimpl entity_field_protocol, for: [ Noizu.Entity.UUIDReference] do
+    @type_helper type_helper
+    defdelegate field_from_record(
+                  field,
+                  record,
+                  field_settings,
+                  persistence_settings,
+                  context,
+                  options
+                ),
+                to: @type_helper
+    
+    defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
+                to: @type_helper
+  end
 
-  defdelegate delete_record(entity, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
 
-  defdelegate from_record(record, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate merge_from_record(entity, record, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
 end
+  
 
-defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Entity.UUIDReference] do
-  defdelegate field_from_record(
-                field,
-                record,
-                field_settings,
-                persistence_settings,
-                context,
-                options
-              ),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-end
-
-defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.UUIDReference] do
-  defdelegate persist(entity, type, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate as_record(entity, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate fetch_as_entity(entity, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate as_entity(entity, record, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate delete_record(entity, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate merge_from_record(entity, record, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate from_record(record, settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-end
-
-defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.UUIDReference] do
-  defdelegate field_from_record(
-                field,
-                record,
-                field_settings,
-                persistence_settings,
-                context,
-                options
-              ),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
-    to: Noizu.Entity.UUIDReference.TypeHelper
-end

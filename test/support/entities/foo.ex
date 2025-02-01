@@ -45,6 +45,7 @@ defmodule Noizu.Support.Entities.Foos.Foo do
     @pii :low
     field(:name)
 
+    @config auto: true
     field :reference_field, nil, Noizu.Entity.Extended.UUIDReference
 
     pii do

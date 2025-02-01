@@ -150,30 +150,6 @@ end
 for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity.Store.Ecto, Noizu.Entity.Store.Mnesia, Noizu.Entity.Store.Redis] do
   entity_protocol = Module.concat(store, EntityProtocol)
   entity_field_protocol = Module.concat(store, Entity.FieldProtocol)
-  
-  
-  defimpl entity_protocol, for: [Noizu.Entity.DerivedField] do
-    defdelegate persist(entity, type, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate as_record(entity, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate fetch_as_entity(entity, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate as_entity(entity, record, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate delete_record(entity, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate from_record(record, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    defdelegate merge_from_record(entity, record, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-  end
-  
   defimpl entity_field_protocol, for: [Noizu.Entity.DerivedField] do
     defdelegate field_from_record(
                   field,
@@ -188,7 +164,5 @@ for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity
     defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
                 to: Noizu.Entity.DerivedField.TypeHelper
   end
-
-
 end
 

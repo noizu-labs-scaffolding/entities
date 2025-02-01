@@ -13,6 +13,15 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
       message: "#{m.__struct__} Generate Identifier with dual_ref type not supported"
   end
   
+  # ----------------
+  # ecto_gen_string
+  # ----------------
+  def ecto_gen_string(name) do
+    [
+      {:ok, "#{name}:tuple"},
+    ]
+  end
+  
   #-----------------------------
   #  kind/2
   #-----------------------------

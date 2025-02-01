@@ -16,7 +16,14 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
              :uuid_id,
              Noizu.Entity.Meta.UUIDIdentifier.Common
            )
-
+  
+  # ----------------
+  # ecto_gen_string
+  # ----------------
+  def ecto_gen_string(name) do
+    {:ok, "#{name}:uuid"}
+  end
+  
   defdelegate format_id(m, id, index), to: @handler
   defdelegate uuid_string(id), to: @handler
   defdelegate kind(m, id), to: @handler

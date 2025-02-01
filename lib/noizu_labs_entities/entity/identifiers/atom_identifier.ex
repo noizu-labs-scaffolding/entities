@@ -30,7 +30,15 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   def format_id(_m, id, _) do
     "#{id}"
   end
-
+  
+  # ----------------
+  # ecto_gen_string
+  # ----------------
+  def ecto_gen_string(name) do
+    {:ok, "#{name}:string"} # TODO enum:[list]
+  end
+  
+  
   # ----------------
   # kind/2
   # ----------------

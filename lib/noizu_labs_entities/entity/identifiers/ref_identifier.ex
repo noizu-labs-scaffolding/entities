@@ -5,6 +5,14 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
   
+  # ----------------
+  # ecto_gen_string
+  # ----------------
+  def ecto_gen_string(name) do
+    {:ok, "#{name}:tuple"}
+  end
+  
+  
   #-----------------------------
   # format_id/3
   #-----------------------------

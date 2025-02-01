@@ -4,8 +4,11 @@
 # -------------------------------------------------------------------------------
 
 defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
+  @moduledoc """
+  Protocol used to save/load entities from store. Leverage Entity.FieldProtocol to pack/unpack individual fields.
+  """
   @fallback_to_any true
-
+  
   @typedoc "An Entity That Implements the Entity Protocol"
   @type entity :: any
   
@@ -34,7 +37,6 @@ defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
   def as_record(entity, settings, context, options)
   
   @doc "Transform record to entity"
-  # TODO rename fetch_as_entity
   @spec fetch_as_entity(entity, settings, context, options) :: {:ok, entity} | {:error, any}
   def fetch_as_entity(entity, settings, context, options)
   
@@ -59,44 +61,6 @@ defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
   def merge_from_record(entity, record, settings, context, options)
 end
 
-defprotocol Noizu.Entity.Store.Amnesia.Entity.FieldProtocol do
-  @fallback_to_any true
-  
-  
-  @typedoc "An Entity That Implements the Entity.FieldProtocol"
-  @type field :: any
-  
-  @typedoc "Valid field name for storage mechanism"
-  @type field_name :: any
-  
-  @typedoc "An Amnesia Record"
-  @type record :: any
-  
-  @typedoc "Entity Settings Record"
-  @type field_settings :: Noizu.Entity.Meta.Field.field_settings
-  
-  @typedoc "Persistence Settings"
-  @type persistence_settings :: Noizu.Entity.Meta.Persistence.persistence_settings
-  
-  @typedoc "Context Record"
-  @type context :: any
-  
-  @typedoc "Options Keyword List"
-  @type options :: nil | list
-  
-  
-  @doc """
-  Convert field to record format.
-  """
-  @spec field_as_record(field, field_settings, persistence_settings, context, options) :: {:ok, {field_name, any}} | {:error, any}
-  def field_as_record(field, field_settings, persistence_settings, context, options)
-  
-  @doc """
-  Extract field from record.
-  """
-  @spec field_from_record(field, record, field_settings, persistence_settings, context, options) :: {:ok, any} | {:error, any}
-  def field_from_record(field, record, field_settings, persistence_settings, context, options)
-end
 
 defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   require Noizu.Entity.Meta.Persistence
@@ -124,10 +88,10 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
       ) do
     # todo strip transient fields,
     # collapse refs.
-
+    
     field_settings =
       Noizu.Entity.Meta.fields(entity)
-
+    
     # Populate any Indexes
     indexes =
       with true <- function_exported?(table, :set_indexes, 4) || :auto_index,
@@ -159,20 +123,20 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
         _ ->
           []
       end
-
+    
     fields =
       field_settings
       |> Enum.map(
            fn
-        {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings} ->
-          Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_as_record(
-            get_in(entity, [Access.key(name)]),
-            field_settings,
-            settings,
-            context,
-            options
-          )
-
+             {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings} ->
+               Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_as_record(
+                 get_in(entity, [Access.key(name)]),
+                 field_settings,
+                 settings,
+                 context,
+                 options
+               )
+             
              {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: {:ecto, _}) = field_settings} ->
                Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_as_record(
                  get_in(entity, [Access.key(name)]),
@@ -181,18 +145,18 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
                  context,
                  options
                )
-
-        {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
-          with {:ok, field_entry} <- apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options]) do
-            Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_as_record(
-              field_entry,
-              field_settings,
-              settings,
-              context,
-              options
-            )
-          end
-      end)
+             
+             {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
+               with {:ok, field_entry} <- apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options]) do
+                 Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_as_record(
+                   field_entry,
+                   field_settings,
+                   settings,
+                   context,
+                   options
+                 )
+               end
+           end)
       |> List.flatten()
       |> List.flatten()
       |> Enum.map(fn
@@ -201,14 +165,14 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
       end)
       |> Enum.reject(&is_nil/1)
       |> Map.new()
-
+    
     entity = Enum.reduce(fields, entity, fn({k,v}, acc) -> put_in(acc, [Access.key(k)], v) end)
     
-
+    
     record = struct(table, [{:entity, entity}|indexes])
     {:ok, record}
   end
-
+  
   # ---------------------------
   # fetch_as_entity/4
   # ---------------------------
@@ -223,20 +187,20 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
       from_record(record, settings, context, options)
     end
   end
-
+  
   # ---------------------------
   # as_entity/5
   # ---------------------------
   def as_entity(
-        _,
+        entity,
         record,
         settings = Noizu.Entity.Meta.Persistence.persistence_settings(),
         context,
         options
       ) do
-    from_record(record, settings, context, options)
+    merge_from_record(entity, record, settings, context, options)
   end
-
+  
   # ---------------------------
   # delete_record/4
   # ---------------------------
@@ -250,7 +214,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
       apply(table, :delete!, [id])
     end
   end
-
+  
   # ---------------------------
   # fetch_from_record/4
   # ---------------------------
@@ -259,43 +223,43 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
              |> Enum.map(
                   fn
                     ({field, field_settings = Noizu.Entity.Meta.Field.field_settings(options: field_options)}) ->
-                      with true <- field_options[:auto],
-                           {:ok, unpacked} <- Noizu.EntityReference.Protocol.entity(get_in(entity, [Access.key(field)]), context)
-                        do
-                        {field, unpacked}
-                      else
-                         _ ->
-                           case field_settings do
-                                               Noizu.Entity.Meta.Field.field_settings(name: _name, type: nil) ->
-                        nil
-                             Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) ->
-                               nil
-                             Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) ->
-                               {:ok, stub} = apply(type, :stub, [])
-                                                         
-                                                         with {:ok, x}  <- Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_from_record(
-                                 # used for matching
-                                 stub,
-                                 record,
-                                 field_settings,
-                                 settings,
-                                 context,
-                                 options
-                               )
-                               do
-                                 x
-                               else
-                               _ -> nil
-                               end
-                           end
-                           
-                         
+                      case field_settings do
+                        Noizu.Entity.Meta.Field.field_settings(name: _name, type: nil) ->
+                          if field_options[:auto] do
+                            with {:ok, unpacked} <- Noizu.EntityReference.Protocol.entity(get_in(entity, [Access.key(field)]), context) do
+                              {field, unpacked}
+                            end
+                          end
+                        Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) ->
+                          if field_options[:auto] do
+                            with {:ok, unpacked} <- Noizu.EntityReference.Protocol.entity(get_in(entity, [Access.key(field)]), context) do
+                              {field, unpacked}
+                            end
+                          end
+                        Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) ->
+                          {:ok, stub} = apply(type, :stub, [])
+                          
+                          with {:ok, x}  <- Noizu.Entity.Store.Amnesia.Entity.FieldProtocol.field_from_record(
+                            # used for matching
+                            stub,
+                            record,
+                            field_settings,
+                            settings,
+                            context,
+                            options
+                          )
+                            do
+                            x
+                          else
+                            _ -> nil
+                          end
                       end
+                    
                     (_) -> nil
                   end)
              |> Enum.reject(&is_nil/1)
     unless unpack == [] do
-      entity = Enum.reduce(unpack, entity, fn({k,v}, acc) -> put_in(acc, [Access.key(k)], v) end)      
+      entity = Enum.reduce(unpack, entity, fn({k,v}, acc) -> put_in(acc, [Access.key(k)], v) end)
       {:ok, entity}
     else
       {:ok, entity}
@@ -314,80 +278,4 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
     from_record(record, settings, context, options)
   end
 
-end
-
-defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Any] do
-  require Noizu.Entity.Meta.Persistence
-  require Noizu.Entity.Meta.Field
-  
-  # ---------------------------
-  # field_as_record/4
-  # ---------------------------
-  def field_as_record(field, field_settings, persistence_settings, context, options)
-  def field_as_record(_, Noizu.Entity.Meta.Field.field_settings(name: name, transient: true), _, _, _) do
-    {:ok, {name, nil}}
-  end
-  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name), _, _, _) do
-    {:ok, {name, field}}
-  end
-  
-  # ---------------------------
-  # field_from_record
-  # ---------------------------
-  def field_from_record(field, record, field_settings, persistence_settings, context, options)
-  def field_from_record(_, _, _, _, _, _),
-      do: {:error, {:unsupported, Amnesia}} # We simply grab Amnesia for default cases. Multi Table scenarios require Overrides
-end
-
-defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Noizu.Entity.UUIDReference] do
-  defdelegate persist(entity, type, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate as_record(entity, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate fetch_as_entity(entity, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-  defdelegate as_entity(entity, record, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate delete_record(entity, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-  defdelegate from_record(record, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-  defdelegate merge_from_record(entity, record, settings, context, options),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-end
-
-defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Noizu.Entity.UUIDReference] do
-  require Noizu.Entity.Meta.Persistence
-  require Noizu.Entity.Meta.Field
-
-  require Noizu.EntityReference.Records
-  #alias Noizu.EntityReference.Records, as: R
-
-  defdelegate field_from_record(
-                field,
-                record,
-                field_settings,
-                persistence_settings,
-                context,
-                options
-              ),
-              to: Noizu.Entity.UUIDReference.TypeHelper
-
-   def field_as_record(
-        field,
-        Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
-        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
-        _context,
-        _options
-      ) do
-    name = field_store[table][:name] || field_store[store][:name] || name
-    # We need to do a universal ecto conversion
-    with {:ok, ref} <- Noizu.EntityReference.Protocol.ref(field) do
-      {:ok, {name, ref}}
-    end
-  end
 end

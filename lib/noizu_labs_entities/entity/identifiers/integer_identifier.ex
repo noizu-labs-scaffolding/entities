@@ -21,6 +21,13 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
     end
   end
   
+  # ----------------
+  # ecto_gen_string
+  # ----------------
+  def ecto_gen_string(name) do
+    {:ok, "#{name}:integer"}
+  end
+  
   #-----------------------------
   # format_id/3
   #-----------------------------

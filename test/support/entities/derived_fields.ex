@@ -19,14 +19,21 @@ defmodule Noizu.Support.Entities.DerivedFields.DerivedFieldEntity do
   @sref "derived-field-entity"
   @persistence amnesia_store(NoizuEntityTestDb.DerivedFields.DerivedFieldsTable, NoizuTest.EntityRepo)
   def_entity do
-    id(:integer)
+    id(:uuid)
     
     @config pull: &__MODULE__.pull_derived_field/4, push: &__MODULE__.push_derived_field/5
     field :derived_field_a, nil, Noizu.Entity.DerivedField
     field :base_field_a, nil, :string
     field :base_field_b, nil, :string
     field :time_stamp, nil, Noizu.Entity.TimeStamp
-  
+    
+    field :nested_field, nil, Noizu.Support.Entities.NestedFields.NestedFieldReference
+    
+    @config auto: true
+    field :unpacked_nested_field, nil, Noizu.Support.Entities.NestedFields.NestedFieldReference
+    
+    @config auto: true
+    field :unpacked_nested_field_by_ref, nil, Noizu.Support.Entities.NestedFields.NestedFieldReference
   end
   
   
