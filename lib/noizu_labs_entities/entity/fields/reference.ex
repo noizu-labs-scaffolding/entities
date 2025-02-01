@@ -102,11 +102,11 @@ defmodule Noizu.Entity.Reference.TypeHelper do
 
   def persist(_, _, _, _, _), do: {:error, :not_supported}
   def as_record(_, _, _, _), do: {:error, :not_supported}
-  def as_entity(_, _, _, _), do: {:error, :not_supported}
+  def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
   def as_entity(_, _, _, _, _), do: {:error, :not_supported}
   def delete_record(_, _, _, _), do: {:error, :not_supported}
   def from_record(_, _, _, _), do: {:error, :not_supported}
-  def from_record(_, _, _, _, _), do: {:error, :not_supported}
+  def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
 
   def field_as_record(
         field,
@@ -158,7 +158,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.Reference] do
     to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
-  defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
+  defdelegate fetch_as_entity(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
   defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
@@ -166,7 +166,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.Reference] do
 
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Entity.Reference.TypeHelper
-  defdelegate from_record(entity, record, settings, context, options),
+  defdelegate merge_from_record(entity, record, settings, context, options),
               to: Noizu.Entity.Reference.TypeHelper
 end
 
@@ -190,13 +190,13 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.Reference] d
     to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
-  defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
+  defdelegate fetch_as_entity(entity, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
   defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Entity.Reference.TypeHelper
 
-  defdelegate from_record(entity, record, settings, context, options),
+  defdelegate merge_from_record(entity, record, settings, context, options),
               to: Noizu.Entity.Reference.TypeHelper
 
   defdelegate from_record(record, settings, context, options),

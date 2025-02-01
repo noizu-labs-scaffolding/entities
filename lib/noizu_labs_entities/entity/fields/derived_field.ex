@@ -159,7 +159,7 @@ for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity
     defdelegate as_record(entity, settings, context, options),
                 to: Noizu.Entity.DerivedField.TypeHelper
     
-    defdelegate as_entity(entity, settings, context, options),
+    defdelegate fetch_as_entity(entity, settings, context, options),
                 to: Noizu.Entity.DerivedField.TypeHelper
     
     defdelegate as_entity(entity, record, settings, context, options),
@@ -170,7 +170,7 @@ for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity
     
     defdelegate from_record(record, settings, context, options),
                 to: Noizu.Entity.DerivedField.TypeHelper
-    defdelegate from_record(entity, record, settings, context, options),
+    defdelegate merge_from_record(entity, record, settings, context, options),
                 to: Noizu.Entity.DerivedField.TypeHelper
   end
   

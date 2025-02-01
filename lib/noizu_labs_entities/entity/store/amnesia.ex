@@ -6,18 +6,95 @@
 defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
   @fallback_to_any true
 
+  @typedoc "An Entity That Implements the Entity Protocol"
+  @type entity :: any
+  
+  @typedoc "An Amnesia Record"
+  @type record :: any
+  
+  @typedoc "Field Handler"
+  @type type :: any
+  
+  @typedoc "Persistence Settings"
+  @type settings :: Noizu.Entity.Meta.Persistence.persistence_settings
+  
+  @typedoc "Context Record"
+  @type context :: any
+  
+  @typedoc "Options Keyword List"
+  @type options :: nil | list
+  
+  
+  @doc "Save entity to store."
+  @spec persist(entity, type, settings, context, options) :: {:ok, entity} | {:error, any}
   def persist(entity, type, settings, context, options)
+  
+  @doc "Transform to expected entity record format."
+  @spec as_record(entity, settings, context, options) :: {:ok, record} | {:error, any}
   def as_record(entity, settings, context, options)
-  def as_entity(entity, settings, context, options)
+  
+  @doc "Transform record to entity"
+  # TODO rename fetch_as_entity
+  @spec fetch_as_entity(entity, settings, context, options) :: {:ok, entity} | {:error, any}
+  def fetch_as_entity(entity, settings, context, options)
+  
+  @doc "Transform record to entity"
+  @spec as_entity(entity, record, settings, context, options) :: {:ok, entity} | {:error, any}
   def as_entity(entity, record, settings, context, options)
+  
+  @doc "Delete record entity"
+  @spec delete_record(entity, settings, context, options) :: {:ok, entity} | {:error, any}
   def delete_record(entity, settings, context, options)
+  
+  @doc """
+  as_entity helper convert record to entity - fetch
+  """
+  @spec from_record(record, settings, context, options) :: {:ok, entity} | {:error, any}
   def from_record(record, settings, context, options)
-  def from_record(entity, record, settings, context, options)
+  
+  @doc """
+  as_entity helper convert record to entity
+  """
+  @spec merge_from_record(entity, record, settings, context, options) :: {:ok, entity} | {:error, any}
+  def merge_from_record(entity, record, settings, context, options)
 end
 
 defprotocol Noizu.Entity.Store.Amnesia.Entity.FieldProtocol do
   @fallback_to_any true
+  
+  
+  @typedoc "An Entity That Implements the Entity.FieldProtocol"
+  @type field :: any
+  
+  @typedoc "Valid field name for storage mechanism"
+  @type field_name :: any
+  
+  @typedoc "An Amnesia Record"
+  @type record :: any
+  
+  @typedoc "Entity Settings Record"
+  @type field_settings :: Noizu.Entity.Meta.Field.field_settings
+  
+  @typedoc "Persistence Settings"
+  @type persistence_settings :: Noizu.Entity.Meta.Persistence.persistence_settings
+  
+  @typedoc "Context Record"
+  @type context :: any
+  
+  @typedoc "Options Keyword List"
+  @type options :: nil | list
+  
+  
+  @doc """
+  Convert field to record format.
+  """
+  @spec field_as_record(field, field_settings, persistence_settings, context, options) :: {:ok, {field_name, any}} | {:error, any}
   def field_as_record(field, field_settings, persistence_settings, context, options)
+  
+  @doc """
+  Extract field from record.
+  """
+  @spec field_from_record(field, record, field_settings, persistence_settings, context, options) :: {:ok, any} | {:error, any}
   def field_from_record(field, record, field_settings, persistence_settings, context, options)
 end
 
@@ -26,7 +103,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   require Noizu.EntityReference.Records
   require Noizu.Entity.Meta.Field
   # ---------------------------
-  #
+  # persist/5
   # ---------------------------
   def persist(%{__struct__: table} = record, _type, Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = _settings, _context, _options) do
     with x = %{} <- apply(table, :write!, [record]) do
@@ -37,7 +114,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
     {:error, :unsupported}
   end
   # ---------------------------
-  #
+  #  as_record/4
   # ---------------------------
   def as_record(
         entity,
@@ -133,9 +210,9 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   end
 
   # ---------------------------
-  #
+  # fetch_as_entity/4
   # ---------------------------
-  def as_entity(
+  def fetch_as_entity(
         entity,
         settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
         context,
@@ -148,7 +225,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   end
 
   # ---------------------------
-  #
+  # as_entity/5
   # ---------------------------
   def as_entity(
         _,
@@ -161,7 +238,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   end
 
   # ---------------------------
-  #
+  # delete_record/4
   # ---------------------------
   def delete_record(
         entity,
@@ -175,7 +252,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   end
 
   # ---------------------------
-  #
+  # fetch_from_record/4
   # ---------------------------
   def from_record(%{entity: entity} = record, settings, context, options) do
     unpack = Noizu.Entity.Meta.fields(entity)
@@ -224,12 +301,15 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
       {:ok, entity}
     end
   end
-
-
   def from_record(_, _settings, _context, _options) do
     {:error, :invalid_record}
   end
-  def from_record(_, record, settings, context, options) do
+  
+  # ---------------------------
+  # from_record/5
+  # ---------------------------
+  def merge_from_record(entity, record, settings, context, options)
+  def merge_from_record(_, record, settings, context, options) do
     # @todo refresh entity with record
     from_record(record, settings, context, options)
   end
@@ -239,26 +319,25 @@ end
 defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol, for: [Any] do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
-  def field_as_record(_field, Noizu.Entity.Meta.Field.field_settings(name: name, transient: true) = _field_settings, _persistence_settings, _context, _options) do
+  
+  # ---------------------------
+  # field_as_record/4
+  # ---------------------------
+  def field_as_record(field, field_settings, persistence_settings, context, options)
+  def field_as_record(_, Noizu.Entity.Meta.Field.field_settings(name: name, transient: true), _, _, _) do
     {:ok, {name, nil}}
   end
-  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name) = _field_settings, _persistence_settings, _context, _options) do
+  def field_as_record(field, Noizu.Entity.Meta.Field.field_settings(name: name), _, _, _) do
     {:ok, {name, field}}
   end
-  def field_from_record(
-        _field,
-        _record,
-        _field_settings,
-        _persistence_settings,
-        _context,
-        _options
-      ),
+  
+  # ---------------------------
+  # field_from_record
+  # ---------------------------
+  def field_from_record(field, record, field_settings, persistence_settings, context, options)
+  def field_from_record(_, _, _, _, _, _),
       do: {:error, {:unsupported, Amnesia}} # We simply grab Amnesia for default cases. Multi Table scenarios require Overrides
 end
-
-
-
-
 
 defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Noizu.Entity.UUIDReference] do
   defdelegate persist(entity, type, settings, context, options),
@@ -267,7 +346,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Noizu.Entity.UUIDRefere
   defdelegate as_record(entity, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
 
-  defdelegate as_entity(entity, settings, context, options),
+  defdelegate fetch_as_entity(entity, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
   defdelegate as_entity(entity, record, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
@@ -277,7 +356,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Noizu.Entity.UUIDRefere
 
   defdelegate from_record(record, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
-  defdelegate from_record(entity, record, settings, context, options),
+  defdelegate merge_from_record(entity, record, settings, context, options),
               to: Noizu.Entity.UUIDReference.TypeHelper
 end
 

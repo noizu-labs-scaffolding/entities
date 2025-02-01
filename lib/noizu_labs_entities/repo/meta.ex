@@ -247,7 +247,8 @@ defmodule Noizu.Repo.Meta do
     |> Enum.reduce_while({:error, :not_found}, fn settings, _ ->
       Noizu.Entity.Meta.Persistence.persistence_settings(type: type) = settings
       protocol = Module.concat([type, EntityProtocol])
-      with {:ok, entity} <- apply(protocol, :as_entity, [entity, settings, context, options]) do
+      
+      with {:ok, entity} <- apply(protocol, :fetch_as_entity, [entity, settings, context, options]) do
         {:halt, {:ok, entity}}
       else
         err -> {:cont, err}

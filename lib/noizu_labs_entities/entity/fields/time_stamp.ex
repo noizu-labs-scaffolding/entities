@@ -36,11 +36,11 @@ defmodule Noizu.Entity.TimeStamp.TypeHelper do
   require Noizu.Entity.Meta.Field
 
   def as_record(_, _, _, _), do: {:error, :not_supported}
-  def as_entity(_, _, _, _), do: {:error, :not_supported}
+  def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
   def as_entity(_, _, _, _, _), do: {:error, :not_supported}
   def delete_record(_, _, _, _), do: {:error, :not_supported}
   def from_record(_, _, _, _), do: {:error, :not_supported}
-  def from_record(_, _, _, _, _), do: {:error, :not_supported}
+  def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
   def persist(_, _, _, _, _), do: {:error, :not_supported}
 
   def field_as_record(
@@ -137,7 +137,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.TimeStamp] d
     to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
-  defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
+  defdelegate fetch_as_entity(entity, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
   defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
@@ -146,7 +146,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.TimeStamp] d
   defdelegate from_record(entity, record, settings, context, options),
               to: Noizu.Entity.TimeStamp.TypeHelper
 
-  defdelegate from_record(record, settings, context, options),
+  defdelegate merge_from_record(record, settings, context, options),
     to: Noizu.Entity.TimeStamp.TypeHelper
 end
 

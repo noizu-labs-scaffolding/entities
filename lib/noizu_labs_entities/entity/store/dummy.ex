@@ -9,11 +9,11 @@ defprotocol Noizu.Entity.Store.Dummy.EntityProtocol do
 
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
-  def as_entity(entity, settings, context, options)
+  def fetch_as_entity(entity, settings, context, options)
   def as_entity(entity, record, settings, context, options)
   def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
-  def from_record(entity, record, settings, context, options)
+  def merge_from_record(entity, record, settings, context, options)
 end
 
 defprotocol Noizu.Entity.Store.Dummy.Entity.FieldProtocol do
@@ -146,7 +146,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   # ---------------------------
   #
   # ---------------------------
-  def as_entity(
+  def fetch_as_entity(
         entity,
         settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
         context,
@@ -189,7 +189,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   # ---------------------------
   #
   # ---------------------------
-  def from_record(_, record, settings, context, options) do
+  def merge_from_record(_, record, settings, context, options) do
     # todo refresh entity from record
     from_record(record, settings, context, options)
   end

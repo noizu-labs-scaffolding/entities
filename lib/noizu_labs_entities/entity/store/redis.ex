@@ -9,11 +9,11 @@ defprotocol Noizu.Entity.Store.Redis.EntityProtocol do
 
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
-  def as_entity(entity, settings, context, options)
+  def fetch_as_entity(entity, settings, context, options)
   def as_entity(entity, record, settings, context, options)
   def delete_record(entity, settings, context, options)
   def from_record(record, settings, context, options)
-  def from_record(entity, record, settings, context, options)
+  def merge_from_record(entity, record, settings, context, options)
   def key(entity, settings, context, options)
 end
 
@@ -73,7 +73,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
-  def as_entity(
+  def fetch_as_entity(
         entity,
         settings = Noizu.Entity.Meta.Persistence.persistence_settings(store: store),
         context,
@@ -118,7 +118,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
-  def from_record(_, record, settings, context, options) do
+  def merge_from_record(_, record, settings, context, options) do
     # todo refresh entity
     from_record(record, settings, context, options)
   end
@@ -149,7 +149,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
       defdelegate as_record(record, settings, context, options),
         to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
-      defdelegate as_entity(record, settings, context, options),
+      defdelegate fetch_as_entity(record, settings, context, options),
         to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
       defdelegate as_entity(entity, record, settings, context, options),
@@ -161,17 +161,17 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
       defdelegate from_record(record, settings, context, options),
         to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
-      defdelegate from_record(entity, record, settings, context, options),
+      defdelegate merge_from_record(entity, record, settings, context, options),
         to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
       defoverridable key: 4,
                      persist: 5,
                      as_record: 4,
-                     as_entity: 4,
+                     fetch_as_entity: 4,
                      as_entity: 5,
                      delete_record: 4,
                      from_record: 4,
-                     from_record: 5
+                     merge_from_record: 5
     end
   end
 end
@@ -193,8 +193,8 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
         def as_record(record, settings, context, options),
           do: apply(unquote(module), :as_record, [record, settings, context, options])
 
-        def as_entity(record, settings, context, options),
-          do: apply(unquote(module), :as_entity, [record, settings, context, options])
+        def fetch_as_entity(record, settings, context, options),
+          do: apply(unquote(module), :fetch_as_entity, [record, settings, context, options])
 
         def as_entity(entity, record, settings, context, options),
           do: apply(unquote(module), :as_entity, [entity, record, settings, context, options])
@@ -205,7 +205,7 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
         def from_record(record, settings, context, options),
           do: apply(unquote(module), :from_record, [record, settings, context, options])
 
-        def from_record(entity, record, settings, context, options),
+        def merge_from_record(entity, record, settings, context, options),
           do: apply(unquote(module), :from_record, [entity, record, settings, context, options])
       end
     end
@@ -221,7 +221,7 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   defdelegate as_record(record, settings, context, options),
     to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
-  defdelegate as_entity(record, settings, context, options),
+  defdelegate fetch_as_entity(record, settings, context, options),
     to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
   defdelegate as_entity(entity, record, settings, context, options),
@@ -233,7 +233,7 @@ defimpl Noizu.Entity.Store.Redis.EntityProtocol, for: [Any] do
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 
-  defdelegate from_record(entity, record, settings, context, options),
+  defdelegate merge_from_record(entity, record, settings, context, options),
     to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
 end
 

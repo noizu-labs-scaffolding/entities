@@ -33,21 +33,21 @@ defmodule Noizu.Entity.ReferenceBehavior do
           defimpl Noizu.Entity.Store.Ecto.EntityProtocol do
             def persist(_, _, _, _, _), do: {:error, :not_supported}
             def as_record(_, _, _, _), do: {:error, :not_supported}
-            def as_entity(_, _, _, _), do: {:error, :not_supported}
+            def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
             def as_entity(_, _, _, _, _), do: {:error, :not_supported}
             def delete_record(_, _, _, _), do: {:error, :not_supported}
             def from_record(_, _, _, _), do: {:error, :not_supported}
-            def from_record(_, _, _, _, _), do: {:error, :not_supported}
+            def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
           end
 
           defimpl Noizu.Entity.Store.Dummy.EntityProtocol do
             def persist(_, _, _, _, _), do: {:error, :not_supported}
             def as_record(_, _, _, _), do: {:error, :not_supported}
-            def as_entity(_, _, _, _), do: {:error, :not_supported}
+            def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
             def as_entity(_, _, _, _, _), do: {:error, :not_supported}
             def delete_record(_, _, _, _), do: {:error, :not_supported}
             def from_record(_, _, _, _), do: {:error, :not_supported}
-            def from_record(_, _, _, _, _), do: {:error, :not_supported}
+            def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
           end
 
 
@@ -180,32 +180,32 @@ defmodule Noizu.Entity.ReferenceBehavior do
           defimpl Noizu.Entity.Store.Ecto.EntityProtocol do
             def persist(_, _, _, _, _), do: {:error, :not_supported}
             def as_record(_, _, _, _), do: {:error, :not_supported}
-            def as_entity(_, _, _, _), do: {:error, :not_supported}
+            def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
             def as_entity(_, _, _, _, _), do: {:error, :not_supported}
             def delete_record(_, _, _, _), do: {:error, :not_supported}
             def from_record(_, _, _, _), do: {:error, :not_supported}
-            def from_record(_, _, _, _, _), do: {:error, :not_supported}
+            def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
           end
 
 
           defimpl Noizu.Entity.Store.Dummy.EntityProtocol do
             def persist(_, _, _, _, _), do: {:error, :not_supported}
             def as_record(_, _, _, _), do: {:error, :not_supported}
-            def as_entity(_, _, _, _), do: {:error, :not_supported}
+            def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
             def as_entity(_, _, _, _, _), do: {:error, :not_supported}
             def delete_record(_, _, _, _), do: {:error, :not_supported}
             def from_record(_, _, _, _), do: {:error, :not_supported}
-            def from_record(_, _, _, _, _), do: {:error, :not_supported}
+            def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
           end
 
           defimpl Noizu.Entity.Store.Amnesia.EntityProtocol do
             def persist(_, _, _, _, _), do: {:error, :not_supported}
             def as_record(_, _, _, _), do: {:error, :not_supported}
-            def as_entity(_, _, _, _), do: {:error, :not_supported}
+            def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
             def as_entity(_, _, _, _, _), do: {:error, :not_supported}
             def delete_record(_, _, _, _), do: {:error, :not_supported}
             def from_record(_, _, _, _), do: {:error, :not_supported}
-            def from_record(_, _, _, _, _), do: {:error, :not_supported}
+            def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
           end
 
           defimpl Noizu.Entity.Store.Amnesia.Entity.FieldProtocol do
