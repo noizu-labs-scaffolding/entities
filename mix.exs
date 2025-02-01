@@ -79,7 +79,7 @@ defmodule Noizu.Entities.MixProject do
       
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
-    
+      {:junit_formatter, "~> 3.4", only: [:test]},
       {:shortuuid, "~> 3.0"},
       {:elixir_uuid, "~> 1.2", optional: true},
       {:inflex, "~> 2.0.0"},
