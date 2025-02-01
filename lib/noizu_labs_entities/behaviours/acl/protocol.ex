@@ -8,7 +8,8 @@ defprotocol Noizu.Entity.ACL.Protocol do
   ACL protocol is used to strip/removed fields context user does not have access to.
   """
   @fallback_to_any true
-  @spec restrict(for :: term, entity :: term, settings :: term, context :: term, options :: term) :: {:ok, any} | {:error, any}
+  @spec restrict(for :: term, entity :: term, settings :: term, context :: term, options :: term) ::
+          {:ok, any} | {:error, any}
   def restrict(for, entity, acl_settings, context, options)
 end
 

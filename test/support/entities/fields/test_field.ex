@@ -100,7 +100,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Support.Entity.TestF
     to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate as_entity(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+    to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
@@ -109,7 +109,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Support.Entity.TestF
     to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate from_record(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+    to: Noizu.Support.Entity.TestField.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Support.Entity.TestField] do
@@ -138,13 +138,13 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Support.Entity.Test
     to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate as_entity(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+    to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate from_record(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+    to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper

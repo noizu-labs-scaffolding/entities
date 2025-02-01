@@ -6,7 +6,7 @@
 defprotocol Noizu.Entity.Store.Dummy.EntityProtocol do
   @fallback_to_any true
   require Noizu.Entity.Meta.Field
-  
+
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
   def fetch_as_entity(entity, settings, context, options)
@@ -18,37 +18,37 @@ end
 
 defmodule Noizu.Entity.Store.Dummy.StorageLayer do
   @table_name :dummy_storage_device
-  
+
   def init do
     create_table()
   end
-  
+
   defp create_table do
     case :ets.info(@table_name) do
       :undefined -> :ets.new(@table_name, [:public, :named_table])
       _ -> :ok
     end
   end
-  
+
   def write(id, name_space, entity) do
     # IO.inspect(entity, label:  "WRITE #{id}:#{name_space}")
     create_table()
     key = {id, name_space}
     :ets.insert(@table_name, {key, entity})
   end
-  
+
   def delete(id, name_space) do
     # IO.puts "delete #{id}:#{name_space}"
     create_table()
     key = {id, name_space}
     :ets.delete(@table_name, key)
   end
-  
+
   def get(id, name_space) do
     # IO.puts "get #{id}:#{name_space}"
     create_table()
     key = {id, name_space}
-    
+
     case :ets.lookup(@table_name, key) do
       [{_, entity}] -> {:ok, entity}
       [] -> {:error, :not_found}
@@ -59,7 +59,7 @@ end
 defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -73,11 +73,11 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
     # Verify table match
     Noizu.Entity.Store.Dummy.StorageLayer.write(id, table, record)
   end
-  
+
   def persist(_, _, _, _, _) do
     {:error, :pending}
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -91,13 +91,12 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
     # @todo collapse refs.
     # @todo map fields
     # @todo Inject indexes
-    
+
     #     Record.defrecord(:field_settings, [name: nil, store: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
     fields =
       Noizu.Entity.Meta.fields(entity)
       |> Enum.map(fn
         {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: nil) = field_settings} ->
-          
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
             get_in(entity, [Access.key(name)]),
             field_settings,
@@ -105,8 +104,8 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
             context,
             options
           )
+
         {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: {:ecto, _}) = field_settings} ->
-          
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
             get_in(entity, [Access.key(name)]),
             field_settings,
@@ -114,9 +113,11 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
             context,
             options
           )
+
         {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
-          {:ok, field_entry} = apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
-          
+          {:ok, field_entry} =
+            apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
+
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_as_record(
             field_entry,
             field_settings,
@@ -126,17 +127,16 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
           )
       end)
       |> List.flatten()
-      |> Enum.map(
-           fn
-             {:ok, v} -> v
-             _ -> nil
-           end)
+      |> Enum.map(fn
+        {:ok, v} -> v
+        _ -> nil
+      end)
       |> Enum.reject(&is_nil/1)
-    
+
     record = struct(table, fields)
     {:ok, record}
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -151,7 +151,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
       from_record(record, settings, context, options)
     end
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -164,7 +164,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
       ) do
     from_record(record, settings, context, options)
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -179,7 +179,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
       :ok
     end
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -187,7 +187,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
     # todo refresh entity from record
     from_record(record, settings, context, options)
   end
-  
+
   def from_record(
         record,
         Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings,
@@ -206,7 +206,9 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
             context,
             options
           )
-        {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) = field_settings} ->
+
+        {_,
+         Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) = field_settings} ->
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_from_record(
             nil,
             record,
@@ -215,9 +217,10 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
             context,
             options
           )
+
         {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings} ->
           {:ok, stub} = apply(type, :stub, [])
-          
+
           Noizu.Entity.Store.Dummy.Entity.FieldProtocol.field_from_record(
             # used for matching
             stub,
@@ -229,15 +232,13 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
           )
       end)
       |> List.flatten()
-      |> Enum.map(
-           fn
-             {:ok, v} -> v
-             _ -> nil
-           end)
+      |> Enum.map(fn
+        {:ok, v} -> v
+        _ -> nil
+      end)
       |> Enum.reject(&is_nil/1)
-    
+
     entity = struct(kind, fields)
     {:ok, entity}
   end
 end
-

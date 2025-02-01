@@ -3,7 +3,6 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 
-
 defmodule Noizu.Support.Entities.Foos do
   use Noizu.Repo
   def_repo()
@@ -46,7 +45,7 @@ defmodule Noizu.Support.Entities.Foos.Foo do
     field(:name)
 
     @config auto: true
-    field :reference_field, nil, Noizu.Entity.Extended.UUIDReference
+    field(:reference_field, nil, Noizu.Entity.Extended.UUIDReference)
 
     pii do
       @json false
@@ -96,7 +95,6 @@ defmodule Noizu.Support.Entities.Foos.Foo do
     @json for: :api, set: [omit: false, as: :bop2]
     field(:json_template_specific2)
   end
-
 
   # todo  REPO - own module
   # todo  all entity to pl logic

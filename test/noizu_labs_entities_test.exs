@@ -153,8 +153,9 @@ defmodule Noizu.EntitiesTest do
       templates =
         Noizu.Entity.Meta.json(Noizu.Support.Entities.Foos.Foo)
         |> Map.keys()
-      
-      assert Enum.sort(templates)  == Enum.sort([:admin, :admin2, :api, :bar, :brief, :default, :foo, :special])
+
+      assert Enum.sort(templates) ==
+               Enum.sort([:admin, :admin2, :api, :bar, :brief, :default, :foo, :special])
     end
 
     test "not_set template" do
@@ -497,8 +498,6 @@ defmodule Noizu.EntitiesTest do
     test "Save and Get Record" do
       id = :os.system_time(:millisecond) * 100 + 1
 
-
-
       foo = %Noizu.Support.Entities.Foos.Foo{
         id: id,
         name: "Henry 1",
@@ -511,10 +510,11 @@ defmodule Noizu.EntitiesTest do
       {:ok, foo_ref} = Noizu.Support.Entities.Foos.Foo.ref(foo_entity)
 
       id = :os.system_time(:millisecond) * 100 + 3
+
       entity = %Noizu.Support.Entities.Foos.Foo{
         id: id,
         name: "Henry",
-        reference_field: foo_ref,
+        reference_field: foo_ref
       }
 
       {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
@@ -643,39 +643,71 @@ defmodule Noizu.EntitiesTest do
 
   describe "Ecto.Changeset support" do
     test "validate required" do
-      cs = Noizu.Support.Entities.BizBops.BizBop.changeset(%Noizu.Support.Entities.BizBops.BizBop{}, %{})
+      cs =
+        Noizu.Support.Entities.BizBops.BizBop.changeset(
+          %Noizu.Support.Entities.BizBops.BizBop{},
+          %{}
+        )
+
       assert cs.errors[:name] == {"can't be blank", [validation: :required]}
     end
 
     test "validate type" do
-      cs = Noizu.Support.Entities.BizBops.BizBop.changeset(%Noizu.Support.Entities.BizBops.BizBop{}, %{ecto_hint: 123, name: "apple"})
+      cs =
+        Noizu.Support.Entities.BizBops.BizBop.changeset(
+          %Noizu.Support.Entities.BizBops.BizBop{},
+          %{ecto_hint: 123, name: "apple"}
+        )
+
       assert cs.errors[:ecto_hint] == {"is invalid", [type: :string, validation: :cast]}
     end
 
-
     test "valid changeset" do
-      cs = Noizu.Support.Entities.BizBops.BizBop.changeset(%Noizu.Support.Entities.BizBops.BizBop{}, %{ecto_hint: "string", name: "apple"})
+      cs =
+        Noizu.Support.Entities.BizBops.BizBop.changeset(
+          %Noizu.Support.Entities.BizBops.BizBop{},
+          %{ecto_hint: "string", name: "apple"}
+        )
+
       assert cs.errors == []
     end
 
     test "Create from changeset - direct" do
-        initial = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", inserted_at: DateTime.utc_now()}
-        cs = Noizu.Support.Entities.BizBops.BizBop.changeset(initial, %{ecto_hint: "string", name: "apple"})
-        {:ok, e} = Noizu.Support.Entities.BizBops.create(cs, @context, [])
-        r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.id)
-        assert is_integer(r.inserted_at)
-        assert r.entity.name == "apple"
-    end
+      initial = %Noizu.Support.Entities.BizBops.BizBop{
+        title2: "Apple",
+        description: "Bop",
+        inserted_at: DateTime.utc_now()
+      }
 
+      cs =
+        Noizu.Support.Entities.BizBops.BizBop.changeset(initial, %{
+          ecto_hint: "string",
+          name: "apple"
+        })
 
-    test "Create from changeset" do
-      initial = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", inserted_at: DateTime.utc_now()}
-      cs = Noizu.Support.Entities.BizBops.BizBop.changeset(initial, %{ecto_hint: "string", name: "apple"})
-      {:ok, e} = NoizuTest.EntityRepo.create(cs, @context)
+      {:ok, e} = Noizu.Support.Entities.BizBops.create(cs, @context, [])
       r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.id)
       assert is_integer(r.inserted_at)
       assert r.entity.name == "apple"
     end
 
+    test "Create from changeset" do
+      initial = %Noizu.Support.Entities.BizBops.BizBop{
+        title2: "Apple",
+        description: "Bop",
+        inserted_at: DateTime.utc_now()
+      }
+
+      cs =
+        Noizu.Support.Entities.BizBops.BizBop.changeset(initial, %{
+          ecto_hint: "string",
+          name: "apple"
+        })
+
+      {:ok, e} = NoizuTest.EntityRepo.create(cs, @context)
+      r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.id)
+      assert is_integer(r.inserted_at)
+      assert r.entity.name == "apple"
+    end
   end
 end

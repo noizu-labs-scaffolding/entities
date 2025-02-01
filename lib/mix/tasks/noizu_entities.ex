@@ -5,7 +5,27 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   use --no-ecto to prevent context and entity generation
   """
   use Mix.Task
-  @ecto_types ["integer", "float", "string", "boolean", "binary", "date", "time", "naive_datetime", "utc_datetime", "utc_datetime_usec", "uuid", "map", "array", "decimal", "json", "jsonb", "enum", "any"]
+
+  @ecto_types [
+    "integer",
+    "float",
+    "string",
+    "boolean",
+    "binary",
+    "date",
+    "time",
+    "naive_datetime",
+    "utc_datetime",
+    "utc_datetime_usec",
+    "uuid",
+    "map",
+    "array",
+    "decimal",
+    "json",
+    "jsonb",
+    "enum",
+    "any"
+  ]
 
   defp extract_args(argv) do
     OptionParser.parse(
@@ -22,7 +42,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         context: :boolean,
         schema: :boolean,
         context_app: :string,
-        web: :string,
+        web: :string
       ]
     )
   end
@@ -34,9 +54,11 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
     ecto = is_nil(args[:ecto]) || args[:ecto]
     live = is_nil(args[:live]) || args[:live]
-    ecto_gen_fields = if (ecto || live) do
-      ecto_gen(options)
-    end
+
+    ecto_gen_fields =
+      if ecto || live do
+        ecto_gen(options)
+      end
 
     # Generate Context and Entity Files
     with {:ok, context_body} <- context_template(options),
@@ -47,60 +69,108 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
             app = :"#{options.app}_web"
             app_dir = "#{app}"
 
-            optional_args = [
-                              (options.args[:context_app] && "--context-app=#{options.args[:context_app]}"),
-                              (options.args[:web] && "--web=#{options.args[:web]}"),
-                              (options.args[:context] == false && "--no-context"),
-                              (options.args[:schema] == false && "--no-schema")
-                            ]
-                            |> Enum.filter(&(&1))
-            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            optional_args =
+              [
+                options.args[:context_app] && "--context-app=#{options.args[:context_app]}",
+                options.args[:web] && "--web=#{options.args[:web]}",
+                options.args[:context] == false && "--no-context",
+                options.args[:schema] == false && "--no-schema"
+              ]
+              |> Enum.filter(& &1)
 
-            #Mix.Shell.cmd("mix app phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
+            command =
+              [
+                "Schema.#{options.context.name}",
+                options.entity.name,
+                options.table.name | ecto_gen_fields
+              ] ++ optional_args
+
+            # Mix.Shell.cmd("mix app phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
             Mix.Project.in_project(
               app,
               "#{options.config[:apps_path]}/#{app_dir}",
               fn module ->
-                Mix.Shell.IO.info("Running: mix phx.gen.live in #{module} #{Enum.join(command, " ")}")
-                Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
-              end)
+                Mix.Shell.IO.info(
+                  "Running: mix phx.gen.live in #{module} #{Enum.join(command, " ")}"
+                )
+
+                Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn x ->
+                  IO.puts(x)
+                end)
+              end
+            )
+
           ecto ->
-            optional_args = [
-                              (options.args[:context] == false && "--no-context"),
-                              (options.args[:schema] == false && "--no-schema")
-                            ]
-                            |> Enum.filter(&(&1))
-            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            optional_args =
+              [
+                options.args[:context] == false && "--no-context",
+                options.args[:schema] == false && "--no-schema"
+              ]
+              |> Enum.filter(& &1)
+
+            command =
+              [
+                "Schema.#{options.context.name}",
+                options.entity.name,
+                options.table.name | ecto_gen_fields
+              ] ++ optional_args
+
             Mix.Project.in_project(
               options.app,
               "#{options.config[:apps_path]}/#{options.app}",
               fn module ->
-                Mix.Shell.IO.info("Running: mix phx.gen.context in #{module} #{Enum.join(command, " ")}")
-                Mix.Shell.cmd("mix phx.gen.context #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
-              end)
-          :else -> :nop
+                Mix.Shell.IO.info(
+                  "Running: mix phx.gen.context in #{module} #{Enum.join(command, " ")}"
+                )
+
+                Mix.Shell.cmd("mix phx.gen.context #{Enum.join(command, " ")}", fn x ->
+                  IO.puts(x)
+                end)
+              end
+            )
+
+          :else ->
+            :nop
         end
       else
         cond do
           live ->
-            optional_args = [
-                              (options.args[:web] && "--web=#{options.args[:web]}"),
-                              (options.args[:context] == false && "--no-context"),
-                              (options.args[:schema] == false && "--no-schema")
-                            ]
-                            |> Enum.filter(&(&1))
-            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            optional_args =
+              [
+                options.args[:web] && "--web=#{options.args[:web]}",
+                options.args[:context] == false && "--no-context",
+                options.args[:schema] == false && "--no-schema"
+              ]
+              |> Enum.filter(& &1)
+
+            command =
+              [
+                "Schema.#{options.context.name}",
+                options.entity.name,
+                options.table.name | ecto_gen_fields
+              ] ++ optional_args
+
             Mix.Shell.IO.info("Running: mix phx.gen.live in #{Enum.join(command, " ")}")
-            Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
+            Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn x -> IO.puts(x) end)
+
           ecto ->
-            optional_args = [
-                              (options.args[:context] == false && "--no-context"),
-                              (options.args[:schema] == false && "--no-schema")
-                            ]
-                            |> Enum.filter(&(&1))
-            command = ["Schema.#{options.context.name}", options.entity.name,  options.table.name | ecto_gen_fields] ++ optional_args
+            optional_args =
+              [
+                options.args[:context] == false && "--no-context",
+                options.args[:schema] == false && "--no-schema"
+              ]
+              |> Enum.filter(& &1)
+
+            command =
+              [
+                "Schema.#{options.context.name}",
+                options.entity.name,
+                options.table.name | ecto_gen_fields
+              ] ++ optional_args
+
             Mix.Shell.IO.info("Running: mix phx.gen.live in #{Enum.join(command, " ")}")
-            Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn(x) -> IO.puts(x) end)
+            Mix.Shell.cmd("mix phx.gen.live #{Enum.join(command, " ")}", fn x -> IO.puts(x) end)
+
           :else ->
             :nop
         end
@@ -109,63 +179,71 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       # Write Entity Files
       File.write(options.context.file, context_body)
       File.write(options.entity.file, entity_body)
-
     end
   end
-
 
   def ecto_gen(options) do
     meta = extract_meta(options)
-    fields = Keyword.get_values(options.args, :field)
-             |> Enum.map(
-                  fn
-                    x ->
-                      case String.split(x, ":") do
-                        [field] ->
-                          # @TODO also check if meta attribute for ecto was set @ecto type: value
-                          # temp work around
-                          if t = meta[field] && get_in(meta[field], ["ecto.type"]) do
-                            "#{field}:#{t}"
-                          end
-                        [field | type] ->
-                          type = Enum.join(type, ":") |> String.trim()
-                          case type do
-                            "array:" <> _ -> "#{field}:#{type}"
-                            "enum:" <> _ -> "#{field}:#{type}"
-                            t when t in @ecto_types -> "#{field}:#{type}"
-                            x ->
-                              try do
-                                # @TODO also check if meta attribute for ecto was set @ecto type: value
-                                # temp work around
-                                if t = meta[field] && get_in(meta[field], ["ecto.type"]) do
-                                  "#{field}:#{t}"
-                                else
-                                  m = String.to_existing_atom("Elixir.#{type}")
-                                  with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
-                                    x
-                                  else
-                                    _ -> nil
-                                  end
-                                end
-                              rescue
-                                _ ->
-                                  Mix.Shell.IO.warn("Failed to determine Type #{type} for field #{field}")
-                                  exit(1)
-                              end
-                          end
+
+    fields =
+      Keyword.get_values(options.args, :field)
+      |> Enum.map(fn
+        x ->
+          case String.split(x, ":") do
+            [field] ->
+              # @TODO also check if meta attribute for ecto was set @ecto type: value
+              # temp work around
+              if t = meta[field] && get_in(meta[field], ["ecto.type"]) do
+                "#{field}:#{t}"
+              end
+
+            [field | type] ->
+              type = Enum.join(type, ":") |> String.trim()
+
+              case type do
+                "array:" <> _ ->
+                  "#{field}:#{type}"
+
+                "enum:" <> _ ->
+                  "#{field}:#{type}"
+
+                t when t in @ecto_types ->
+                  "#{field}:#{type}"
+
+                x ->
+                  try do
+                    # @TODO also check if meta attribute for ecto was set @ecto type: value
+                    # temp work around
+                    if t = meta[field] && get_in(meta[field], ["ecto.type"]) do
+                      "#{field}:#{t}"
+                    else
+                      m = String.to_existing_atom("Elixir.#{type}")
+
+                      with {:ok, x} <- apply(m, :ecto_gen_string, [field]) do
+                        x
+                      else
+                        _ -> nil
                       end
+                    end
+                  rescue
+                    _ ->
+                      Mix.Shell.IO.warn("Failed to determine Type #{type} for field #{field}")
+                      exit(1)
                   end
-                )
-             |> List.flatten()
-             |> Enum.filter(&(&1))
+              end
+          end
+      end)
+      |> List.flatten()
+      |> Enum.filter(& &1)
   end
 
-
   def context_template(options) do
-    author = cond do
-      authors = options.config[:authors] -> Enum.join(authors, ", ")
-      :else -> options.app_name
-    end
+    author =
+      cond do
+        authors = options.config[:authors] -> Enum.join(authors, ", ")
+        :else -> options.app_name
+      end
+
     org = options.config[:organization] || options.app_name
 
     app = options.app_name
@@ -175,6 +253,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     singular = Macro.underscore(Inflex.singularize(x))
     plural = Macro.underscore(Inflex.pluralize(x))
     entity_alias = "Entity"
+
     template = """
       #-------------------------------------------------------------------------------
       # Author: #{author}
@@ -235,14 +314,17 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         end
       end
     """
+
     {:ok, template}
   end
 
   def entity_template(options) do
-    author = cond do
-      authors = options.config[:authors] -> Enum.join(authors, ", ")
-      :else -> options.app_name
-    end
+    author =
+      cond do
+        authors = options.config[:authors] -> Enum.join(authors, ", ")
+        :else -> options.app_name
+      end
+
     org = options.config[:organization] || options.app_name
     app = options.app_name
     context = options.context.name
@@ -256,78 +338,105 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     stores = extract_stores(options)
     id_type = extract_id(options)
     sref = extract_sref(options)
-    sref_block = cond do
-      is_nil(sref) -> ""
-      true -> "@sref \"#{sref}\""
-    end
 
-    persistence_block = cond do
-      stores == [] -> nil
-      is_list(stores) ->
-        Enum.map(stores,
-          fn
-            store ->
-              store = store
-                      |> indent(String.length("@persistence "))
+    sref_block =
+      cond do
+        is_nil(sref) -> ""
+        true -> "@sref \"#{sref}\""
+      end
+
+    persistence_block =
+      cond do
+        stores == [] ->
+          nil
+
+        is_list(stores) ->
+          Enum.map(
+            stores,
+            fn
+              store ->
+                store =
+                  store
+                  |> indent(String.length("@persistence "))
+                  |> String.lstrip()
+
+                "@persistence #{store}"
+            end
+          )
+          |> Enum.join("\n")
+      end
+
+    field_block =
+      Enum.map(
+        field_order || [],
+        fn
+          field ->
+            settings = fields[field]
+            type = settings.type
+
+            default =
+              cond do
+                default = settings.meta["default"] -> default
+                :else -> "nil"
+              end
+
+            field_indent = String.duplicate(" ", String.length("field :#{field}, "))
+            default_block = indent(default, field_indent) |> String.lstrip()
+
+            attribute_block =
+              Enum.map(
+                settings.meta || [],
+                fn
+                  {flag, _} when flag in ["default", "ecto.type"] ->
+                    nil
+
+                  {attribute, value} ->
+                    value =
+                      value
+                      |> indent(String.length("@#{attribute} "))
                       |> String.lstrip()
-              "@persistence #{store}"
-          end
-        ) |> Enum.join("\n")
-    end
 
-    field_block = Enum.map(field_order || [],
-                    fn
-                      field ->
+                    "@#{attribute} #{value}"
+                end
+              )
+              |> Enum.reject(&is_nil/1)
+              |> Enum.join("\n")
 
-                        settings = fields[field]
-                        type = settings.type
-                        default = cond do
-                          default = settings.meta["default"] -> default
-                          :else -> "nil"
-                        end
-                        field_indent = String.duplicate(" ", String.length("field :#{field}, "))
-                        default_block = indent(default, field_indent) |> String.lstrip()
+            type_indent =
+              case String.split(default_block, "\n") do
+                [x] ->
+                  field_indent <> String.duplicate(" ", String.length(x) + String.length(", "))
 
-                        attribute_block = Enum.map(settings.meta || [],
-                                            fn
-                                              {flag, _} when flag in ["default","ecto.type"] -> nil
-                                              {attribute, value} ->
-                                                value = value
-                                                        |> indent(String.length("@#{attribute} "))
-                                                        |> String.lstrip()
-                                                "@#{attribute} #{value}"
-                                            end)
-                                          |> Enum.reject(&is_nil/1)
-                                          |> Enum.join("\n")
+                l when is_list(x) ->
+                  x = List.last(l)
+                  String.duplicate(" ", String.length(x) + String.length(", "))
+              end
 
-                        type_indent = case String.split(default_block, "\n") do
-                          [x] ->
-                            field_indent <> String.duplicate(" ", String.length(x) + String.length(", "))
-                          l when is_list(x) ->
-                            x = List.last(l)
-                            String.duplicate(" ", String.length(x) + String.length(", "))
-                        end
+            type_block =
+              case type do
+                nil -> ""
+                "array:" <> type -> ", {:array, :#{type}}"
+                t when t in @ecto_types -> ", :#{t}"
+                x -> ", " <> x
+              end
+              |> indent(type_indent)
+              |> String.lstrip()
 
-                        type_block = case type do
-                                       nil -> ""
-                                       "array:" <> type -> ", {:array, :#{type}}"
-                                       t when t in @ecto_types -> ", :#{t}"
-                                       x -> ", " <> x
-                                     end
-                                     |> indent(type_indent)
-                                     |> String.lstrip()
-
-                        if attribute_block == "" do
-                          """
-                          field :#{field}, #{default}#{type_block}
-                          """ |> String.strip()
-                        else
-                          """
-                          #{attribute_block}
-                          field :#{field}, #{default}#{type_block}
-                          """ |> String.strip()
-                        end
-                    end) |> Enum.join("\n")
+            if attribute_block == "" do
+              """
+              field :#{field}, #{default}#{type_block}
+              """
+              |> String.strip()
+            else
+              """
+              #{attribute_block}
+              field :#{field}, #{default}#{type_block}
+              """
+              |> String.strip()
+            end
+        end
+      )
+      |> Enum.join("\n")
 
     template = """
     #-------------------------------------------------------------------------------
@@ -348,13 +457,16 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       end
     end
     """
+
     {:ok, template}
   end
 
   def indent(string, indent \\ "  ")
+
   def indent(string, indent) when is_integer(indent) do
     indent(string, String.duplicate(" ", indent))
   end
+
   def indent(string, indent) do
     string
     |> String.split("\n")
@@ -373,14 +485,12 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Enum.join("\n")
   end
 
-
   def extract_sref(options) do
     cond do
       sref = options.args[:sref] -> sref
       :else -> nil
     end
   end
-
 
   def extract_id(options) do
     case options.args[:id] do
@@ -396,86 +506,96 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
   def extract_stores(options) do
     Keyword.get_values(options.args, :store)
-    |> Enum.map(
-         fn
-           "ecto" -> "{:ecto, :storage}"
-           "redis" -> "{:redis, :storage}"
-           "amnesia" -> "{:amnesia, :storage}"
-           "mnesia" -> "{:mnesia, :storage}"
-           x when is_bitstring(x) -> x
-         end
-       )
+    |> Enum.map(fn
+      "ecto" -> "{:ecto, :storage}"
+      "redis" -> "{:redis, :storage}"
+      "amnesia" -> "{:amnesia, :storage}"
+      "mnesia" -> "{:mnesia, :storage}"
+      x when is_bitstring(x) -> x
+    end)
   end
 
   def extract_fields(meta, options) do
-
     fields = Keyword.get_values(options.args, :field)
 
-    order = fields
-            |> Enum.map(
-                 fn
-                   x ->
-                     case String.split(x, ":") do
-                       [field] -> field
-                       [field | _] -> field
-                     end
-                 end)
-            |> Enum.uniq()
-    fields = fields
-             |> Enum.map(
-                  fn
-                    x ->
-                      case String.split(x, ":") do
-                        [field] ->
-                          m = meta[field] || %{}
-                          {field, %{type: nil, meta: m}}
-                        [field | type] ->
-                          m = meta[field] || %{}
-                          type = Enum.join(type, ":") |> String.trim()
-                          type = case type do
-                            "array:" <> t -> "{:array, :#{t}}"
-                            "enum:" <> values ->
-                              values = Enum.split(values, ":")
-                                       |> Enum.map(&":#{String.strip(&1)}")
-                                       |> Enum.join(", ")
-                              "{:enum, [#{values}]}"
-                            t when t in @ecto_types -> ":#{t}"
-                            x -> x
-                          end
-                          {field, %{type: type, meta: m}}
-                      end
-                  end
-                )
-             |> Map.new()
+    order =
+      fields
+      |> Enum.map(fn
+        x ->
+          case String.split(x, ":") do
+            [field] -> field
+            [field | _] -> field
+          end
+      end)
+      |> Enum.uniq()
+
+    fields =
+      fields
+      |> Enum.map(fn
+        x ->
+          case String.split(x, ":") do
+            [field] ->
+              m = meta[field] || %{}
+              {field, %{type: nil, meta: m}}
+
+            [field | type] ->
+              m = meta[field] || %{}
+              type = Enum.join(type, ":") |> String.trim()
+
+              type =
+                case type do
+                  "array:" <> t ->
+                    "{:array, :#{t}}"
+
+                  "enum:" <> values ->
+                    values =
+                      Enum.split(values, ":")
+                      |> Enum.map(&":#{String.strip(&1)}")
+                      |> Enum.join(", ")
+
+                    "{:enum, [#{values}]}"
+
+                  t when t in @ecto_types ->
+                    ":#{t}"
+
+                  x ->
+                    x
+                end
+
+              {field, %{type: type, meta: m}}
+          end
+      end)
+      |> Map.new()
+
     {order, fields}
   end
 
   def extract_meta(options) do
     Keyword.get_values(options.args, :meta)
-    |> Enum.map(
-         fn
-           x ->
-             case String.split(x, ":") do
-               [field | meta] ->
-                 meta = Enum.join(meta, ":")
-                 case String.split(meta, "=") do
-                   [k] -> {field, {k, "true"}}
-                   [k|v] -> {field, {k, Enum.join(v, "=")}}
-                 end
-             end
-         end)
-    |> Enum.group_by(&elem(&1,0))
-    |> Enum.map(
-         fn
-           {field,x} ->
-             v = x
-                 |> Enum.map(&elem(&1,1))
-                 |> Map.new()
-             {field, v}
-         end)
+    |> Enum.map(fn
+      x ->
+        case String.split(x, ":") do
+          [field | meta] ->
+            meta = Enum.join(meta, ":")
+
+            case String.split(meta, "=") do
+              [k] -> {field, {k, "true"}}
+              [k | v] -> {field, {k, Enum.join(v, "=")}}
+            end
+        end
+    end)
+    |> Enum.group_by(&elem(&1, 0))
+    |> Enum.map(fn
+      {field, x} ->
+        v =
+          x
+          |> Enum.map(&elem(&1, 1))
+          |> Map.new()
+
+        {field, v}
+    end)
     |> Map.new()
   end
-
 
   def usage do
     """
@@ -488,11 +608,13 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   def gen_options([context, entity, table | argv]) do
     Mix.Task.run("app.config", [])
     {args, params, errors} = extract_args(argv)
+
     unless errors == [] do
       Mix.Shell.IO.warn("Invalid arguments: #{inspect(errors)}")
       Mix.Shell.IO.info(usage())
       exit(1)
     end
+
     unless params == [] do
       Mix.Shell.IO.warn("Invalid arguments: #{inspect(params)}")
       Mix.Shell.IO.info(usage())
@@ -514,7 +636,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       path: path,
       context: %{name: context, snake: context_snake, file: context_file},
       entity: %{name: entity, snake: entity_snake, file: entity_file},
-      table: %{name: table},
+      table: %{name: table}
     }
   end
 
@@ -528,6 +650,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       Mix.Shell.IO.warn("Context File Already Exists: #{options.context.file}")
       exit(1)
     end
+
     if File.exists?(options.entity.file) do
       Mix.Shell.IO.warn("Entity File Already Exists: #{options.entity.file}")
       exit(1)
@@ -538,13 +661,16 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     cond do
       Mix.Project.umbrella?(config) ->
         app_path = config[:apps_path] || "apps"
+
         if app = args[:app] do
           "#{app_path}/#{app}/lib/#{app}"
         else
           Mix.Shell.IO.warn("--app argument required for umbrella project")
           exit(1)
         end
-      app = config[:app] -> "lib/#{app}"
+
+      app = config[:app] ->
+        "lib/#{app}"
     end
   end
 
@@ -562,5 +688,4 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Enum.map(&String.capitalize(&1))
     |> Enum.join("")
   end
-
 end

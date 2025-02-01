@@ -78,6 +78,7 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
         options
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
+
     Enum.find_value(
       [
         field_store[table][:pull],
@@ -147,9 +148,16 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
   end
 end
 
-for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity.Store.Ecto, Noizu.Entity.Store.Mnesia, Noizu.Entity.Store.Redis] do
+for store <- [
+      Noizu.Entity.Store.Amnesia,
+      Noizu.Entity.Store.Dummy,
+      Noizu.Entity.Store.Ecto,
+      Noizu.Entity.Store.Mnesia,
+      Noizu.Entity.Store.Redis
+    ] do
   entity_protocol = Module.concat(store, EntityProtocol)
   entity_field_protocol = Module.concat(store, Entity.FieldProtocol)
+
   defimpl entity_field_protocol, for: [Noizu.Entity.DerivedField] do
     defdelegate field_from_record(
                   field,
@@ -160,9 +168,8 @@ for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity
                   options
                 ),
                 to: Noizu.Entity.DerivedField.TypeHelper
-    
+
     defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
+      to: Noizu.Entity.DerivedField.TypeHelper
   end
 end
-

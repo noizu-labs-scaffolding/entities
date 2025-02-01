@@ -6,7 +6,7 @@
 defprotocol Noizu.Entity.Store.Mnesia.EntityProtocol do
   @fallback_to_any true
   require Noizu.Entity.Meta.Field
-  
+
   def persist(entity, type, settings, context, options)
   def as_record(entity, settings, context, options)
   def fetch_as_entity(entity, settings, context, options)

@@ -12,7 +12,7 @@ end
 defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Any] do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -26,7 +26,7 @@ defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Any] do
     name = field_store[table][:name] || field_store[store][:name] || name
     {:ok, {name, field}}
   end
-  
+
   # ---------------------------
   #
   # ---------------------------

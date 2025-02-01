@@ -14,7 +14,14 @@ defmodule Noizu.Entity.Path do
   use Noizu.Entity.Field.Behaviour
 
   def ecto_gen_string(name) do
-    {:ok, ["#{name}_depth:integer", "#{name}_a11:integer", "#{name}_a12:integer", "#{name}_a21:integer", "#{name}_a22:integer"]}
+    {:ok,
+     [
+       "#{name}_depth:integer",
+       "#{name}_a11:integer",
+       "#{name}_a12:integer",
+       "#{name}_a21:integer",
+       "#{name}_a22:integer"
+     ]}
   end
 
   def parent_path(nil), do: nil
@@ -195,8 +202,9 @@ end
 defmodule Noizu.Entity.Path.TypeHelper do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
-  
+
   def field_as_record(field, field_settings, persistence_settings, context, options)
+
   def field_as_record(
         field,
         Noizu.Entity.Meta.Field.field_settings(),
@@ -206,15 +214,20 @@ defmodule Noizu.Entity.Path.TypeHelper do
       ) do
     {:error, :simple}
   end
+
   def field_as_record(
         field,
         Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
-        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table, type: Noizu.Entity.Store.Amnesia),
+        Noizu.Entity.Meta.Persistence.persistence_settings(
+          store: store,
+          table: table,
+          type: Noizu.Entity.Store.Amnesia
+        ),
         _,
         _
       ) do
     name = field_store[table][:name] || field_store[store][:name] || name
-    
+
     [
       {:ok, {:"#{name}_depth", field.depth}},
       {:ok, {:"#{name}_a11", field.matrix.a11}},
@@ -223,9 +236,9 @@ defmodule Noizu.Entity.Path.TypeHelper do
       {:ok, {:"#{name}_a22", field.matrix.a22}}
     ]
   end
-  
-  
+
   def field_from_record(entity, record, field_settings, persistence_settings, context, options)
+
   def field_from_record(
         _,
         record,
@@ -236,6 +249,7 @@ defmodule Noizu.Entity.Path.TypeHelper do
       ) do
     {:error, :simple}
   end
+
   def field_from_record(
         _,
         record,
@@ -251,20 +265,21 @@ defmodule Noizu.Entity.Path.TypeHelper do
     a21 = Map.get(record, :"#{as_name}_a21")
     a22 = Map.get(record, :"#{as_name}_a22")
     entity = Noizu.Entity.Path.new(%{a11: a11, a12: a12, a21: a21, a22: a22, depth: depth})
-    {:ok,{name, entity}}
+    {:ok, {name, entity}}
   end
 end
 
-
-
-
-
-
-for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity.Store.Ecto, Noizu.Entity.Store.Mnesia, Noizu.Entity.Store.Redis] do
+for store <- [
+      Noizu.Entity.Store.Amnesia,
+      Noizu.Entity.Store.Dummy,
+      Noizu.Entity.Store.Ecto,
+      Noizu.Entity.Store.Mnesia,
+      Noizu.Entity.Store.Redis
+    ] do
   entity_protocol = Module.concat(store, EntityProtocol)
   entity_field_protocol = Module.concat(store, Entity.FieldProtocol)
   type_helper = Noizu.Entity.Path.TypeHelper
-  
+
   defimpl entity_field_protocol, for: [Noizu.Entity.Path] do
     @type_helper type_helper
     defdelegate field_from_record(
@@ -276,8 +291,8 @@ for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity
                   options
                 ),
                 to: @type_helper
-    
+
     defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
-                to: @type_helper
+      to: @type_helper
   end
 end

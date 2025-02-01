@@ -6,7 +6,7 @@
 defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -16,7 +16,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
       {:ok, key}
     end
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -33,7 +33,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
       {:ok, entity}
     end
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -49,7 +49,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
     # @todo Inject indexes
     {:ok, entity}
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -66,7 +66,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
       {:ok, entity}
     end
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -79,7 +79,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
       ) do
     from_record(record, settings, context, options)
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -94,7 +94,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
       {:ok, entity}
     end
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
@@ -102,48 +102,48 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
     # todo refresh entity
     from_record(record, settings, context, options)
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
   def from_record(nil, _, _context, _options) do
     {:error, :not_found}
   end
-  
+
   # ---------------------------
   #
   # ---------------------------
   def from_record(record, _, _context, _options) do
     {:ok, record}
   end
-  
+
   defmacro __using__(_) do
     quote do
       @behaviour Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
       defdelegate key(record, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defdelegate persist(record, action, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defdelegate as_record(record, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defdelegate fetch_as_entity(record, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defdelegate as_entity(entity, record, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defdelegate delete_record(record, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defdelegate from_record(record, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defdelegate merge_from_record(entity, record, settings, context, options),
-                  to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
-      
+        to: Noizu.Entity.Store.Redis.EntityProtocol.Behaviour
+
       defoverridable key: 4,
                      persist: 5,
                      as_record: 4,

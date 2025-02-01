@@ -7,7 +7,12 @@ defmodule Noizu.Entity.TimeStamp do
 
   def ecto_gen_string(name) do
     unless name in ["time_stamp", "root"] do
-      {:ok, ["#{name}_inserted_at:utc_datetime_usec", "#{name}_updated_at:utc_datetime_usec", "#{name}_deleted_at:utc_datetime_usec"]}
+      {:ok,
+       [
+         "#{name}_inserted_at:utc_datetime_usec",
+         "#{name}_updated_at:utc_datetime_usec",
+         "#{name}_deleted_at:utc_datetime_usec"
+       ]}
     else
       {:ok, ["deleted_at:utc_datetime_usec"]}
     end
@@ -103,7 +108,9 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.TimeStamp] do
 
   defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
   defdelegate as_entity(entity, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
-  defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
+
+  defdelegate as_entity(entity, record, settings, context, options),
+    to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Entity.TimeStamp.TypeHelper
@@ -112,7 +119,7 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Entity.TimeStamp] do
     to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate from_record(entity, record, settings, context, options),
-              to: Noizu.Entity.TimeStamp.TypeHelper
+    to: Noizu.Entity.TimeStamp.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Entity.TimeStamp] do
@@ -130,30 +137,31 @@ defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Entity.TimeSta
     to: Noizu.Entity.TimeStamp.TypeHelper
 end
 
-
-
 defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Entity.TimeStamp] do
   defdelegate persist(entity, type, settings, context, options),
     to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate as_record(entity, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
-  defdelegate fetch_as_entity(entity, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
-  defdelegate as_entity(entity, record, settings, context, options), to: Noizu.Entity.TimeStamp.TypeHelper
+
+  defdelegate fetch_as_entity(entity, settings, context, options),
+    to: Noizu.Entity.TimeStamp.TypeHelper
+
+  defdelegate as_entity(entity, record, settings, context, options),
+    to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate from_record(entity, record, settings, context, options),
-              to: Noizu.Entity.TimeStamp.TypeHelper
+    to: Noizu.Entity.TimeStamp.TypeHelper
 
   defdelegate merge_from_record(record, settings, context, options),
     to: Noizu.Entity.TimeStamp.TypeHelper
 end
 
-
-
 defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.TimeStamp] do
   require Noizu.Entity.Meta.Field
+
   def field_from_record(
         _field,
         record,
@@ -161,8 +169,7 @@ defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.TimeSt
         _persistence_settings,
         _context,
         _options
-      )
-    do
+      ) do
     {:ok, {name, get_in(record, [Access.key(name)])}}
   end
 
@@ -171,8 +178,8 @@ defimpl Noizu.Entity.Store.Dummy.Entity.FieldProtocol, for: [Noizu.Entity.TimeSt
         Noizu.Entity.Meta.Field.field_settings(name: name) = _field_settings,
         _persistence_settings,
         _context,
-        _options)
-      do
-        {:ok, {name, field}}
-    end
+        _options
+      ) do
+    {:ok, {name, field}}
+  end
 end

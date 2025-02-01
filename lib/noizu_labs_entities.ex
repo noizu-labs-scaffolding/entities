@@ -6,9 +6,9 @@
 defmodule Noizu.Entities do
   @moduledoc """
   Noizu Entities are Structs with meta data for permissions, json encoding, persistence channels, cache and more.
-  
+
   To use define your  entity and repo module:
-  
+
   ```elixir
   defmodule MyApp.Versioned.Descriptions.Description do
     use Noizu.Entities
@@ -24,28 +24,27 @@ defmodule Noizu.Entities do
       field :time_stamp, nil, Noizu.Entity.TimeStamp
     end
   end
-  
+
   defmodule MyApp.Versioned.Descriptions do
       use Noizu.Entities
       def_repo()
   end
   ```
-  
-  
+
+
   """
-  
+
   defmacro __using__(options \\ nil) do
     quote do
-      
       require Logger
       require Record
       require Noizu.EntityReference.Records
-      
+
       alias Noizu.Service.Types, as: M
       alias Noizu.Service.Types.Handle, as: MessageHandler
       alias Noizu.EntityReference.Records, as: R
       alias Noizu.EntityReference.Protocol, as: ERP
-      
+
       use Noizu.Entity.Meta, unquote(options)
 
       # Register Module Attributes

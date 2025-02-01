@@ -15,13 +15,18 @@ defmodule Noizu.AmnesiaEntitiesTest do
   @context Noizu.Context.system()
 
   test "smoke test" do
-    {:ok, e} = %Noizu.Support.Entities.BizBops.BizBop{title2: "Apple", description: "Bop", inserted_at: DateTime.utc_now()}
-               |> NoizuTest.EntityRepo.create(@context)
+    {:ok, e} =
+      %Noizu.Support.Entities.BizBops.BizBop{
+        title2: "Apple",
+        description: "Bop",
+        inserted_at: DateTime.utc_now()
+      }
+      |> NoizuTest.EntityRepo.create(@context)
+
     r = NoizuEntityTestDb.BizBops.BizBopTable.read!(e.id)
     assert is_integer(r.inserted_at)
     fields = Noizu.Entity.Meta.fields(e)
     Noizu.Entity.Meta.Field.field_settings(options: o) = fields[:title2]
     assert o == [auto: false]
   end
-
 end

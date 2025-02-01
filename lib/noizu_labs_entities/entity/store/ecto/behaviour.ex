@@ -7,7 +7,7 @@ if Code.ensure_loaded?(Ecto) do
   defmodule Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour do
     require Noizu.Entity.Meta.Persistence
     require Noizu.Entity.Meta.Field
-    
+
     # ---------------------------
     #
     # ---------------------------
@@ -28,7 +28,7 @@ if Code.ensure_loaded?(Ecto) do
       # Verify table match
       apply(repo, :insert, [record])
     end
-    
+
     def persist(
           %{__struct__: table} = record,
           :update,
@@ -42,11 +42,11 @@ if Code.ensure_loaded?(Ecto) do
         apply(repo, :update, [cs])
       end
     end
-    
+
     def persist(_, _, _, _, _) do
       {:error, :pending}
     end
-    
+
     # ---------------------------
     #
     # ---------------------------
@@ -62,7 +62,7 @@ if Code.ensure_loaded?(Ecto) do
       # @todo collapse refs.
       # @todo map fields
       # @todo Inject indexes
-      
+
       #     Record.defrecord(:field_settings, [name: nil, store: nil, type: nil, transient: false, pii: false, default: nil, acl: nil])
       fields =
         Noizu.Entity.Meta.fields(entity)
@@ -75,7 +75,9 @@ if Code.ensure_loaded?(Ecto) do
               context,
               options
             )
-          {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: {:ecto, _}) = field_settings} ->
+
+          {_,
+           Noizu.Entity.Meta.Field.field_settings(name: name, type: {:ecto, _}) = field_settings} ->
             Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
               get_in(entity, [Access.key(name)]),
               field_settings,
@@ -83,12 +85,11 @@ if Code.ensure_loaded?(Ecto) do
               context,
               options
             )
-          
+
           {_, Noizu.Entity.Meta.Field.field_settings(name: name, type: type) = field_settings} ->
             {:ok, field_entry} =
               apply(type, :type_as_entity, [get_in(entity, [Access.key(name)]), context, options])
-            
-            
+
             Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_as_record(
               field_entry,
               field_settings,
@@ -104,13 +105,11 @@ if Code.ensure_loaded?(Ecto) do
           _ -> nil
         end)
         |> Enum.filter(& &1)
-      
-      
-      
+
       record = struct(table, fields)
       {:ok, record}
     end
-    
+
     # ---------------------------
     #
     # ---------------------------
@@ -128,7 +127,7 @@ if Code.ensure_loaded?(Ecto) do
         from_record(record, settings, context, options)
       end
     end
-    
+
     # ---------------------------
     #
     # ---------------------------
@@ -148,7 +147,7 @@ if Code.ensure_loaded?(Ecto) do
         ) do
       from_record(record, settings, context, options)
     end
-    
+
     # ---------------------------
     #
     # ---------------------------
@@ -164,7 +163,7 @@ if Code.ensure_loaded?(Ecto) do
         apply(store, :delete, [struct(table, id: id)])
       end
     end
-    
+
     # ---------------------------
     #
     # ---------------------------
@@ -184,7 +183,7 @@ if Code.ensure_loaded?(Ecto) do
         ) do
       from_record(record, settings, context, options)
     end
-    
+
     @callback from_record(entity :: any, settings :: Tuple, context :: any, options :: any) ::
                 {:ok, any} | {:error, details :: any}
     def from_record(
@@ -205,7 +204,9 @@ if Code.ensure_loaded?(Ecto) do
               context,
               options
             )
-          {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) = field_settings} ->
+
+          {_,
+           Noizu.Entity.Meta.Field.field_settings(name: _name, type: {:ecto, _}) = field_settings} ->
             Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_from_record(
               nil,
               record,
@@ -214,9 +215,10 @@ if Code.ensure_loaded?(Ecto) do
               context,
               options
             )
+
           {_, Noizu.Entity.Meta.Field.field_settings(name: _name, type: type) = field_settings} ->
             {:ok, stub} = apply(type, :stub, [])
-            
+
             Noizu.Entity.Store.Ecto.Entity.FieldProtocol.field_from_record(
               # used for matching
               stub,
@@ -233,35 +235,35 @@ if Code.ensure_loaded?(Ecto) do
           _ -> nil
         end)
         |> Enum.filter(& &1)
-      
+
       entity = struct(kind, fields)
       {:ok, entity}
     end
-    
+
     defmacro __using__(_) do
       quote do
         @behaviour Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
         defdelegate persist(record, action, settings, context, options),
-                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
-        
+          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
         defdelegate as_record(record, settings, context, options),
-                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
-        
+          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
         defdelegate fetch_as_entity(record, settings, context, options),
-                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
-        
+          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
         defdelegate as_entity(entity, record, settings, context, options),
-                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
-        
+          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
         defdelegate delete_record(record, settings, context, options),
-                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
-        
+          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
         defdelegate from_record(record, settings, context, options),
-                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
-        
+          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
         defdelegate merge_from_record(entity, record, settings, context, options),
-                    to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
-        
+          to: Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
         defoverridable persist: 5,
                        as_record: 4,
                        fetch_as_entity: 4,
