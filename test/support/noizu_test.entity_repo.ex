@@ -1,4 +1,5 @@
 defmodule NoizuTest.EntityRepo do
+  @moduledoc false
   def create(entity, context, options \\ nil)
 
   def create(%Ecto.Changeset{data: entity} = cs, context, options) do

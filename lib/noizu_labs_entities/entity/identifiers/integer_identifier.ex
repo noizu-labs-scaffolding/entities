@@ -2,6 +2,10 @@
 # ERP methods
 # ================================
 defmodule Noizu.Entity.Meta.IntegerIdentifier do
+  @moduledoc """
+  Logic for entities that use an integer value for their id.
+  """
+  
   require Noizu.Entity.Meta.Persistence
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R

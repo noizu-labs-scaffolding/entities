@@ -4,6 +4,7 @@
 # -------------------------------------------------------------------------------
 
 defprotocol Noizu.Entity.Store.Dummy.EntityProtocol do
+  @moduledoc false
   @fallback_to_any true
   require Noizu.Entity.Meta.Field
 
@@ -17,6 +18,7 @@ defprotocol Noizu.Entity.Store.Dummy.EntityProtocol do
 end
 
 defmodule Noizu.Entity.Store.Dummy.StorageLayer do
+  @moduledoc false
   @table_name :dummy_storage_device
 
   def init do
@@ -63,17 +65,11 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   # ---------------------------
   #
   # ---------------------------
-  def persist(
-        record = %{id: id},
-        _type,
-        Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
-        _context,
-        _options
-      ) do
+  def persist(record, type, persistence_settings, context, options)
+  def persist(%{id: id} = record, _, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _, _) do
     # Verify table match
     Noizu.Entity.Store.Dummy.StorageLayer.write(id, table, record)
   end
-
   def persist(_, _, _, _, _) do
     {:error, :pending}
   end
@@ -142,7 +138,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   # ---------------------------
   def fetch_as_entity(
         entity,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
+        Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = settings,
         context,
         options
       ) do
@@ -158,7 +154,7 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   def as_entity(
         _,
         record,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(),
+        Noizu.Entity.Meta.Persistence.persistence_settings() = settings,
         context,
         options
       ) do

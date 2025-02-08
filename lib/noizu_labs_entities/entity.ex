@@ -51,7 +51,8 @@ defimpl Noizu.Entity.Protocol, for: Any do
     # we should be defining a provider rather than requiring these methods be defined for each struct
     quote do
       defimpl Noizu.Entity.Protocol, for: [unquote(module)] do
-        def layer_id(_struct = %{id: x}, _layer), do: {:ok, x}
+        def layer_id(subject, layer)
+        def layer_id(%{id: x}, _), do: {:ok, x}
       end
     end
   end

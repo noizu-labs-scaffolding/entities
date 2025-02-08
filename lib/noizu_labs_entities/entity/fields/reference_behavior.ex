@@ -1,4 +1,5 @@
 defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
+  @moduledoc false
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
@@ -7,7 +8,7 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
 
   def do_field_as_record(
         m,
-        field = %{reference: ref},
+        %{reference: ref} = field,
         Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
         Noizu.Entity.Meta.Persistence.persistence_settings(
           store: store,
@@ -33,7 +34,7 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
   def do_field_from_record(
         m,
         _,
-        record = %{entity: entity},
+        %{entity: entity} = record,
         Noizu.Entity.Meta.Field.field_settings(
           options: field_options,
           name: name,
@@ -64,21 +65,27 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
   end
 end
 
-defmodule Noizu.Entity.ReferenceBehaviour do
-  defmodule Error do
-    defexception [:message]
 
-    def message(e) do
-      "#{inspect(e.message)}"
-    end
+defmodule Noizu.Entity.Reference.Exception do
+  @moduledoc false
+  defexception [:message]
+  
+  def message(e) do
+    "#{inspect(e.message)}"
   end
+end
 
+defmodule Noizu.Entity.ReferenceBehaviour do
+  @moduledoc """
+  Use for declaring a field reference to handle encoding/decoding when writting to storage.
+  """
+  
   defmacro __using__(options \\ nil) do
     identifier_type =
       options[:identifier_type] ||
-        raise Noizu.Entity.ReferenceBehaviour.Error, "identifier_type is required"
+        raise Noizu.Entity.Reference.Exception, "identifier_type is required"
 
-    entity = options[:entity] || raise Noizu.Entity.ReferenceBehaviour.Error, "entity is required"
+    entity = options[:entity] || raise Noizu.Entity.Reference.Exception, "entity is required"
 
     quote do
       @erp_type_handlers %{

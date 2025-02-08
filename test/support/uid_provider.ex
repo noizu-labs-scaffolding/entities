@@ -1,4 +1,5 @@
 defmodule Noizu.Entity.Test.UIDProvider do
+  @moduledoc false
   @foo_type Noizu.UUID.uuid5(:dns, "#{Elixir.Noizu.Support.Entities.Foos.Foo}")
   def generate(_, _), do: {:ok, {:os.system_time(:millisecond) - 1_683_495_051_937, 0}}
 

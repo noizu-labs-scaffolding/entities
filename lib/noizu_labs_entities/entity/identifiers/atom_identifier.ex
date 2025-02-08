@@ -2,6 +2,10 @@
 # ERP methods
 # ================================
 defmodule Noizu.Entity.Meta.AtomIdentifier do
+  @moduledoc """
+  Logic for atom id backed entities.
+  """
+  
   require Noizu.Entity.Meta.Persistence
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R

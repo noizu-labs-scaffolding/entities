@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Meta.Identifier do
+  @moduledoc """
+  Logic for entity identifier details.
+  """
   require Record
   Record.defrecord(:id_settings, name: nil, generate: true, universal: false, type: nil)
 

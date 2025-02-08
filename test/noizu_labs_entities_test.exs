@@ -56,19 +56,19 @@ defmodule Noizu.EntitiesTest do
   end
 
   # Record.defrecord(:nz__field, [name: nil, type: nil, transient: false, pii: false, default: nil])
-  def assert_record(actual = nil, expected) do
+  def assert_record(nil = actual, expected) do
     assert actual == expected
   end
 
-  def assert_record(actual, expected = nil) do
+  def assert_record(actual, nil = expected) do
     assert actual == expected
   end
 
-  def assert_record(actual = {:nz, :inherit}, expected) do
+  def assert_record({:nz, :inherit} = actual, expected) do
     assert actual == expected
   end
 
-  def assert_record(actual, expected = {:nz, :inherit}) do
+  def assert_record(actual, {:nz, :inherit} = expected) do
     assert actual == expected
   end
 
@@ -540,7 +540,7 @@ defmodule Noizu.EntitiesTest do
 
       {:ok, entity} = Noizu.Support.Entities.Foos.create(entity, @context, nil)
       {:ok, sut} = Noizu.Support.Entities.Foos.get(id, @context, nil)
-      assert entity.special_field.id == 31337
+      assert entity.special_field.id == 31_337
       assert entity.special_field.sno == "Appa"
       assert sut.special_field == entity.special_field
     end

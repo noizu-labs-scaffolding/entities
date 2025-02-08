@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Macros.ACL do
+  @moduledoc """
+  This module provides macros for defining access control lists (ACLs) for entities and fields.
+  """
   require Noizu.Entity.Meta.ACL
   require Noizu.Entity.Meta.Field
 

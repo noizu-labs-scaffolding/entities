@@ -4,6 +4,10 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Repo.Macros do
+  @moduledoc """
+  Macros for setting up Entity Repos.
+  """
+  
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Json

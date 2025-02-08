@@ -53,9 +53,9 @@ defimpl Noizu.Entity.Json.Protocol, for: [Any] do
         ) ::
           protocol_response
   def embed_field(value, field_settings, term, term_settings, context, options)
-  def embed_field(value = nil, _, _, _, _, _), do: {:omit, value}
-  def embed_field(value = @restricted, _, _, _, _, _), do: {:omit, value}
-  def embed_field(value = {@restricted, _}, _, _, _, _, _), do: {:omit, value}
+  def embed_field(nil = value, _, _, _, _, _), do: {:omit, value}
+  def embed_field(@restricted = value, _, _, _, _, _), do: {:omit, value}
+  def embed_field({@restricted, _} = value, _, _, _, _, _), do: {:omit, value}
   def embed_field(value, _, _, _, _, _), do: {:ok, value}
 
   @doc """

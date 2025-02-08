@@ -196,7 +196,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   # ---------------------------
   def fetch_as_entity(
         entity,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
+        Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = settings,
         context,
         options
       ) do
@@ -212,7 +212,7 @@ defimpl Noizu.Entity.Store.Amnesia.EntityProtocol, for: [Any] do
   def as_entity(
         entity,
         record,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(),
+        Noizu.Entity.Meta.Persistence.persistence_settings() = settings,
         context,
         options
       ) do

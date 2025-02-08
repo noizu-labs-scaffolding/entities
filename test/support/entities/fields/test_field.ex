@@ -1,4 +1,5 @@
 defmodule Noizu.Support.Entity.TestField do
+  @moduledoc false
   @derive Noizu.EntityReference.Protocol
   defstruct id: nil,
             sno: nil
@@ -23,7 +24,7 @@ defmodule Noizu.Support.Entity.TestField do
   def type__before_create(%__MODULE__{} = this, _, _, _) do
     cond do
       this.id -> {:ok, this}
-      :else -> {:ok, %{this | id: 31337}}
+      :else -> {:ok, %{this | id: 31_337}}
     end
   end
 
@@ -46,6 +47,7 @@ defmodule Noizu.Support.Entity.TestField do
 end
 
 defmodule Noizu.Support.Entity.TestField.TypeHelper do
+  @moduledoc false
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 

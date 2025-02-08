@@ -4,11 +4,13 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Support.Entities.NestedFields do
+  @moduledoc false
   use Noizu.Repo
   def_repo(entity: Noizu.Support.Entities.NestedFields.NestedField)
 end
 
 defmodule Noizu.Support.Entities.NestedFields.NestedField do
+  @moduledoc false
   use Noizu.Entity
 
   @vsn 1.0
@@ -24,6 +26,7 @@ defmodule Noizu.Support.Entities.NestedFields.NestedField do
 end
 
 defmodule Noizu.Support.Entities.NestedFields.NestedFieldReference do
+  @moduledoc false
   use Noizu.Entity.ReferenceBehaviour,
     identifier_type: :uuid,
     entity: Noizu.Support.Entities.NestedFields.NestedField

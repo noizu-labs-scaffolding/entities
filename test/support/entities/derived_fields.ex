@@ -4,11 +4,13 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Support.Entities.DerivedFields do
+  @moduledoc false
   use Noizu.Repo
   def_repo(entity: Noizu.Support.Entities.DerivedFields.DerivedFieldEntity)
 end
 
 defmodule Noizu.Support.Entities.DerivedFields.DerivedFieldEntity do
+  @moduledoc false
   use Noizu.Entity
 
   @vsn 1.0

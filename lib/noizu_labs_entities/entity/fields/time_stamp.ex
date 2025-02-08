@@ -1,4 +1,7 @@
 defmodule Noizu.Entity.TimeStamp do
+  @moduledoc """
+  TimeStamp custom field. This field is used to track inserted_at, updated_at, and deleted_at timestamp.
+  """
   defstruct inserted_at: nil,
             updated_at: nil,
             deleted_at: nil
@@ -37,6 +40,7 @@ defmodule Noizu.Entity.TimeStamp do
 end
 
 defmodule Noizu.Entity.TimeStamp.TypeHelper do
+  @moduledoc false
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 

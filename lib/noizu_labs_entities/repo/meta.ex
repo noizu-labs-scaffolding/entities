@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Repo.Meta do
+  @moduledoc """
+  Logic for driving entity repos.
+  """
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Identifier

@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Meta.Json do
+  @moduledoc """
+  Logic for entity json details.
+  """
   require Record
 
   Record.defrecord(:json_settings,

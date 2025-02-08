@@ -3,6 +3,9 @@
 # ================================
 
 defmodule Noizu.UUID do
+  @moduledoc """
+  Wrapper around UUID provider.
+  """
   @handler Application.compile_env(:noizu_labs_entities, :uuid_lib, UUID)
 
   defdelegate binary_to_string!(id), to: @handler
@@ -11,6 +14,10 @@ defmodule Noizu.UUID do
 end
 
 defmodule Noizu.Entity.Meta.UUIDIdentifier do
+  @moduledoc """
+  Logic for UUID id backed entities.
+  """
+  
   @handler Application.compile_env(
              :noizu_labs_entities,
              :uuid_id,
@@ -33,6 +40,10 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
   defdelegate entity(m, id, context), to: @handler
 
   defmodule Common do
+    @moduledoc """
+    Default implementation of UUIDIdentifier backed entities.
+    """
+    
     unless Application.compile_env(:noizu_labs_entities, :uuid_lib) || Code.ensure_loaded?(UUID) do
       require Noizu.EntityReference.Records
       alias Noizu.EntityReference.Records, as: R

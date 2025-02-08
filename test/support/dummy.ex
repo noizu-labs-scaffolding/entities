@@ -1,7 +1,9 @@
 defmodule Noizu.Support.Entity.ETS.DummyRepo do
+  @moduledoc false
 end
 
 defmodule Noizu.Support.Entity.ETS.DummyRecord do
+  @moduledoc false
   defstruct id: nil,
             name: nil,
             title: nil,

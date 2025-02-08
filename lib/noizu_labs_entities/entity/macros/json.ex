@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Macros.Json do
+  @moduledoc """
+  Macros for annotating json settings on entity fields.
+  """
   require Noizu.Entity.Meta.Json
   require Noizu.Entity.Meta.Field
 

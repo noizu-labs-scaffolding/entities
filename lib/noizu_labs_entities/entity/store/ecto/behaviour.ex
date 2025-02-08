@@ -5,6 +5,9 @@
 
 if Code.ensure_loaded?(Ecto) do
   defmodule Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour do
+    @moduledoc """
+    Support for Ecto backed Entities.
+    """
     require Noizu.Entity.Meta.Persistence
     require Noizu.Entity.Meta.Field
 
@@ -117,8 +120,7 @@ if Code.ensure_loaded?(Ecto) do
                 {:ok, any} | {:error, details :: any}
     def fetch_as_entity(
           entity,
-          settings =
-            Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store),
+          Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store) = settings,
           context,
           options
         ) do
@@ -141,7 +143,7 @@ if Code.ensure_loaded?(Ecto) do
     def as_entity(
           _,
           record,
-          settings = Noizu.Entity.Meta.Persistence.persistence_settings(),
+          Noizu.Entity.Meta.Persistence.persistence_settings() = settings,
           context,
           options
         ) do

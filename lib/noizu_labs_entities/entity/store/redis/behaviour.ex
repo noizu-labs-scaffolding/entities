@@ -4,6 +4,10 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
+  @moduledoc """
+  Support for Redis backed Entities.
+  """
+  
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
@@ -20,10 +24,11 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  def persist(entity, type, persistence_settings, context, options)
   def persist(
         entity,
-        _type,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(store: store),
+        _,
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store) = settings,
         context,
         options
       ) do
@@ -55,7 +60,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   def fetch_as_entity(
         entity,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(store: store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store) = settings,
         context,
         options
       ) do
@@ -73,7 +78,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   def as_entity(
         _,
         record,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(),
+        Noizu.Entity.Meta.Persistence.persistence_settings() = settings,
         context,
         options
       ) do
@@ -85,7 +90,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   def delete_record(
         entity,
-        settings = Noizu.Entity.Meta.Persistence.persistence_settings(store: store),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store) = settings,
         context,
         options
       ) do

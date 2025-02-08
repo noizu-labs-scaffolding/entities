@@ -1,4 +1,8 @@
 defmodule Noizu.Entity.Reference do
+  @moduledoc """
+  A entity field type that is persisted as a ref/id of another field.
+  """
+  
   @derive Noizu.EntityReference.Protocol
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour
@@ -94,6 +98,7 @@ defmodule Noizu.Entity.Reference do
 end
 
 defmodule Noizu.Entity.Reference.TypeHelper do
+  @moduledoc false
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 

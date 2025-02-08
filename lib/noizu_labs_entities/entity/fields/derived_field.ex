@@ -13,6 +13,9 @@ defmodule Noizu.Entity.DerivedField do
 end
 
 defmodule Noizu.Entity.DerivedField.TypeHelper do
+  @moduledoc """
+  Helper functions for derived fields.
+  """
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
@@ -66,14 +69,12 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
   def field_from_record(
         field_stub,
         record,
-        field_settings =
-          Noizu.Entity.Meta.Field.field_settings(
+        Noizu.Entity.Meta.Field.field_settings(
             name: name,
             store: field_store,
             options: field_options
-          ),
-        persistence_settings =
-          Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+          ) = field_settings,
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table) = persistence_settings,
         context,
         options
       ) do

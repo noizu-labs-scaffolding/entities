@@ -1,4 +1,8 @@
 defmodule Noizu.Entity.Path do
+  @moduledoc """
+  Entity field for encoding path data.
+  """
+  
   @derive Noizu.EntityReference.Protocol
   defstruct path: nil,
             materialized_path: nil,
@@ -200,6 +204,7 @@ defmodule Noizu.Entity.Path do
 end
 
 defmodule Noizu.Entity.Path.TypeHelper do
+  @moduledoc false
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 

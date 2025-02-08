@@ -351,8 +351,9 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
           nil
 
         is_list(stores) ->
-          Enum.map(
+          Enum.map_join(
             stores,
+           "\n",
             fn
               store ->
                 store =
@@ -363,12 +364,13 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                 "@persistence #{store}"
             end
           )
-          |> Enum.join("\n")
+          
       end
 
     field_block =
-      Enum.map(
-        field_order || [],
+      (field_order || [])
+      |> Enum.map_join(
+        "\n",
         fn
           field ->
             settings = fields[field]
@@ -436,7 +438,6 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
             end
         end
       )
-      |> Enum.join("\n")
 
     template = """
     #-------------------------------------------------------------------------------
@@ -470,8 +471,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   def indent(string, indent) do
     string
     |> String.split("\n")
-    |> Enum.map(fn x -> indent <> x end)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", fn x -> indent <> x end)
   end
 
   def dedent(string) do
@@ -481,8 +481,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     strip = String.duplicate(" ", dedent)
 
     lines
-    |> Enum.map(&String.lstrip(&1, strip))
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &String.lstrip(&1, strip))
   end
 
   def extract_sref(options) do
@@ -550,9 +549,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                   "enum:" <> values ->
                     values =
                       Enum.split(values, ":")
-                      |> Enum.map(&":#{String.strip(&1)}")
-                      |> Enum.join(", ")
-
+                      |> Enum.map_join(", ", &":#{String.strip(&1)}")
                     "{:enum, [#{values}]}"
 
                   t when t in @ecto_types ->
@@ -685,7 +682,6 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     app_atom(args, config)
     |> Atom.to_string()
     |> String.split("_")
-    |> Enum.map(&String.capitalize(&1))
-    |> Enum.join("")
+    |> Enum.map_join("", &String.capitalize(&1))
   end
 end

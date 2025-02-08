@@ -4,11 +4,13 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Support.Entities.Boos do
+  @moduledoc false
   use Noizu.Repo
   def_repo()
 end
 
 defmodule Noizu.Support.Entities.Boos.Boo do
+  @moduledoc false
   use Noizu.Entity
 
   @vsn 1.0
@@ -92,6 +94,7 @@ defmodule Noizu.Support.Entities.Boos.Boo do
   end
 
   defmodule Repo do
+    @moduledoc false
     use Noizu.Repo
     def_repo()
   end

@@ -2,6 +2,9 @@
 # ERP methods
 # ================================
 defmodule Noizu.Entity.Meta.RefIdentifier do
+  @moduledoc """
+  Logic for entities that use a ref value for their id.
+  """
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 

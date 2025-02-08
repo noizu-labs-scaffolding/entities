@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Macros do
+  @moduledoc """
+  This module provides macros for defining entities and their fields.
+  """
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Json
