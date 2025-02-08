@@ -7,7 +7,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   @moduledoc """
   Support for Redis backed Entities.
   """
-  
+
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
@@ -25,6 +25,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   #
   # ---------------------------
   def persist(entity, type, persistence_settings, context, options)
+
   def persist(
         entity,
         _,

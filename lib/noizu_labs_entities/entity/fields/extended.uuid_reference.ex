@@ -2,7 +2,7 @@ defmodule Noizu.Entity.Extended.UUIDReference do
   @moduledoc """
   Field that is encoded on ecto using uuid and type fields.
   """
-  
+
   @derive Noizu.EntityReference.Protocol
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour

@@ -2,7 +2,7 @@ defmodule Noizu.Entity.Reference do
   @moduledoc """
   A entity field type that is persisted as a ref/id of another field.
   """
-  
+
   @derive Noizu.EntityReference.Protocol
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour

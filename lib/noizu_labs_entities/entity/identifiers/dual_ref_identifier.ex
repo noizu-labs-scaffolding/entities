@@ -5,7 +5,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   @moduledoc """
   This module provides methods for generating and parsing identifiers for entities with dual references.
   """
-  
+
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 

@@ -70,11 +70,12 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
         field_stub,
         record,
         Noizu.Entity.Meta.Field.field_settings(
-            name: name,
-            store: field_store,
-            options: field_options
-          ) = field_settings,
-        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table) = persistence_settings,
+          name: name,
+          store: field_store,
+          options: field_options
+        ) = field_settings,
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table) =
+          persistence_settings,
         context,
         options
       ) do

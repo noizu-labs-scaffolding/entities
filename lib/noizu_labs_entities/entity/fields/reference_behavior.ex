@@ -65,11 +65,10 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
   end
 end
 
-
 defmodule Noizu.Entity.Reference.Exception do
   @moduledoc false
   defexception [:message]
-  
+
   def message(e) do
     "#{inspect(e.message)}"
   end
@@ -79,7 +78,7 @@ defmodule Noizu.Entity.ReferenceBehaviour do
   @moduledoc """
   Use for declaring a field reference to handle encoding/decoding when writting to storage.
   """
-  
+
   defmacro __using__(options \\ nil) do
     identifier_type =
       options[:identifier_type] ||

@@ -120,7 +120,8 @@ if Code.ensure_loaded?(Ecto) do
                 {:ok, any} | {:error, details :: any}
     def fetch_as_entity(
           entity,
-          Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store) = settings,
+          Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store) =
+            settings,
           context,
           options
         ) do

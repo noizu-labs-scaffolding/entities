@@ -353,7 +353,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         is_list(stores) ->
           Enum.map_join(
             stores,
-           "\n",
+            "\n",
             fn
               store ->
                 store =
@@ -364,7 +364,6 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                 "@persistence #{store}"
             end
           )
-          
       end
 
     field_block =
@@ -550,6 +549,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                     values =
                       Enum.split(values, ":")
                       |> Enum.map_join(", ", &":#{String.strip(&1)}")
+
                     "{:enum, [#{values}]}"
 
                   t when t in @ecto_types ->

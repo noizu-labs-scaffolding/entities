@@ -66,10 +66,18 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Any] do
   #
   # ---------------------------
   def persist(record, type, persistence_settings, context, options)
-  def persist(%{id: id} = record, _, Noizu.Entity.Meta.Persistence.persistence_settings(table: table), _, _) do
+
+  def persist(
+        %{id: id} = record,
+        _,
+        Noizu.Entity.Meta.Persistence.persistence_settings(table: table),
+        _,
+        _
+      ) do
     # Verify table match
     Noizu.Entity.Store.Dummy.StorageLayer.write(id, table, record)
   end
+
   def persist(_, _, _, _, _) do
     {:error, :pending}
   end

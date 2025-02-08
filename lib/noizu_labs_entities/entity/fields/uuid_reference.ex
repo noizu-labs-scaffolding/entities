@@ -2,7 +2,7 @@ defmodule Noizu.Entity.UUIDReference do
   @moduledoc """
   A entity type that converted entities to and from uuids/refs for persistence.
   """
-  
+
   @derive Noizu.EntityReference.Protocol
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour

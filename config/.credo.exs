@@ -114,7 +114,7 @@
           {Credo.Check.Readability.TrailingWhiteSpace, []},
           {Credo.Check.Readability.UnnecessaryAliasExpansion, []},
           {Credo.Check.Readability.VariableNames, []},
-          
+
           # House style prefers using with over case due to likelihood of future extension
           # {Credo.Check.Readability.WithSingleClause, []},
 
@@ -122,9 +122,9 @@
           ## Refactoring Opportunities
           #
           {Credo.Check.Refactor.Apply, []},
-        
+
           # House style accepts two value cond statements due to likelyhood of future logic.
-          #{Credo.Check.Refactor.CondStatements, []},
+          # {Credo.Check.Refactor.CondStatements, []},
           {Credo.Check.Refactor.CyclomaticComplexity, [max_complexity: 30]},
           {Credo.Check.Refactor.FilterCount, []},
           {Credo.Check.Refactor.FilterFilter, []},
@@ -136,9 +136,9 @@
           {Credo.Check.Refactor.NegatedConditionsWithElse, []},
           {Credo.Check.Refactor.Nesting, [max_nesting: 4]},
           # House style is fine with redundant with clause due to likelyhood of future logic.
-          #{Credo.Check.Refactor.RedundantWithClauseResult, []},
+          # {Credo.Check.Refactor.RedundantWithClauseResult, []},
           {Credo.Check.Refactor.RejectReject, []},
-          
+
           # House style preferes unless with else statements for guard logic.
           # {Credo.Check.Refactor.UnlessWithElse, []},
           {Credo.Check.Refactor.WithClauses, []},
