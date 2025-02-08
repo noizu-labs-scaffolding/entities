@@ -78,8 +78,7 @@ defimpl Noizu.Entity.Json.Protocol, for: [Any] do
     with acl_config <- Noizu.Entity.Meta.acl(m),
          {:ok, restricted} <-
            Noizu.Entity.ACL.Protocol.restrict(:read, term, acl_config, context, options) do
-      r =
-        Enum.map(
+      Enum.map(
           settings,
           fn
             # Cast id to sref string

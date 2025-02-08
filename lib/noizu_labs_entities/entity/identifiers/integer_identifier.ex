@@ -35,7 +35,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   # -----------------------------
   # format_id/3
   # -----------------------------
-  def format_id(m, id, _) do
+  def format_id(_, id, _) do
     id
   end
 
@@ -69,7 +69,8 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   # -----------------------------
   # id/2
   # -----------------------------
-  def id(m, id) when is_integer(id), do: {:ok, id}
+  def id(m, id)
+  def id(_, id) when is_integer(id), do: {:ok, id}
   def id(m, R.ref(module: m, id: id)) when is_integer(id), do: {:ok, id}
   def id(m, %{__struct__: m, id: id}) when is_integer(id), do: {:ok, id}
 

@@ -45,20 +45,19 @@ defmodule Noizu.Support.Entities.DerivedFields.DerivedFieldEntity do
         field,
         Noizu.Entity.Meta.Field.field_settings(
           name: name,
-          store: field_store,
-          options: field_options
-        ) = field_settings,
-        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table) =
-          persistence_settings,
-        context,
-        options
+          store: field_store
+        ) ,
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        _,
+        _
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
 
     {:ok, {as_name, field}}
   end
-
-  def pull_derived_field(as_name, record, context, field_options) do
+  
+  def pull_derived_field(as_name, record, context, field_options)
+  def pull_derived_field(_, record, _, _) do
     {:ok, "der-#{record.entity.base_field_a}-#{record.entity.base_field_b}"}
   end
 

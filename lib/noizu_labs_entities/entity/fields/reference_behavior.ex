@@ -4,11 +4,11 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
   require Noizu.Entity.Meta.Field
 
   require Noizu.EntityReference.Records
-  alias Noizu.EntityReference.Records, as: R
+  #alias Noizu.EntityReference.Records, as: R
 
   def do_field_as_record(
         m,
-        %{reference: ref} = field,
+        %{reference: ref},
         Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
         Noizu.Entity.Meta.Persistence.persistence_settings(
           store: store,
@@ -34,7 +34,7 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
   def do_field_from_record(
         m,
         _,
-        %{entity: entity} = record,
+        %{entity: entity},
         Noizu.Entity.Meta.Field.field_settings(
           options: field_options,
           name: name,

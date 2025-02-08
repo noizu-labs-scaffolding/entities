@@ -45,7 +45,7 @@ defmodule Noizu.Entity.Extended.UUIDReference.TypeHelper do
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
     # We need to do a universal ecto conversion
-    with {:ok, R.ref(module: m, id: id)} <- Noizu.EntityReference.Protocol.ref(field) do
+    with {:ok, R.ref(id: id)} <- Noizu.EntityReference.Protocol.ref(field) do
       {:ok, {as_name, id}}
     end
   end

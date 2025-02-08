@@ -185,8 +185,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
   def ecto_gen(options) do
     meta = extract_meta(options)
 
-    fields =
-      Keyword.get_values(options.args, :field)
+    Keyword.get_values(options.args, :field)
       |> Enum.map(fn
         x ->
           case String.split(x, ":") do
@@ -210,7 +209,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                 t when t in @ecto_types ->
                   "#{field}:#{type}"
 
-                x ->
+                _ ->
                   try do
                     # @TODO also check if meta attribute for ecto was set @ecto type: value
                     # temp work around
@@ -227,7 +226,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                     end
                   rescue
                     _ ->
-                      Mix.Shell.IO.warn("Failed to determine Type #{type} for field #{field}")
+                      Mix.Shell.IO.error("Failed to determine Type #{type} for field #{field}")
                       exit(1)
                   end
               end
@@ -330,8 +329,8 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     context = options.context.name
     entity = options.entity.name
     x = entity |> String.replace(".", "")
-    singular = Macro.underscore(Inflex.singularize(x))
-    plural = Macro.underscore(Inflex.pluralize(x))
+    #singular = Macro.underscore(Inflex.singularize(x))
+    #plural = Macro.underscore(Inflex.pluralize(x))
 
     meta = extract_meta(options)
     {field_order, fields} = extract_fields(meta, options)
@@ -353,17 +352,18 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         is_list(stores) ->
           Enum.map_join(
             stores,
-            "\n",
+           "\n",
             fn
               store ->
                 store =
                   store
                   |> indent(String.length("@persistence "))
-                  |> String.lstrip()
+                  |> String.trim_leading()
 
                 "@persistence #{store}"
             end
           )
+          
       end
 
     field_block =
@@ -382,7 +382,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
               end
 
             field_indent = String.duplicate(" ", String.length("field :#{field}, "))
-            default_block = indent(default, field_indent) |> String.lstrip()
+            default_block = indent(default, field_indent) |> String.trim_leading()
 
             attribute_block =
               Enum.map(
@@ -395,7 +395,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                     value =
                       value
                       |> indent(String.length("@#{attribute} "))
-                      |> String.lstrip()
+                      |> String.trim_leading()
 
                     "@#{attribute} #{value}"
                 end
@@ -421,27 +421,27 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                 x -> ", " <> x
               end
               |> indent(type_indent)
-              |> String.lstrip()
+              |> String.trim_leading()
 
             if attribute_block == "" do
               """
               field :#{field}, #{default}#{type_block}
               """
-              |> String.strip()
+              |> String.trim()
             else
               """
               #{attribute_block}
               field :#{field}, #{default}#{type_block}
               """
-              |> String.strip()
+              |> String.trim()
             end
         end
       )
 
     template = """
     #-------------------------------------------------------------------------------
-    # Author: #{@author}
-    # Copyright (C) #{DateTime.utc_now().year} #{@org} All rights reserved.
+    # Author: #{author}
+    # Copyright (C) #{DateTime.utc_now().year} #{org} All rights reserved.
     #-------------------------------------------------------------------------------
 
     defmodule #{app}.#{context}.#{entity} do
@@ -450,10 +450,10 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       @vsn 1.0
       @repo #{app}.#{context}
       #{sref_block}
-      #{persistence_block && persistence_block |> indent("  ") |> String.lstrip()}
+      #{persistence_block && persistence_block |> indent("  ") |> String.trim_leading()}
       def_entity do
         id #{id_type}
-        #{field_block |> indent("    ") |> String.lstrip()}
+        #{field_block |> indent("    ") |> String.trim_leading()}
       end
     end
     """
@@ -480,7 +480,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     strip = String.duplicate(" ", dedent)
 
     lines
-    |> Enum.map_join("\n", &String.lstrip(&1, strip))
+    |> Enum.map_join("\n", &String.trim_leading(&1, strip))
   end
 
   def extract_sref(options) do
@@ -548,8 +548,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
                   "enum:" <> values ->
                     values =
                       Enum.split(values, ":")
-                      |> Enum.map_join(", ", &":#{String.strip(&1)}")
-
+                      |> Enum.map_join(", ", &":#{String.trim(&1)}")
                     "{:enum, [#{values}]}"
 
                   t when t in @ecto_types ->
@@ -607,13 +606,13 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     {args, params, errors} = extract_args(argv)
 
     unless errors == [] do
-      Mix.Shell.IO.warn("Invalid arguments: #{inspect(errors)}")
+      Mix.Shell.IO.error("Invalid arguments: #{inspect(errors)}")
       Mix.Shell.IO.info(usage())
       exit(1)
     end
 
     unless params == [] do
-      Mix.Shell.IO.warn("Invalid arguments: #{inspect(params)}")
+      Mix.Shell.IO.error("Invalid arguments: #{inspect(params)}")
       Mix.Shell.IO.info(usage())
       exit(1)
     end
@@ -625,7 +624,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     entity_snake = Macro.underscore(entity)
     entity_file = "#{path}/entities/#{context_snake}/#{entity_snake}.ex"
 
-    options = %{
+    %{
       app_name: app_name(args, config),
       app: app_atom(args, config),
       args: args,
@@ -644,12 +643,12 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
 
   defp check_files(options) do
     if File.exists?(options.context.file) do
-      Mix.Shell.IO.warn("Context File Already Exists: #{options.context.file}")
+      Mix.Shell.IO.error("Context File Already Exists: #{options.context.file}")
       exit(1)
     end
 
     if File.exists?(options.entity.file) do
-      Mix.Shell.IO.warn("Entity File Already Exists: #{options.entity.file}")
+      Mix.Shell.IO.error("Entity File Already Exists: #{options.entity.file}")
       exit(1)
     end
   end
@@ -662,7 +661,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         if app = args[:app] do
           "#{app_path}/#{app}/lib/#{app}"
         else
-          Mix.Shell.IO.warn("--app argument required for umbrella project")
+          Mix.Shell.IO.error("--app argument required for umbrella project")
           exit(1)
         end
 

@@ -30,7 +30,7 @@ defmodule Noizu.JasonEncoderTest do
           "{\"id\":\"ref.biz-bop.#{ShortUUID.encode!(e.id)}\",\"inserted_at\":\"#{e.inserted_at |> DateTime.to_iso8601()}\",\"vsn\":1.0}" ->
         :ok
 
-        json ==
+        assert json ==
           "{\"id\":\"ref.biz-bop.#{ShortUUID.encode!(e.id)}\",\"vsn\":1.0,\"inserted_at\":\"#{e.inserted_at |> DateTime.to_iso8601()}\"}"
 
       :else ->

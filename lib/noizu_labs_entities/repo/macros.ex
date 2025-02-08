@@ -39,7 +39,7 @@ defmodule Noizu.Repo.Macros do
                  Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
                    __MODULE__
                    |> Module.split()
-                   |> Enum.slice(0..-2)
+                   |> Enum.slice(0..-2//-1)
                    |> Module.concat()
 
                  :else ->

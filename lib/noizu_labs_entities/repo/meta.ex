@@ -89,8 +89,9 @@ defmodule Noizu.Repo.Meta do
       {:ok, entity}
     end
   end
-
-  defp __before_create__generate_id(entity, context, options) do
+  
+  defp __before_create__generate_id(entity, context, options)
+  defp __before_create__generate_id(entity, _, _) do
     cond do
       entity.id ->
         {:ok, entity}

@@ -31,7 +31,7 @@ defmodule Noizu.Entity.Path do
   def parent_path(nil), do: nil
 
   def parent_path(%{__struct__: __MODULE__} = this) do
-    new(Enum.slice(this.path, 0..-2))
+    new(Enum.slice(this.path, 0..-2//-1))
   end
 
   def path_string(nil), do: nil
@@ -211,7 +211,7 @@ defmodule Noizu.Entity.Path.TypeHelper do
   def field_as_record(field, field_settings, persistence_settings, context, options)
 
   def field_as_record(
-        field,
+        _,
         Noizu.Entity.Meta.Field.field_settings(),
         Noizu.Entity.Meta.Persistence.persistence_settings(type: Noizu.Entity.Store.Amnesia),
         _,
@@ -225,8 +225,7 @@ defmodule Noizu.Entity.Path.TypeHelper do
         Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
         Noizu.Entity.Meta.Persistence.persistence_settings(
           store: store,
-          table: table,
-          type: Noizu.Entity.Store.Amnesia
+          table: table
         ),
         _,
         _
@@ -246,7 +245,7 @@ defmodule Noizu.Entity.Path.TypeHelper do
 
   def field_from_record(
         _,
-        record,
+        _,
         Noizu.Entity.Meta.Field.field_settings(),
         Noizu.Entity.Meta.Persistence.persistence_settings(type: Noizu.Entity.Store.Amnesia),
         _,
