@@ -5,7 +5,7 @@ defmodule Noizu.Entities.MixProject do
     [
       app: :noizu_labs_entities,
       name: "NoizuLabs Entities",
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.14",
       package: package(),
       description: description(),
@@ -90,7 +90,7 @@ defmodule Noizu.Entities.MixProject do
       else
         deps ++
           [
-            {:noizu_labs_core, "~> 0.1.3"}
+            {:noizu_labs_core, "~> 0.1.4"}
             # {:noizu_labs_core,            github: "noizu-labs-scaffolding/core", branch: "develop", override: true},
           ]
       end

@@ -63,6 +63,39 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
       v -> v
     end
   end
+  
+  def do_field_from_record(
+        m,
+        _,
+        entity = %{__meta__: _},
+        Noizu.Entity.Meta.Field.field_settings(
+          options: field_options,
+          name: name,
+          store: field_store
+        ),
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        context,
+        _
+      ) do
+    as_name = field_store[table][:name] || field_store[store][:name] || name
+    
+    case Map.get(entity, as_name) do
+      v when is_struct(v) ->
+        {:ok, v}
+      
+      ref ->
+        if field_options[:auto] do
+          apply(m, :entity, [ref, context])
+        else
+          apply(m, :ref, [ref])
+        end
+    end
+    |> case do
+         nil -> {:ok, {name, nil}}
+         {:ok, entity} -> {:ok, {name, entity}}
+         v -> v
+       end
+  end
 end
 
 defmodule Noizu.Entity.Reference.Exception do
