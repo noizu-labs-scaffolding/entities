@@ -76,7 +76,7 @@ defmodule Noizu.Entities.MixProject do
       {:ecto_sql, "~> 3.6"},
       {:nuamnesia, "~> 0.3.0", optional: true},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.0", runtime: false},
       {:junit_formatter, "~> 3.4", only: [:test]},
       {:shortuuid, "~> 3.0"},
       {:elixir_uuid, "~> 1.2", optional: true},

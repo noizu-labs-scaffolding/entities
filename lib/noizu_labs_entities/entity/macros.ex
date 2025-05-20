@@ -38,8 +38,7 @@ defmodule Noizu.Entity.Macros do
         end
 
         def encode(s, {_, _} = opts) do
-          settings = Noizu.Entity.Meta.fields(s)
-
+          settings = Noizu.Entity.Meta.json(s)[:default]
           Noizu.Entity.Json.Protocol.prep(s, settings, Noizu.Context.system(), [])
           |> Jason.Encode.map(opts)
         end
