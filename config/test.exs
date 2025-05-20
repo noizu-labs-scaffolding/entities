@@ -6,10 +6,11 @@
 
 # General application configuration
 import Config
+
 config :noizu_labs_entities,
-       legacy_mode: false,
-       uid_provider: Noizu.Entity.Test.UIDProvider
-       
+  legacy_mode: false,
+  uid_provider: Noizu.Entity.Test.UIDProvider
+
 config :junit_formatter,
-       report_file: "results.xml",
-       print_report_file: true
+  report_file: "results.xml",
+  print_report_file: true

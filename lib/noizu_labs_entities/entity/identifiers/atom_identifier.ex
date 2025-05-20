@@ -2,13 +2,17 @@
 # ERP methods
 # ================================
 defmodule Noizu.Entity.Meta.AtomIdentifier do
+  @moduledoc """
+  Logic for atom id backed entities.
+  """
+
   require Noizu.Entity.Meta.Persistence
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
-  #-----------------------------
+  # -----------------------------
   # __using___/1
-  #-----------------------------
+  # -----------------------------
   defmacro __using__(opts) do
     entity = opts[:entity]
 
@@ -20,10 +24,10 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
       def entity(ref, context), do: unquote(entity).entity(ref, context)
     end
   end
-  
-  #-----------------------------
+
+  # -----------------------------
   # format_id/3
-  #-----------------------------
+  # -----------------------------
   @doc """
   String format id for sref
   """
@@ -32,20 +36,30 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   end
 
   # ----------------
+  # ecto_gen_string
+  # ----------------
+  def ecto_gen_string(name) do
+    # TODO enum:[list]
+    {:ok, "#{name}:string"}
+  end
+
+  # ----------------
   # kind/2
   # ----------------
   @doc """
   Returns the kind of the entity.
   """
-  def kind(m, id) when not(is_nil(id)) and is_atom(id), do: {:ok, m}
+  def kind(m, id) when not is_nil(id) and is_atom(id), do: {:ok, m}
   def kind(m, R.ref(module: m)), do: {:ok, m}
   def kind(m, %{__struct__: m}), do: {:ok, m}
+
   def kind(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
           {:ok, m}
+
         :else ->
           {:error, {:unsupported, {__MODULE__, :kind, ref}}}
       end
@@ -53,21 +67,25 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   end
 
   def kind(_m, ref), do: {:error, {:unsupported, {__MODULE__, :kind, ref}}}
-  
-  #-----------------------------
+
+  # -----------------------------
   # id/2
-  #-----------------------------
-  def id(_m, id) when not(is_nil(id)) and is_atom(id), do: {:ok, id}
-  def id(m, R.ref(module: m, id: id)) when not(is_nil(id)) and is_atom(id), do: {:ok, id}
-  def id(m, %{__struct__: m, id: id}) when not(is_nil(id)) and is_atom(id), do: {:ok, id}
+  # -----------------------------
+  def id(_m, id) when not is_nil(id) and is_atom(id), do: {:ok, id}
+  def id(m, R.ref(module: m, id: id)) when not is_nil(id) and is_atom(id), do: {:ok, id}
+  def id(m, %{__struct__: m, id: id}) when not is_nil(id) and is_atom(id), do: {:ok, id}
+
   def id(m, "ref." <> _ = ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
-          x = String.trim_leading(ref, "ref.#{sref}.")
-              |> String.to_existing_atom()
+          x =
+            String.trim_leading(ref, "ref.#{sref}.")
+            |> String.to_existing_atom()
+
           {:ok, x}
+
         :else ->
           {:error, {:unsupported, {m, :id, ref}}}
       end
@@ -75,16 +93,16 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   end
 
   def id(m, ref), do: {:error, {:unsupported, {m, :id, ref}}}
-  
-  #-----------------------------
-  # ref/2
-  #-----------------------------
-  def ref(m, id) when not(is_nil(id)) and is_atom(id), do: {:ok, R.ref(module: m, id: id)}
 
-  def ref(m, R.ref(module: m, id: id)) when not(is_nil(id)) and is_atom(id),
+  # -----------------------------
+  # ref/2
+  # -----------------------------
+  def ref(m, id) when not is_nil(id) and is_atom(id), do: {:ok, R.ref(module: m, id: id)}
+
+  def ref(m, R.ref(module: m, id: id)) when not is_nil(id) and is_atom(id),
     do: {:ok, R.ref(module: m, id: id)}
 
-  def ref(m, %{__struct__: m, id: id}) when not(is_nil(id)) and is_atom(id),
+  def ref(m, %{__struct__: m, id: id}) when not is_nil(id) and is_atom(id),
     do: {:ok, R.ref(module: m, id: id)}
 
   def ref(m, "ref." <> _ = ref) do
@@ -92,10 +110,12 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
-
-        x = String.trim_leading(ref, "ref.#{sref}.")
+          x =
+            String.trim_leading(ref, "ref.#{sref}.")
             |> String.to_existing_atom()
-        {:ok, R.ref(module: m, id: x)}
+
+          {:ok, R.ref(module: m, id: x)}
+
         :else ->
           {:error, {:unsupported, {m, :ref, ref}}}
       end
@@ -103,26 +123,25 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   end
 
   def ref(m, ref), do: {:error, {:unsupported, {m, :ref, ref}}}
-  
-  
-  #-----------------------------
+
+  # -----------------------------
   # sref/2
-  #-----------------------------
-  def sref(m, id) when not(is_nil(id)) and is_atom(id) do
+  # -----------------------------
+  def sref(m, id) when not is_nil(id) and is_atom(id) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       {:ok, "ref.#{sref}.#{id}"}
     end
   end
 
-  def sref(m, R.ref(module: m, id: id)) when not(is_nil(id)) and is_atom(id) do
+  def sref(m, R.ref(module: m, id: id)) when not is_nil(id) and is_atom(id) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       {:ok, "ref.#{sref}.#{id}"}
     end
   end
 
-  def sref(m, %{__struct__: m, id: id}) when not(is_nil(id)) and is_atom(id) do
+  def sref(m, %{__struct__: m, id: id}) when not is_nil(id) and is_atom(id) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       {:ok, "ref.#{sref}.#{id}"}
@@ -134,9 +153,12 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
-          x = String.trim_leading(ref, "ref.#{sref}.")
-              |> String.to_existing_atom()
-             {:ok, "ref.#{sref}.#{x}"}
+          x =
+            String.trim_leading(ref, "ref.#{sref}.")
+            |> String.to_existing_atom()
+
+          {:ok, "ref.#{sref}.#{x}"}
+
         :else ->
           {:error, {:unsupported, {m, :sref, ref}}}
       end
@@ -144,21 +166,21 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   end
 
   def sref(m, ref), do: {:error, {:unsupported, {m, :sref, ref}}}
-  
-  #-----------------------------
+
+  # -----------------------------
   # entity/3
-  #-----------------------------
-  def entity(m, id, context) when not(is_nil(id)) and is_atom(id),
+  # -----------------------------
+  def entity(m, id, context) when not is_nil(id) and is_atom(id),
     do: apply(m, :entity, [R.ref(module: m, id: id), context])
 
-  def entity(m, R.ref(module: m, id: id) = ref, context) when not(is_nil(id)) and is_atom(id) do
+  def entity(m, R.ref(module: m, id: id) = ref, context) when not is_nil(id) and is_atom(id) do
     with repo <- Noizu.Entity.Meta.repo(ref),
          {:ok, repo} <- (repo && {:ok, repo}) || {:error, {m, :repo_not_found}} do
       apply(repo, :get, [ref, context, []])
     end
   end
 
-  def entity(m, %{__struct__: m, id: id} = ref, _context) when not(is_nil(id)) and is_atom(id),
+  def entity(m, %{__struct__: m, id: id} = ref, _context) when not is_nil(id) and is_atom(id),
     do: {:ok, ref}
 
   def entity(m, %{__struct__: record_type} = ref, context) do
@@ -177,9 +199,12 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}} do
       cond do
         String.starts_with?(ref, "ref.#{sref}.") ->
-          x = String.trim_leading(ref, "ref.#{sref}.")
-              |> String.to_existing_atom()
-              apply(m, :entity, [R.ref(module: m, id: x), context])
+          x =
+            String.trim_leading(ref, "ref.#{sref}.")
+            |> String.to_existing_atom()
+
+          apply(m, :entity, [R.ref(module: m, id: x), context])
+
         :else ->
           {:error, {:unsupported, {__MODULE__, :entity, ref}}}
       end

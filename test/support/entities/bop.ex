@@ -3,13 +3,14 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 
-
 defmodule Noizu.Support.Entities.Bops do
+  @moduledoc false
   use Noizu.Repo
   def_repo()
 end
 
 defmodule Noizu.Support.Entities.Bops.Bop do
+  @moduledoc false
   use Noizu.Entity
 
   @vsn 1.0
@@ -90,7 +91,6 @@ defmodule Noizu.Support.Entities.Bops.Bop do
     @json for: :api, set: [omit: false, as: :bop2]
     field(:json_template_specific2)
   end
-
 
   # todo  all entity to pl logic
   # todo  ref, entity, id, -> Noizu.Entity.ref(module, ref, options) -> injected by derive with macro callback.

@@ -1,3 +1,3 @@
-defmodule Noizu.Entities.PendingFeature do
+defmodule Noizu.Entities.PendingFeature.Exception do
   defexception [:message]
 end

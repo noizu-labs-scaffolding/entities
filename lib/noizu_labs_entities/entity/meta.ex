@@ -7,10 +7,10 @@ defmodule Noizu.Entity.Meta do
   @moduledoc """
   Module for checking and encoding entity metadata.
   """
-  
+
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
-  
+
   @callback meta() :: []
   @callback fields() :: []
   @callback id() :: []
@@ -23,9 +23,11 @@ defmodule Noizu.Entity.Meta do
   # ---------------
   def meta(%{__struct__: m}), do: meta(m)
   def meta(R.ref(module: m)), do: meta(m)
+
   def meta(m) when is_atom(m) do
     apply(m, :__noizu_meta__, [])
-    rescue _ -> nil
+  rescue
+    _ -> nil
   end
 
   def meta(m),

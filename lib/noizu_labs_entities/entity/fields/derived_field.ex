@@ -13,6 +13,9 @@ defmodule Noizu.Entity.DerivedField do
 end
 
 defmodule Noizu.Entity.DerivedField.TypeHelper do
+  @moduledoc """
+  Helper functions for derived fields.
+  """
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
@@ -66,18 +69,18 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
   def field_from_record(
         field_stub,
         record,
-        field_settings =
-          Noizu.Entity.Meta.Field.field_settings(
-            name: name,
-            store: field_store,
-            options: field_options
-          ),
-        persistence_settings =
-          Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table),
+        Noizu.Entity.Meta.Field.field_settings(
+          name: name,
+          store: field_store,
+          options: field_options
+        ) = field_settings,
+        Noizu.Entity.Meta.Persistence.persistence_settings(store: store, table: table) =
+          persistence_settings,
         context,
         options
       ) do
     as_name = field_store[table][:name] || field_store[store][:name] || name
+
     Enum.find_value(
       [
         field_store[table][:pull],
@@ -147,33 +150,16 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
   end
 end
 
-for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity.Store.Ecto, Noizu.Entity.Store.Mnesia, Noizu.Entity.Store.Redis] do
+for store <- [
+      Noizu.Entity.Store.Amnesia,
+      Noizu.Entity.Store.Dummy,
+      Noizu.Entity.Store.Ecto,
+      Noizu.Entity.Store.Mnesia,
+      Noizu.Entity.Store.Redis
+    ] do
   entity_protocol = Module.concat(store, EntityProtocol)
   entity_field_protocol = Module.concat(store, Entity.FieldProtocol)
-  
-  
-  defimpl entity_protocol, for: [Noizu.Entity.DerivedField] do
-    defdelegate persist(entity, type, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate as_record(entity, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate as_entity(entity, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate as_entity(entity, record, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate delete_record(entity, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    
-    defdelegate from_record(record, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-    defdelegate from_record(entity, record, settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
-  end
-  
+
   defimpl entity_field_protocol, for: [Noizu.Entity.DerivedField] do
     defdelegate field_from_record(
                   field,
@@ -184,11 +170,8 @@ for store <- [Noizu.Entity.Store.Amnesia, Noizu.Entity.Store.Dummy, Noizu.Entity
                   options
                 ),
                 to: Noizu.Entity.DerivedField.TypeHelper
-    
+
     defdelegate field_as_record(field, field_settings, persistence_settings, context, options),
-                to: Noizu.Entity.DerivedField.TypeHelper
+      to: Noizu.Entity.DerivedField.TypeHelper
   end
-
-
 end
-

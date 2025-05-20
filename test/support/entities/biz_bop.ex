@@ -4,11 +4,13 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Support.Entities.BizBops do
+  @moduledoc false
   use Noizu.Repo
   def_repo()
 end
 
 defmodule Noizu.Support.Entities.BizBops.BizBop do
+  @moduledoc false
   use Noizu.Entity
 
   @vsn 1.0
@@ -92,9 +94,10 @@ defmodule Noizu.Support.Entities.BizBops.BizBop do
     @config misc: :apple
     field(:inserted_at)
 
-    field :ecto_hint, nil, :string
-    field :time_stamp, nil, Noizu.Entity.TimeStamp
+    field(:ecto_hint, nil, :string)
+    field(:time_stamp, nil, Noizu.Entity.TimeStamp)
   end
+
   jason_encoder()
 
   def changeset(%__MODULE__{} = entity, attrs) do

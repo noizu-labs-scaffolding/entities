@@ -1,4 +1,5 @@
 defmodule Noizu.Support.Entity.TestField do
+  @moduledoc false
   @derive Noizu.EntityReference.Protocol
   defstruct id: nil,
             sno: nil
@@ -23,7 +24,7 @@ defmodule Noizu.Support.Entity.TestField do
   def type__before_create(%__MODULE__{} = this, _, _, _) do
     cond do
       this.id -> {:ok, this}
-      :else -> {:ok, %{this | id: 31337}}
+      :else -> {:ok, %{this | id: 31_337}}
     end
   end
 
@@ -46,16 +47,17 @@ defmodule Noizu.Support.Entity.TestField do
 end
 
 defmodule Noizu.Support.Entity.TestField.TypeHelper do
+  @moduledoc false
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
   def persist(_, _, _, _, _), do: {:error, :not_supported}
   def as_record(_, _, _, _), do: {:error, :not_supported}
-  def as_entity(_, _, _, _), do: {:error, :not_supported}
+  def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
   def as_entity(_, _, _, _, _), do: {:error, :not_supported}
   def delete_record(_, _, _, _), do: {:error, :not_supported}
   def from_record(_, _, _, _), do: {:error, :not_supported}
-  def from_record(_, _, _, _, _), do: {:error, :not_supported}
+  def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
 
   def field_as_record(
         field,
@@ -96,11 +98,11 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Support.Entity.TestF
   defdelegate as_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
-  defdelegate as_entity(entity, settings, context, options),
+  defdelegate fetch_as_entity(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate as_entity(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+    to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
@@ -108,8 +110,8 @@ defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Noizu.Support.Entity.TestF
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
-  defdelegate from_record(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+  defdelegate merge_from_record(entity, record, settings, context, options),
+    to: Noizu.Support.Entity.TestField.TypeHelper
 end
 
 defimpl Noizu.Entity.Store.Ecto.Entity.FieldProtocol, for: [Noizu.Support.Entity.TestField] do
@@ -134,17 +136,17 @@ defimpl Noizu.Entity.Store.Dummy.EntityProtocol, for: [Noizu.Support.Entity.Test
   defdelegate as_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
-  defdelegate as_entity(entity, settings, context, options),
+  defdelegate fetch_as_entity(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate as_entity(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+    to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate delete_record(entity, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper
 
-  defdelegate from_record(entity, record, settings, context, options),
-              to: Noizu.Support.Entity.TestField.TypeHelper
+  defdelegate merge_from_record(entity, record, settings, context, options),
+    to: Noizu.Support.Entity.TestField.TypeHelper
 
   defdelegate from_record(record, settings, context, options),
     to: Noizu.Support.Entity.TestField.TypeHelper

@@ -3,13 +3,14 @@
 # Copyright (C) 2023 Noizu Labs Inc. All rights reserved.
 # -------------------------------------------------------------------------------
 
-
 defmodule Noizu.Support.Entities.Foos do
+  @moduledoc false
   use Noizu.Repo
   def_repo()
 end
 
 defmodule Noizu.Support.Entities.Foos.Foo do
+  @moduledoc false
   use Noizu.Entity
 
   @vsn 1.0
@@ -45,7 +46,8 @@ defmodule Noizu.Support.Entities.Foos.Foo do
     @pii :low
     field(:name)
 
-    field :reference_field, nil, Noizu.Entity.Extended.UUIDReference
+    @config auto: true
+    field(:reference_field, nil, Noizu.Entity.Extended.UUIDReference)
 
     pii do
       @json false
@@ -95,7 +97,6 @@ defmodule Noizu.Support.Entities.Foos.Foo do
     @json for: :api, set: [omit: false, as: :bop2]
     field(:json_template_specific2)
   end
-
 
   # todo  REPO - own module
   # todo  all entity to pl logic

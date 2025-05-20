@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Entity.Macros do
+  @moduledoc """
+  This module provides macros for defining entities and their fields.
+  """
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Json
@@ -16,17 +19,27 @@ defmodule Noizu.Entity.Macros do
   defmacro jason_encoder(_opts \\ nil) do
     quote do
       defimpl Jason.Encoder do
-        def encode(s, {_,_,user_settings} = opts) do
+        def encode(s, {_, _, user_settings} = opts) do
           json_format = user_settings[:json_format] || :default
-          settings = cond do
-            x = Noizu.Entity.Meta.json(s)[json_format] -> x
-            x = Noizu.Entity.Meta.json(s)[:default] -> x
-          end
-          Noizu.Entity.Json.Protocol.prep(s, settings, user_settings[:context], user_settings[:settings])
+
+          settings =
+            cond do
+              x = Noizu.Entity.Meta.json(s)[json_format] -> x
+              x = Noizu.Entity.Meta.json(s)[:default] -> x
+            end
+
+          Noizu.Entity.Json.Protocol.prep(
+            s,
+            settings,
+            user_settings[:context],
+            user_settings[:settings]
+          )
           |> Jason.Encode.map(opts)
         end
-        def encode(s, {_,_} = opts) do
+
+        def encode(s, {_, _} = opts) do
           settings = Noizu.Entity.Meta.fields(s)
+
           Noizu.Entity.Json.Protocol.prep(s, settings, Noizu.Context.system(), [])
           |> Jason.Encode.map(opts)
         end
@@ -158,38 +171,44 @@ defmodule Noizu.Entity.Macros do
       require Noizu.Entity.Meta
       require Noizu.Entity.Meta.Identifier
       alias Noizu.Entity.Meta, as: Meta
-      
+
       @erp_type_handlers %{
         uuid: Noizu.Entity.Meta.UUIDIdentifier,
         integer: Noizu.Entity.Meta.IntegerIdentifier,
         atom: Noizu.Entity.Meta.AtomIdentifier,
         ref: Noizu.Entity.Meta.RefIdentifier,
-        dual_ref: Noizu.Entity.Meta.DualRefIdentifier,
+        dual_ref: Noizu.Entity.Meta.DualRefIdentifier
       }
-      
+
       @erp_type_handler (case unquote(ids) do
-          [{:id, Meta.Identifier.id_settings(type: type)}]  ->
-            @erp_type_handlers[type] || type
-        end)
-      
+                           [{:id, Meta.Identifier.id_settings(type: type)}] ->
+                             @erp_type_handlers[type] || type
+                         end)
+
       def kind(ref),
-          do: @erp_type_handler.kind(__MODULE__, ref)
+        do: @erp_type_handler.kind(__MODULE__, ref)
+
       def id(ref),
-          do: @erp_type_handler.id(__MODULE__, ref)
+        do: @erp_type_handler.id(__MODULE__, ref)
+
       def ref(ref),
-          do: @erp_type_handler.ref(__MODULE__, ref)
+        do: @erp_type_handler.ref(__MODULE__, ref)
+
       def sref(ref),
-          do: @erp_type_handler.sref(__MODULE__, ref)
+        do: @erp_type_handler.sref(__MODULE__, ref)
+
       def entity(ref, context),
-          do: @erp_type_handler.entity(__MODULE__, ref, context)
+        do: @erp_type_handler.entity(__MODULE__, ref, context)
+
       def stub(),
-          do: {:ok, %__MODULE__{}}
+        do: {:ok, %__MODULE__{}}
+
       def stub(ref, _, _) do
         with {:ok, id} <- __MODULE__.id(ref) do
           {:ok, %__MODULE__{id: id}}
         end
       end
-      
+
       defoverridable kind: 1,
                      id: 1,
                      ref: 1,
@@ -239,31 +258,43 @@ defmodule Noizu.Entity.Macros do
       Noizu.Entity.Macros.Json.extract_json(name)
       acl = {field, field_acl} = Noizu.Entity.Macros.ACL.extract_acl(name)
       Module.put_attribute(__MODULE__, :__nz_acl, acl)
-      reported_type = case type do
-        nil -> nil
-        x when x in [
-          :integer,
-          :float,
-          :string,
-          :boolean,
-          :binary,
-          :date,
-          :time,
-          :naive_datetime,
-          :utc_datetime,
-          :utc_datetime_usec,
-          :uuid,
-          :map,
-          :array,
-          :decimal,
-          :json,
-          :jsonb,
-          :any
-        ] -> {:ecto, x}
-        {:enum, values} = x-> {:ecto, x}
-        {:array, _} = x -> {:ecto, x}
-        _ -> type
-      end
+
+      reported_type =
+        case type do
+          nil ->
+            nil
+
+          x
+          when x in [
+                 :integer,
+                 :float,
+                 :string,
+                 :boolean,
+                 :binary,
+                 :date,
+                 :time,
+                 :naive_datetime,
+                 :utc_datetime,
+                 :utc_datetime_usec,
+                 :uuid,
+                 :map,
+                 :array,
+                 :decimal,
+                 :json,
+                 :jsonb,
+                 :any
+               ] ->
+            {:ecto, x}
+
+          {:enum, values} = x ->
+            {:ecto, x}
+
+          {:array, _} = x ->
+            {:ecto, x}
+
+          _ ->
+            type
+        end
 
       # Extract any storage attributes.
       store =
@@ -302,6 +333,7 @@ defmodule Noizu.Entity.Macros do
             )
             |> Enum.reject(&is_nil/1)
             |> List.flatten()
+
           _ ->
             nil
         end ++ (opts || [])
@@ -445,10 +477,13 @@ defmodule Noizu.Entity.Macros do
           cond do
             Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
               Module.put_attribute(__MODULE__, :__nz_repo, Module.concat([__MODULE__, Repo]))
+
             :else ->
-              repo = Module.split(__MODULE__)
-                     |> Enum.slice(0..-2//1)
-                     |> Module.concat()
+              repo =
+                Module.split(__MODULE__)
+                |> Enum.slice(0..-2//1)
+                |> Module.concat()
+
               Module.put_attribute(__MODULE__, :__nz_repo, repo)
           end
       end
@@ -578,11 +613,12 @@ defmodule Noizu.Entity.Macros do
         fn
           {field, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, type})} ->
             {field, type}
+
           {field, _} ->
             {field, :any}
         end
-      ) |> Map.new()
-
+      )
+      |> Map.new()
 
     nz_meta = %{
       id: nz_entity__id,

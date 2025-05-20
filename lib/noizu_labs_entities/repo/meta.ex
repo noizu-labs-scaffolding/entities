@@ -4,21 +4,22 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Repo.Meta do
+  @moduledoc """
+  Logic for driving entity repos.
+  """
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Identifier
   # import Noizu.Core.Helpers
-  
-  
+
   @erp_type_handlers %{
     uuid: Noizu.Entity.Meta.UUIDIdentifier,
     integer: Noizu.Entity.Meta.IntegerIdentifier,
     atom: Noizu.Entity.Meta.AtomIdentifier,
     ref: Noizu.Entity.Meta.RefIdentifier,
-    dual_ref: Noizu.Entity.Meta.DualRefIdentifier,
+    dual_ref: Noizu.Entity.Meta.DualRefIdentifier
   }
-  
-  
+
   # -------------------
   # create/3
   # -------------------
@@ -32,6 +33,7 @@ defmodule Noizu.Repo.Meta do
       {:error, changeset.errors}
     end
   end
+
   def create(entity, context, options) do
     with repo <- Noizu.Entity.Meta.repo(entity),
          {:ok, entity} <- apply(repo, :__before_create__, [entity, context, options]),
@@ -54,6 +56,7 @@ defmodule Noizu.Repo.Meta do
       {:error, changeset.errors}
     end
   end
+
   def update(entity, context, options) do
     with repo <- Noizu.Entity.Meta.repo(entity),
          {:ok, entity} <- apply(repo, :__before_update__, [entity, context, options]),
@@ -86,51 +89,54 @@ defmodule Noizu.Repo.Meta do
       {:ok, entity}
     end
   end
-
   
-  
-  defp __before_create__generate_id(entity, context, options) do
+  defp __before_create__generate_id(entity, context, options)
+  defp __before_create__generate_id(entity, _, _) do
     cond do
       entity.id ->
         {:ok, entity}
+
       :else ->
         with {:ok, {id, index}} <-
                Noizu.Entity.UID.generate(Noizu.Entity.Meta.repo(entity), node()),
-             {field, Noizu.Entity.Meta.Identifier.id_settings(type: id_type)} <- Noizu.Entity.Meta.id(entity),
+             {field, Noizu.Entity.Meta.Identifier.id_settings(type: id_type)} <-
+               Noizu.Entity.Meta.id(entity),
              handler <- @erp_type_handlers[id_type] || id_type,
-             generated_id <- handler.format_id(entity, id, index)
-          do
+             generated_id <- handler.format_id(entity, id, index) do
           {:ok, put_in(entity, [Access.key(field)], generated_id)}
         end
     end
   end
-  
+
   defp __before_create__type({:ok, entity}, context, options) do
-        entity =
-          Noizu.Entity.Meta.fields(entity)
-          |> Enum.map(fn
-            {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
-              nil
-            {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
-              nil
-            {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
-              with {:ok, update} <-
-                     apply(type, :type__before_create, [
-                       get_in(entity, [Access.key(field)]),
-                       field_settings,
-                       context,
-                       options
-                     ]) do
-                {field, update}
-              else
-                _ -> nil
-              end
-          end)
-          |> Enum.filter(& &1)
-          |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
-        
-        {:ok, entity}
+    entity =
+      Noizu.Entity.Meta.fields(entity)
+      |> Enum.map(fn
+        {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
+          nil
+
+        {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
+          nil
+
+        {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
+          with {:ok, update} <-
+                 apply(type, :type__before_create, [
+                   get_in(entity, [Access.key(field)]),
+                   field_settings,
+                   context,
+                   options
+                 ]) do
+            {field, update}
+          else
+            _ -> nil
+          end
+      end)
+      |> Enum.filter(& &1)
+      |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
+
+    {:ok, entity}
   end
+
   defp __before_create__type(v, _, _), do: v
   # -------------------
   # __before_create__3
@@ -164,19 +170,17 @@ defmodule Noizu.Repo.Meta do
   def __after_create__(entity, _context, _options) do
     {:ok, entity}
   end
-  
-  
-  
-  
+
   defp __before_update__type({:ok, entity}, context, options) do
     entity =
       Noizu.Entity.Meta.fields(entity)
-      |> Enum.map(
-           fn
+      |> Enum.map(fn
         {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
           nil
+
         {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
           nil
+
         {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
           with {:ok, update} <-
                  apply(type, :type__before_update, [
@@ -192,9 +196,10 @@ defmodule Noizu.Repo.Meta do
       end)
       |> Enum.filter(& &1)
       |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
-    
+
     {:ok, entity}
   end
+
   defp __before_update__type(v, _, _), do: v
   # -------------------
   #
@@ -203,6 +208,7 @@ defmodule Noizu.Repo.Meta do
     cond do
       entity.id ->
         {:ok, entity}
+
       :else ->
         {:error, :id_required}
     end
@@ -217,6 +223,7 @@ defmodule Noizu.Repo.Meta do
     |> Enum.map(fn settings ->
       Noizu.Entity.Meta.Persistence.persistence_settings(type: type) = settings
       protocol = Module.concat([type, EntityProtocol])
+
       with {:ok, record} <- apply(protocol, :as_record, [entity, settings, context, options]) do
         apply(protocol, :persist, [record, :update, settings, context, options])
       end
@@ -247,7 +254,9 @@ defmodule Noizu.Repo.Meta do
     |> Enum.reduce_while({:error, :not_found}, fn settings, _ ->
       Noizu.Entity.Meta.Persistence.persistence_settings(type: type) = settings
       protocol = Module.concat([type, EntityProtocol])
-      with {:ok, entity} <- apply(protocol, :as_entity, [entity, settings, context, options]) do
+
+      with {:ok, entity} <-
+             apply(protocol, :fetch_as_entity, [entity, settings, context, options]) do
         {:halt, {:ok, entity}}
       else
         err -> {:cont, err}
@@ -285,17 +294,17 @@ defmodule Noizu.Repo.Meta do
 
     {:ok, entity}
   end
-  
-  
-  
+
   defp __after_delete__type(entity, context, options) do
     entity =
       Noizu.Entity.Meta.fields(entity)
       |> Enum.map(fn
         {_, Noizu.Entity.Meta.Field.field_settings(type: nil)} ->
           nil
+
         {_, Noizu.Entity.Meta.Field.field_settings(type: {:ecto, _})} ->
           nil
+
         {field, Noizu.Entity.Meta.Field.field_settings(type: type) = field_settings} ->
           with {:ok, update} <-
                  apply(type, :type__after_delete, [
@@ -311,10 +320,10 @@ defmodule Noizu.Repo.Meta do
       end)
       |> Enum.filter(& &1)
       |> Enum.reduce(entity, fn {field, update}, acc -> Map.put(acc, field, update) end)
-    
+
     {:ok, entity}
   end
-  
+
   # -------------------
   #
   # -------------------

@@ -4,6 +4,10 @@
 # -------------------------------------------------------------------------------
 
 defmodule Noizu.Repo.Macros do
+  @moduledoc """
+  Macros for setting up Entity Repos.
+  """
+
   require Noizu.Entity.Meta.Identifier
   require Noizu.Entity.Meta.Field
   require Noizu.Entity.Meta.Json
@@ -28,28 +32,29 @@ defmodule Noizu.Repo.Macros do
       require Noizu.EntityReference.Records
       alias Noizu.EntityReference.Records, as: R
 
-
       @entity (cond do
-        x = unquote(options[:entity]) -> x
-        Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
-          __MODULE__
-          |> Module.split()
-          |> Enum.slice(0..-2)
-          |> Module.concat()
-        :else ->
-          __MODULE__
-          |> Module.split()
-          |> then(
-               fn(l) ->
-                 l ++ [Inflex.singularize(List.last(l))]
+                 x = unquote(options[:entity]) ->
+                   x
+
+                 Application.compile_env(:noizu_labs_entities, :legacy_mode) ->
+                   __MODULE__
+                   |> Module.split()
+                   |> Enum.slice(0..-2//-1)
+                   |> Module.concat()
+
+                 :else ->
+                   __MODULE__
+                   |> Module.split()
+                   |> then(fn l ->
+                     l ++ [Inflex.singularize(List.last(l))]
+                   end)
+                   |> Module.concat()
                end)
-          |> Module.concat()
-      end)
 
       @poly (cond do
-        x = unquote(options[:poly]) -> x
-        :else -> false
-      end)
+               x = unquote(options[:poly]) -> x
+               :else -> false
+             end)
 
       defstruct entities: [],
                 length: 0,
@@ -121,32 +126,30 @@ defmodule Noizu.Repo.Macros do
       def __noizu_meta__() do
         [
           entity: @entity,
-          poly: @poly,
+          poly: @poly
         ]
       end
 
       # ================================
       #
       # ================================
-      defoverridable [
-        create: 3,
-        update: 3,
-        get: 3,
-        delete: 3,
-        __before_create__: 3,
-        __do_create__: 3,
-        __after_create__: 3,
-        __before_update__: 3,
-        __do_update__: 3,
-        __after_update__: 3,
-        __before_get__: 3,
-        __do_get__: 3,
-        __after_get__: 3,
-        __before_delete__: 3,
-        __do_delete__: 3,
-        __after_delete__: 3,
-        __noizu_meta__: 0
-      ]
+      defoverridable create: 3,
+                     update: 3,
+                     get: 3,
+                     delete: 3,
+                     __before_create__: 3,
+                     __do_create__: 3,
+                     __after_create__: 3,
+                     __before_update__: 3,
+                     __do_update__: 3,
+                     __after_update__: 3,
+                     __before_get__: 3,
+                     __do_get__: 3,
+                     __after_get__: 3,
+                     __before_delete__: 3,
+                     __do_delete__: 3,
+                     __after_delete__: 3,
+                     __noizu_meta__: 0
     end
   end
 end
