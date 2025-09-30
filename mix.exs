@@ -61,7 +61,7 @@ defmodule Noizu.Entities.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger,:jason_uo]
+      extra_applications: [:logger]
     ]
   end
 
@@ -70,7 +70,6 @@ defmodule Noizu.Entities.MixProject do
     [
       # @TODO - prepare hex releases (or abandon) jason and amnesi
       {:ex_doc, ">= 0.0.0", only: [:dev, :test], runtime: false},
-      {:jason_uo, "1.4.98", optional: true},
       {:mimic, "~> 1.0.0", only: :test},
       {:ecto_sql, "~> 3.6"},
       {:nuamnesia, "~> 0.3.0", optional: true},
