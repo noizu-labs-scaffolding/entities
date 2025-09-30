@@ -3,7 +3,6 @@ defmodule Noizu.Entity.Path do
   Entity field for encoding path data.
   """
 
-  @derive Noizu.EntityReference.Protocol
   defstruct path: nil,
             materialized_path: nil,
             matrix: nil,

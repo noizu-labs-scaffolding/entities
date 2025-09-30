@@ -5,7 +5,7 @@ defmodule Noizu.Entities.MixProject do
     [
       app: :noizu_labs_entities,
       name: "NoizuLabs Entities",
-      version: "0.2.1",
+      version: "0.2.2",
       elixir: "~> 1.14",
       package: package(),
       description: description(),
@@ -61,8 +61,7 @@ defmodule Noizu.Entities.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      # applications: [:noizu_labs_entities],
-      extra_applications: [:logger]
+      extra_applications: [:logger,:jason_uo]
     ]
   end
 
@@ -80,7 +79,7 @@ defmodule Noizu.Entities.MixProject do
       {:junit_formatter, "~> 3.4", only: [:test]},
       {:shortuuid, "~> 3.0"},
       {:elixir_uuid, "~> 1.2", optional: true},
-      {:inflex, "~> 2.0.0"}
+      {:inflex28, "~> 2.1.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
@@ -90,7 +89,7 @@ defmodule Noizu.Entities.MixProject do
       else
         deps ++
           [
-            {:noizu_labs_core, "~> 0.1.4"}
+            {:noizu_labs_core, "~> 0.1.6"}
             # {:noizu_labs_core,            github: "noizu-labs-scaffolding/core", branch: "develop", override: true},
           ]
       end

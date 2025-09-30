@@ -144,6 +144,8 @@ defmodule Noizu.Entity.ReferenceBehaviour do
       defdelegate ecto_gen_string(name), to: @type_handler
       def id(%__MODULE__{reference: reference}), do: apply(unquote(entity), :id, [reference])
       def ref(%__MODULE__{reference: reference}), do: apply(unquote(entity), :ref, [reference])
+      def sref(%__MODULE__{reference: reference}), do: apply(unquote(entity), :sref, [reference]) 
+      def kind(%__MODULE__{reference: reference}), do: apply(unquote(entity), :kind, [reference])
 
       def entity(%__MODULE__{reference: reference}, context),
         do: apply(unquote(entity), :entity, [reference, context])

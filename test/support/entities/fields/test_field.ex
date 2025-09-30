@@ -8,6 +8,8 @@ defmodule Noizu.Support.Entity.TestField do
 
   def id(%__MODULE__{id: id}), do: {:ok, id}
   def ref(%__MODULE__{id: id}), do: {:ok, {:ref, __MODULE__, id}}
+  def sref(%__MODULE__{id: id}), do: {:ok, "ref.testfield.#{id}"}
+  def kind(%__MODULE__{}), do: {:ok, __MODULE__}
   def entity(%__MODULE__{} = this, _), do: {:ok, this}
 
   def type__before_create(nil, _, _, _), do: nil

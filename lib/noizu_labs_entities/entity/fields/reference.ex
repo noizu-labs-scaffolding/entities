@@ -13,7 +13,8 @@ defmodule Noizu.Entity.Reference do
 
   def id(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.id(reference)
   def ref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.ref(reference)
-
+  def sref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.sref(reference)
+  def kind(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.sref(reference)
   def entity(%__MODULE__{reference: reference}, context),
     do: Noizu.EntityReference.Protocol.entity(reference, context)
 

@@ -1,5 +1,5 @@
 erlang 27.2.1
-elixir 1.18.2-otp-27
+elixir 1.18.3-otp-27
 nodejs 18.15.0
 direnv 2.32.2
 yarn 1.22.19
