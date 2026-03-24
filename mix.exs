@@ -5,7 +5,7 @@ defmodule Noizu.Entities.MixProject do
     [
       app: :noizu_labs_entities,
       name: "NoizuLabs Entities",
-      version: "0.2.2",
+      version: "0.3.0",
       elixir: "~> 1.14",
       package: package(),
       description: description(),
@@ -76,7 +76,7 @@ defmodule Noizu.Entities.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.0", runtime: false},
       {:junit_formatter, "~> 3.4", only: [:test]},
-      {:shortuuid, "~> 3.0"},
+      {:shortuuid, "~> 4.0"},
       {:elixir_uuid, "~> 1.2", optional: true},
       {:inflex28, "~> 2.1.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
@@ -88,7 +88,7 @@ defmodule Noizu.Entities.MixProject do
       else
         deps ++
           [
-            {:noizu_labs_core, "~> 0.1.6"}
+            {:noizu_labs_core, "~> 0.1.7"}
             # {:noizu_labs_core,            github: "noizu-labs-scaffolding/core", branch: "develop", override: true},
           ]
       end

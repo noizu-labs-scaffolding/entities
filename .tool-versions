@@ -1,5 +1,5 @@
-erlang 27.2.1
-elixir 1.18.3-otp-27
-nodejs 18.15.0
-direnv 2.32.2
-yarn 1.22.19
+nodejs 24.5.0
+java openjdk-23.0.1
+erlang 28.4
+elixir 1.19.5-otp-28
+yarn 1.22.22
