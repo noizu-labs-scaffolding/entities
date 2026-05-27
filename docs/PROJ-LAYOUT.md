@@ -16,23 +16,35 @@ entities/
 │   ├── helpers.ex                  #   Shared helper functions
 │   └── noizu_labs_entities.ex      #   Top-level application module
 ├── config/                         # Mix environment configs
+│   ├── .credo.exs                  #   Credo static analysis config
 │   ├── config.exs                  #   Base config
 │   ├── dev.exs                     #   Dev overrides
 │   └── test.exs                    #   Test overrides
 ├── test/                           # Test suites
 │   ├── support/                    #   Test fixtures and entity stubs
-│   │   └── entities/               #   Sample entity definitions
+│   │   ├── entities/               #   Sample entity definitions
+│   │   ├── database.ex             #   Test database setup
+│   │   ├── dummy.ex                #   Dummy modules for testing
+│   │   ├── noizu_test.entity_repo.ex #  Test entity repo
+│   │   └── uid_provider.ex         #   Test UID provider
 │   ├── amnesia_entities_test.exs
 │   ├── field_protocol_test.exs
 │   ├── json_encoder_test.exs
-│   └── noizu_labs_entities_test.exs
-├── doc/                            # Generated ExDoc output (committed)
+│   ├── noizu_labs_entities_test.exs
+│   └── test_helper.exs             #   ExUnit bootstrap
 ├── docs/                           # Project documentation
+│   ├── arch/                       #   Architecture decision records
+│   │   ├── entity-dsl.md           #   Entity DSL design
+│   │   ├── json-acl.md             #   JSON/ACL encoding design
+│   │   └── persistence.md          #   Persistence layer design
+│   ├── layout/                     #   Detailed directory breakdowns
+│   │   └── lib.md
+│   ├── PROJ-ARCH.md                #   Architecture overview
+│   ├── PROJ-ARCH.summary.md        #   Architecture summary
 │   ├── PROJ-LAYOUT.md              #   This file
-│   └── layout/                     #   Detailed directory breakdowns
+│   └── PROJ-LAYOUT.summary.md      #   Layout summary
 ├── priv/plts/                      # Dialyzer PLT caches
-├── .envrc                          # direnv — sets CODACY_PROJECT_TOKEN
-├── .tool-versions                  # asdf versions: Elixir 1.19.5, Erlang 28.4
+├── .tool-versions                  # asdf versions (Elixir, Erlang, Node, Java, Yarn)
 ├── .formatter.exs                  # Elixir code formatter config
 ├── .dialyzer_ignore.exs            # Dialyzer warning suppressions
 ├── mix.exs                         # Project definition and dependencies
@@ -47,5 +59,4 @@ entities/
 
 | File | Action |
 |------|--------|
-| `.envrc` | Run `direnv allow` — sets `CODACY_PROJECT_TOKEN` |
 | `.tool-versions` | Install runtimes via `asdf install` |

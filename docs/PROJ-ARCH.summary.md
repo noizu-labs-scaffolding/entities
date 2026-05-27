@@ -10,8 +10,10 @@
 - **Repo Macros** — DSL (`def_repo`) generating CRUD delegate struct with overridable before/do/after hooks
 - **Repo Meta** — CRUD pipeline implementation iterating persistence layers
 - **Store Adapters** — Protocol-based persistence (Ecto, Mnesia, Amnesia, Redis, Dummy) via EntityProtocol + FieldProtocol
+- **Typed Fields** — TimeStamp, Reference, Path, DerivedField, UUIDReference, Extended.UUIDReference with store/lifecycle callbacks
 - **Json Protocol** — ACL-aware JSON serialization with named format templates
 - **ACL Protocol** — Field-level access restriction based on transient/pii/custom rules
+- **Noizu.UUID** — UUID generation helper wrapping ShortUUID/elixir_uuid
 - **EntityRepoBehaviour** — Application-level repo dispatching by sref string
 
 ## Key Design Decisions
@@ -24,4 +26,4 @@
 
 ## Stack
 
-Elixir 1.19+ / OTP 28, Ecto (primary persistence), Jason, ShortUUID, noizu_labs_core
+Elixir ~> 1.14 (developed on 1.19 / OTP 28), Ecto (primary persistence), Amnesia (optional via nuamnesia), Jason, ShortUUID, inflex28, Credo, Dialyxir, noizu_labs_core ~> 0.1.8

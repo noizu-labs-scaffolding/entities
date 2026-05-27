@@ -1,5 +1,5 @@
-nodejs 24.5.0
-java openjdk-23.0.1
-erlang 28.4
 elixir 1.19.5-otp-28
-yarn 1.22.22
+erlang 28.5
+cmake 3.31.11
+nodejs 22.22.0
+java temurin-21.0.4+7.0.LTS

@@ -13,12 +13,12 @@ entities/
 │   ├── mix/tasks/              # Mix code generator
 │   ├── helpers.ex
 │   └── noizu_labs_entities.ex
-├── config/                     # Mix configs (base, dev, test)
-├── test/                       # Tests and support fixtures
-├── doc/                        # Generated ExDoc
-├── docs/                       # Project docs and layout
+├── config/                     # Mix configs (base, dev, test, credo)
+├── test/                       # Tests, support fixtures, test helpers
+├── docs/                       # Project docs, arch decisions, layout
+│   ├── arch/                   # Entity DSL, JSON/ACL, persistence design
+│   └── layout/                 # Detailed directory breakdowns
 ├── priv/plts/                  # Dialyzer caches
-├── .envrc
 ├── .tool-versions
 ├── mix.exs
 └── README.md

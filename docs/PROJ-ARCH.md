@@ -39,6 +39,9 @@ graph TB
 | `Noizu.Entity.Store.*` | Persistence adapters (Ecto, Mnesia, Amnesia, Redis, Dummy) |
 | `Noizu.Entity.Json.Protocol` | ACL-aware JSON serialization with named formats |
 | `Noizu.Entity.ACL.Protocol` | Field-level access restriction |
+| `Noizu.Entity.{TimeStamp,Reference,Path,DerivedField,UUIDReference}` | Typed field modules with store/lifecycle callbacks |
+| `Noizu.Entity.Extended.UUIDReference` | Extended UUID reference field with additional metadata |
+| `Noizu.UUID` | UUID generation helper (wraps ShortUUID/elixir_uuid) |
 | `Noizu.EntityRepoBehaviour` | Application-level repo that dispatches by sref |
 
 ## Entity Definition DSL
@@ -71,8 +74,10 @@ JSON encoding is driven by named format templates (`:default`, custom names) dec
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Elixir 1.19+ / Erlang/OTP 28 |
-| Persistence | Ecto (primary), Mnesia, Amnesia, Redis |
+| Language | Elixir ~> 1.14 (developed on 1.19 / OTP 28) |
+| Persistence | Ecto (primary), Mnesia, Amnesia (optional via `nuamnesia`), Redis |
 | JSON | Jason with custom encoder |
-| IDs | ShortUUID, elixir_uuid |
-| Core dependency | `noizu_labs_core` (ERP, context, helpers) |
+| IDs | ShortUUID, elixir_uuid (optional) |
+| Inflection | inflex28 — field name conversion |
+| Static analysis | Credo, Dialyxir |
+| Core dependency | `noizu_labs_core` ~> 0.1.8 (ERP, context, helpers) |
