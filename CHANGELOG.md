@@ -1,6 +1,24 @@
 Changelog
 ===========================
 
+## 0.3.3
+
+### Fixes
+
+- fix: 0.3.2 minted uppercase hex in the uuid tail; ids did not round-trip.
+  `id(:uuid)` ids end in the provider `index` as three hex digits, which
+  `Integer.to_string/2` renders uppercase. Postgres (via `Ecto.UUID`) returns
+  lowercase, so for any index containing a-f the id an entity was created with
+  differed from the id read back (`created.id != fetched.id`). The tail is now
+  lowercase. `uuid` columns are unaffected (they store bytes); ids copied into
+  text columns (e.g. srefs) under 0.3.2 may still carry an uppercase tail.
+- `Noizu.Entity.UID.Default`: same-node ids no longer rely on randomness to stay
+  unique. The thousands of the id now carry the monotonic counter's bucket
+  (`div(counter, 4096)` modulo 1000) and the random part is 1..999, so a node only
+  repeats an `{id, index}` pair after 4_096_000 ids in one millisecond. 0.3.2 could
+  repeat after 4096 (seen as an intermittent failure of its own 50k-id uniqueness
+  test under concurrent load). Cross-node bound unchanged (~4e9 per millisecond).
+
 ## 0.3.2
 
 ### Behaviour change: default UID provider

@@ -91,11 +91,14 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       # -----------------------------
       def format_id(m, id, index) do
         with repo <- Noizu.Entity.Meta.repo(m) do
-          <<e10, e11, e12>> = Integer.to_string(index, 16) |> String.pad_leading(3, "0")
+          # Lowercase: Postgres/Ecto.UUID return canonical lowercase hex, so an
+          # uppercase tail would not round-trip (`created.id != fetched.id`).
+          <<e10, e11, e12>> =
+            index |> Integer.to_string(16) |> String.downcase() |> String.pad_leading(3, "0")
 
           <<a1, a2, a3, a4, a5, a6, a7, a8, ?-, b1, b2, b3, b4, ?-, c1, c2, c3, c4, ?-, d1, d2,
-            d3, d4, ?-, e1, e2, e3, e4, e5, e6, e7, e8, e9, _, _,
-            _>> = Noizu.UUID.uuid5(Noizu.UUID.uuid5(:dns, "#{repo}"), "#{id}", :default)
+            d3, d4, ?-, e1, e2, e3, e4, e5, e6, e7, e8, e9, _, _, _>> =
+            Noizu.UUID.uuid5(Noizu.UUID.uuid5(:dns, "#{repo}"), "#{id}", :default)
 
           <<a1, a2, a3, a4, a5, a6, a7, a8, ?-, b1, b2, b3, b4, ?-, c1, c2, c3, c4, ?-, d1, d2,
             d3, d4, ?-, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12>>

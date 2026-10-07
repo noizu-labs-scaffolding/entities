@@ -34,13 +34,17 @@ defmodule Noizu.Entity.UID.Default do
   @moduledoc """
   Default `Noizu.Entity.UID` provider.
 
-  `id` is the millisecond timestamp (offset from `epoch/0`) multiplied by 1_000_000
-  plus a random 1..999_999. `index` is a per-node monotonic counter modulo 4096, so
-  ids minted on one node in the same millisecond differ in their uuid suffix.
+  Both parts come from one per-node monotonic counter `c`. `index` is `c` modulo
+  4096; `id` is the millisecond timestamp (offset from `epoch/0`) multiplied by
+  1_000_000, plus `div(c, 4096)` modulo 1000 in the thousands, plus a random 1..999.
+  Two ids minted on one node in the same millisecond therefore differ unless more
+  than 4_096_000 were minted in that millisecond. (0.3.2 used a random 1..999_999
+  in place of the counter bucket; over 4096 ids in one millisecond could then
+  collide, e.g. under a 50-task burst.)
 
   Uniqueness across nodes is probabilistic: two ids collide only if they share the
-  millisecond, the random component and the index (a birthday bound over roughly
-  4e9 values per millisecond). Ordering follows the wall clock, so a clock step
+  millisecond, the counter bucket, the random component and the index (a birthday
+  bound over roughly 4e9 values per millisecond). Ordering follows the wall clock, so a clock step
   backwards can mint ids smaller than earlier ones; that does not make them collide.
 
   `id` fits a signed 64-bit integer until the offset passes ~9.2e12 ms (~290 years).
@@ -50,6 +54,8 @@ defmodule Noizu.Entity.UID.Default do
   @epoch 1_683_495_051_937
   @spread 1_000_000
   @index_space 4096
+  @buckets 1000
+  @random 999
 
   @doc "Millisecond epoch the timestamp component is offset from."
   def epoch(), do: @epoch
@@ -57,8 +63,10 @@ defmodule Noizu.Entity.UID.Default do
   @impl true
   def generate(_repo, _node) do
     ms = :os.system_time(:millisecond) - @epoch
-    id = ms * @spread + :rand.uniform(@spread - 1)
-    index = rem(:erlang.unique_integer([:positive, :monotonic]), @index_space)
+    c = :erlang.unique_integer([:positive, :monotonic])
+    bucket = rem(div(c, @index_space), @buckets)
+    id = ms * @spread + bucket * (@random + 1) + :rand.uniform(@random)
+    index = rem(c, @index_space)
     {:ok, {id, index}}
   end
 
