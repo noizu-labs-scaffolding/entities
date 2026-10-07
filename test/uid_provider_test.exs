@@ -59,17 +59,6 @@ defmodule Noizu.Entity.UID.DefaultTest do
       assert div(id, 1_000_000) >= stub_id
     end
 
-    test "index is monotonic within a node" do
-      indexes = for _ <- 1..100, do: elem(elem(Default.generate(nil, node()), 1), 1)
-
-      steps =
-        indexes
-        |> Enum.chunk_every(2, 1, :discard)
-        |> Enum.map(fn [a, b] -> rem(b - a + 4096, 4096) end)
-
-      assert Enum.all?(steps, &(&1 > 0))
-    end
-
     # Negative control: the same check must fail for the legacy stub, or the
     # uniqueness test above proves nothing.
     test "the legacy stub collides under the same load" do
@@ -79,8 +68,9 @@ defmodule Noizu.Entity.UID.DefaultTest do
   end
 end
 
-defmodule Noizu.Entity.UID.FallbackTest do
-  # Recompiles Noizu.Entity.UID, so it must not overlap async tests.
+defmodule Noizu.Entity.UID.SerialTest do
+  # Recompiles Noizu.Entity.UID and samples a VM-wide counter, so it must not
+  # overlap async tests.
   use ExUnit.Case,
     async: false
 
@@ -117,5 +107,19 @@ defmodule Noizu.Entity.UID.FallbackTest do
     end
 
     assert provider() == configured
+  end
+
+  # Runs here, not with the async tests: :erlang.unique_integer/1 is VM-wide, so
+  # concurrent minting could advance it by a multiple of 4096 between samples.
+  test "index is monotonic within a node" do
+    indexes =
+      for _ <- 1..100, do: elem(elem(Noizu.Entity.UID.Default.generate(nil, node()), 1), 1)
+
+    steps =
+      indexes
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.map(fn [a, b] -> rem(b - a + 4096, 4096) end)
+
+    assert Enum.all?(steps, &(&1 > 0))
   end
 end

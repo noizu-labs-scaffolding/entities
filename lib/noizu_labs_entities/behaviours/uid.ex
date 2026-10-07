@@ -35,10 +35,13 @@ defmodule Noizu.Entity.UID.Default do
   Default `Noizu.Entity.UID` provider.
 
   `id` is the millisecond timestamp (offset from `epoch/0`) multiplied by 1_000_000
-  plus a random 1..999_999, so ids stay time-ordered at millisecond granularity and
-  two nodes minting in the same millisecond collide with probability 1 in 999_999.
-  `index` is a per-node monotonic counter modulo 4096, so ids minted on one node in
-  the same millisecond also differ in their uuid suffix.
+  plus a random 1..999_999. `index` is a per-node monotonic counter modulo 4096, so
+  ids minted on one node in the same millisecond differ in their uuid suffix.
+
+  Uniqueness across nodes is probabilistic: two ids collide only if they share the
+  millisecond, the random component and the index (a birthday bound over roughly
+  4e9 values per millisecond). Ordering follows the wall clock, so a clock step
+  backwards can mint ids smaller than earlier ones; that does not make them collide.
 
   `id` fits a signed 64-bit integer until the offset passes ~9.2e12 ms (~290 years).
   """
