@@ -1,7 +1,29 @@
 Changelog
 ===========================
 
-## 0.3.3
+## 0.3.4
+
+0.3.3 was tagged but never published to hex; 0.3.4 supersedes it and ships its
+fixes (see 0.3.3 below): lowercase uuid tail (ids round-trip through Postgres),
+counter-bucket `UID.Default` (no same-node `{id, index}` repeats below
+4_096_000 ids/ms), and downcasing of string ids on parse.
+
+### Fixes
+
+- fix: `sref_handlers/0` returned `%{}` to concurrent first callers. The table was
+  built lazily behind a non-blocking 1-slot `Semaphore.acquire/2`; every caller
+  that lost the race while the first build ran (seconds in large apps) got an
+  empty map, so sref lookups failed with `handler_not_found` (e.g. Guardian 401s
+  right after pod boot, and in test runs not preloaded by `--cover`). Callers that
+  find no cached table now build it themselves (idempotent) and the first finished
+  build is published to `:persistent_term`; an empty map is never returned while
+  a build is pending. Table contents and shape are unchanged. The lock key was
+  also global across repos, and the library never declared `:semaphore` as a
+  dependency; both are gone.
+- New `warm_sref_handlers/0` on repos using `Noizu.EntityRepoBehaviour`: call it
+  in `Application.start/2` to pay the cold build at boot.
+
+## 0.3.3 (tagged, never published to hex)
 
 ### Fixes
 

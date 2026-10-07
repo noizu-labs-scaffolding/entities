@@ -59,18 +59,35 @@ defmodule Noizu.EntityRepoBehaviour do
       end
 
       @doc """
-      Get Sref Handlers Lookup Table
+      Get Sref Handlers Lookup Table.
+
+      Built on first use and cached in `:persistent_term`. Every caller gets the
+      full table: a caller that finds no cached table builds it itself (the build
+      is idempotent; concurrent first callers share the code loading it waits on)
+      and the first finished build is published. Call `warm_sref_handlers/0` from
+      `Application.start/2` to pay the cold build (seconds in large apps) at boot.
       """
       def sref_handlers() do
         with :undefined <- :persistent_term.get({__MODULE__, :handlers}, :undefined) do
-          if Semaphore.acquire({:sref_handlers, :lock}, 1) do
-            handlers = rebuild_sref_handlers()
-            :persistent_term.put({__MODULE__, :handlers}, handlers)
-            Semaphore.release({:sref_handlers, :lock})
-            handlers
-          else
-            %{}
-          end
+          publish_sref_handlers(rebuild_sref_handlers())
+        end
+      end
+
+      @doc """
+      Build and cache the sref handlers table now (e.g. in `Application.start/2`).
+      """
+      def warm_sref_handlers() do
+        sref_handlers()
+        :ok
+      end
+
+      # Skip the put when a build is already published (each put of a new term
+      # triggers a global persistent_term GC pass). The check is not atomic: two
+      # builds finishing together may both put, which is harmless (equal tables).
+      defp publish_sref_handlers(handlers) do
+        with :undefined <- :persistent_term.get({__MODULE__, :handlers}, :undefined) do
+          :persistent_term.put({__MODULE__, :handlers}, handlers)
+          handlers
         end
       end
 
