@@ -29,3 +29,6 @@ noizu_labs_entities-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Agent worktrees
+/.claude/worktrees/
