@@ -70,6 +70,16 @@ defmodule Noizu.Entity.UID.DefaultTest do
       end
     end
 
+    test "legacy uppercase-tail ids (0.3.2) normalize to the canonical form" do
+      legacy = "8277069e-de6e-58b5-9b9f-d43f50f5aABC"
+      canonical = String.downcase(legacy)
+
+      assert {:ok, ^canonical} = Noizu.Entity.Meta.UUIDIdentifier.id(BizBop, legacy)
+      assert Noizu.Entity.Meta.UUIDIdentifier.uuid_string(legacy) == canonical
+      # srefs go through ShortUUID, which is already case-insensitive.
+      assert ShortUUID.encode!(legacy) == ShortUUID.encode!(canonical)
+    end
+
     test "default-minted uuids are already canonical" do
       for pair <- mint(Default) |> Enum.take_random(2_000) do
         uuid = format_uuid(pair)

@@ -10,8 +10,10 @@ Changelog
   `Integer.to_string/2` renders uppercase. Postgres (via `Ecto.UUID`) returns
   lowercase, so for any index containing a-f the id an entity was created with
   differed from the id read back (`created.id != fetched.id`). The tail is now
-  lowercase. `uuid` columns are unaffected (they store bytes); ids copied into
-  text columns (e.g. srefs) under 0.3.2 may still carry an uppercase tail.
+  lowercase. `uuid` columns are unaffected (they store bytes) and srefs are
+  case-insensitive (ShortUUID). `UUIDIdentifier.id/2` and `uuid_string/1` now
+  downcase string ids, so a legacy uppercase id read from a text column resolves
+  to the canonical form; raw string comparisons in app code are not normalized.
 - `Noizu.Entity.UID.Default`: same-node ids no longer rely on randomness to stay
   unique. The thousands of the id now carry the monotonic counter's bucket
   (`div(counter, 4096)` modulo 1000) and the random part is 1..999, so a node only

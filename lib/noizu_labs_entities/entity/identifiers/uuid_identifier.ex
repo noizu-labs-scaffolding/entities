@@ -110,11 +110,12 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       # -----------------------------
       def uuid_string(<<_::binary-size(16)>> = id), do: Noizu.UUID.binary_to_string!(id)
 
+      # Downcased: ids minted by 0.3.2 may carry an uppercase tail.
       def uuid_string(
             <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _,
               _, _, _, _, _, _, _, _, _>> = id
           ),
-          do: id
+          do: String.downcase(id)
 
       # -----------------------------
       # kind/2
@@ -156,7 +157,7 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
             <<_, _, _, _, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _, _, ?-, _, _, _,
               _, _, _, _, _, _, _, _, _>> = id
           ),
-          do: {:ok, id}
+          do: {:ok, String.downcase(id)}
 
       def id(m, R.ref(module: m, id: <<_::binary-size(16)>>) = ref),
         do: {:ok, R.ref(ref, :id) |> uuid_string()}
