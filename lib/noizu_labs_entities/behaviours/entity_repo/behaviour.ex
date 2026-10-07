@@ -81,8 +81,9 @@ defmodule Noizu.EntityRepoBehaviour do
         :ok
       end
 
-      # Publish once: a later concurrent build must not overwrite (each put of a
-      # new term triggers a global persistent_term GC pass).
+      # Skip the put when a build is already published (each put of a new term
+      # triggers a global persistent_term GC pass). The check is not atomic: two
+      # builds finishing together may both put, which is harmless (equal tables).
       defp publish_sref_handlers(handlers) do
         with :undefined <- :persistent_term.get({__MODULE__, :handlers}, :undefined) do
           :persistent_term.put({__MODULE__, :handlers}, handlers)
