@@ -41,8 +41,9 @@ graph TB
 | `Noizu.Entity.ACL.Protocol` | Field-level access restriction |
 | `Noizu.Entity.{TimeStamp,Reference,Path,DerivedField,UUIDReference}` | Typed field modules with store/lifecycle callbacks |
 | `Noizu.Entity.Extended.UUIDReference` | Extended UUID reference field with additional metadata |
-| `Noizu.UUID` | UUID generation helper (wraps ShortUUID/elixir_uuid) |
-| `Noizu.EntityRepoBehaviour` | Application-level repo that dispatches by sref |
+| `Noizu.UUID` | UUID generation helper delegating to the configured `:uuid_lib` (`UUID` from elixir_uuid by default) |
+| `Noizu.Entity.UID` | Pluggable UID provider behaviour (`:uid_provider`, compile-env); `Default` and `Stub` providers |
+| `Noizu.EntityRepoBehaviour` | Application-level repo that dispatches by sref, with a cached sref→module handler table |
 
 ## Entity Definition DSL
 
@@ -69,6 +70,7 @@ JSON encoding is driven by named format templates (`:default`, custom names) dec
 - **ACL integrated into JSON**: Field restriction runs inline during serialization rather than as a separate pass
 - **ERP (Entity Reference Protocol)**: Entities are referenceable via `ref()` tuples and `sref` strings, with identifier-type-specific handlers (UUID, integer, atom, ref, dual_ref)
 - **Overridable CRUD hooks**: Every repo operation splits into `__before_*__`, `__do_*__`, `__after_*__` — all `defoverridable`
+- **Sref handler caching**: `EntityRepoBehaviour` builds its sref→module table once and publishes it to `:persistent_term`; concurrent first callers build it themselves rather than receiving an empty map. Apps call `warm_sref_handlers/0` at boot to pay the cold build up front
 
 ## Technology Stack
 

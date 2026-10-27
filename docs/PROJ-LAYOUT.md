@@ -31,6 +31,8 @@ entities/
 │   ├── field_protocol_test.exs
 │   ├── json_encoder_test.exs
 │   ├── noizu_labs_entities_test.exs
+│   ├── sref_handlers_test.exs      #   sref handler cache tests
+│   ├── uid_provider_test.exs       #   UID provider tests
 │   └── test_helper.exs             #   ExUnit bootstrap
 ├── docs/                           # Project documentation
 │   ├── arch/                       #   Architecture decision records
@@ -42,11 +44,17 @@ entities/
 │   ├── PROJ-ARCH.md                #   Architecture overview
 │   ├── PROJ-ARCH.summary.md        #   Architecture summary
 │   ├── PROJ-LAYOUT.md              #   This file
-│   └── PROJ-LAYOUT.summary.md      #   Layout summary
+│   ├── PROJ-LAYOUT.summary.md      #   Layout summary
+│   ├── PROJ-SCHEMA.md              #   Data / metadata schema reference
+│   ├── PROJ-SCHEMA.summary.md      #   Schema summary
+│   ├── THREAT-MODEL.md             #   Threat model and vulnerability register
+│   └── THREAT-MODEL.summary.md     #   Threat model summary
 ├── priv/plts/                      # Dialyzer PLT caches
-├── .tool-versions                  # asdf versions (Elixir, Erlang, Node, Java, Yarn)
+├── .github/workflows/ci.yml        # CI: compile + test on push/PR
+├── .tool-versions                  # asdf versions (Elixir, Erlang, CMake, Node, Java)
 ├── .formatter.exs                  # Elixir code formatter config
 ├── .dialyzer_ignore.exs            # Dialyzer warning suppressions
+├── .gitignore                      # Build artifacts, deps, env, agent worktrees
 ├── mix.exs                         # Project definition and dependencies
 ├── mix.lock                        # Locked dependency versions
 ├── CHANGELOG.md

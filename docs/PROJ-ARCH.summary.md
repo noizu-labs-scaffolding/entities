@@ -13,8 +13,9 @@
 - **Typed Fields** — TimeStamp, Reference, Path, DerivedField, UUIDReference, Extended.UUIDReference with store/lifecycle callbacks
 - **Json Protocol** — ACL-aware JSON serialization with named format templates
 - **ACL Protocol** — Field-level access restriction based on transient/pii/custom rules
-- **Noizu.UUID** — UUID generation helper wrapping ShortUUID/elixir_uuid
-- **EntityRepoBehaviour** — Application-level repo dispatching by sref string
+- **Noizu.UUID** — UUID generation helper delegating to configured `:uuid_lib`
+- **Noizu.Entity.UID** — Pluggable UID provider behaviour (`:uid_provider`, compile-env); Default + Stub providers
+- **EntityRepoBehaviour** — Application-level repo dispatching by sref, with a cached sref→module handler table published to `:persistent_term`
 
 ## Key Design Decisions
 
@@ -23,6 +24,7 @@
 - ACL restriction integrated into JSON serialization pipeline
 - ERP (Entity Reference Protocol) with identifier-type-specific handlers
 - Three-phase CRUD hooks (`before/do/after`) — all `defoverridable`
+- Sref handler table built once and cached in `:persistent_term`; concurrent first callers build rather than see an empty map
 
 ## Stack
 

@@ -1,6 +1,10 @@
 Changelog
 ===========================
 
+## 2026-10-26
+
+- docs: doc-sweep — seed doc-pointer markers and `.meta/pointers.yaml` (#17); add PROJ-SCHEMA/THREAT-MODEL docs and refresh layout/arch (this commit).
+
 ## 0.3.4
 
 0.3.3 was tagged but never published to hex; 0.3.4 supersedes it and ships its

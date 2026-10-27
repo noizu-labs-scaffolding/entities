@@ -15,10 +15,15 @@ entities/
 │   └── noizu_labs_entities.ex
 ├── config/                     # Mix configs (base, dev, test, credo)
 ├── test/                       # Tests, support fixtures, test helpers
-├── docs/                       # Project docs, arch decisions, layout
+├── docs/                       # Project docs
 │   ├── arch/                   # Entity DSL, JSON/ACL, persistence design
-│   └── layout/                 # Detailed directory breakdowns
+│   ├── layout/                 # Detailed directory breakdowns
+│   ├── PROJ-ARCH.md / .summary.md      # Architecture
+│   ├── PROJ-LAYOUT.md / .summary.md    # Layout
+│   ├── PROJ-SCHEMA.md / .summary.md    # Data / metadata schema
+│   └── THREAT-MODEL.md / .summary.md   # Threat model
 ├── priv/plts/                  # Dialyzer caches
+├── .github/workflows/ci.yml    # CI: compile + test
 ├── .tool-versions
 ├── mix.exs
 └── README.md
