@@ -5,6 +5,8 @@
 
 defmodule Noizu.Entities do
   @moduledoc """
+  〚📦:f5f7086e-168a-53cc-878b-36ad807d7f27〛 Noizu.Entities :: Top-level use macro wiring Entity + Repo for entity and repo modules.
+
   Noizu Entities are Structs with meta data for permissions, json encoding, persistence channels, cache and more.
 
   To use define your  entity and repo module:

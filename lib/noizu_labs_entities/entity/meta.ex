@@ -5,6 +5,8 @@
 
 defmodule Noizu.Entity.Meta do
   @moduledoc """
+  〚📦:0cc0fcec-bad7-5176-ac5f-1f3abd0ba3e3〛 Noizu.Entity.Meta :: Runtime access to compiled entity metadata — fields, ids, json, acl, persistence, sref.
+
   Module for checking and encoding entity metadata.
   """
 

@@ -5,6 +5,8 @@
 
 defmodule Noizu.Repo do
   @moduledoc """
+  〚📦:e24681df-f614-5f41-a4a3-d70ad1e2718a〛 Noizu.Repo :: use Noizu.Repo — loads def_repo context and repo callbacks.
+
   Load def_repo context.
   """
 

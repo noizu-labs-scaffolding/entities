@@ -4,6 +4,8 @@
 # -------------------------------------------------------------------------------
 defmodule Noizu.Entity.UID do
   @moduledoc """
+  〚📦:bfbe58b8-e4ad-5953-a55e-856c686f1611〛 Noizu.Entity.UID :: Pluggable UID provider behaviour (compile-env configured) with Default and Stub providers.
+
   Wrapper around UUID generator: to allow custom uuid generator logic.
 
   The provider is read at compile time from `config :noizu_labs_entities, :uid_provider`

@@ -5,6 +5,8 @@
 
 defmodule Noizu.Entity do
   @moduledoc """
+  〚📦:050aa3a8-9be0-5070-8be2-1473badc169d〛 Noizu.Entity :: use Noizu.Entity — loads def_entity context and entity callbacks.
+
   Load def_entity context.
   """
 

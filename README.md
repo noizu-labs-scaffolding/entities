@@ -1,5 +1,6 @@
 Noizu Entities
 ==========================
+<!-- 〚📁:73e32098-8ce5-55fc-b614-cb243327e7cc〛 Noizu Entities README :: Library overview: entity/repo DSL, persistence, indexing, caching. -->
 Noizu Entity Scaffolding provides a mechanism to define extended
 elixir structs with metadata for specifying access control, flagging sensitive data,
 specifying json formatting, specifying text/geo/vector indexing, and per entity caching settings. 
