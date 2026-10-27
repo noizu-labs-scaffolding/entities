@@ -5,6 +5,8 @@
 
 defmodule Noizu.Repo.Meta do
   @moduledoc """
+  〚📦:9ed0dbda-1d8f-564d-8802-aa506bcd83ca〛 Noizu.Repo.Meta :: CRUD pipeline — before/do/after phases over declared persistence layers.
+
   Logic for driving entity repos.
   """
   require Noizu.Entity.Meta.Persistence

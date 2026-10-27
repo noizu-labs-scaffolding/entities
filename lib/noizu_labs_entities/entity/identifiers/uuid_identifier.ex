@@ -4,6 +4,8 @@
 
 defmodule Noizu.UUID do
   @moduledoc """
+  〚📦:37d4e0d6-eddb-5c7f-831c-28994362ca8b〛 Noizu.UUID :: UUID generation helper delegating to the configured UUID library.
+
   Wrapper around UUID provider.
   """
   @handler Application.compile_env(:noizu_labs_entities, :uuid_lib, UUID)

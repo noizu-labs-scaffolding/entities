@@ -1,3 +1,4 @@
+# 〚📁:e49d21d2-9610-5480-bfe7-6288b685db47〛 Noizu Entities Mix Project :: Project definition and dependencies for noizu_labs_entities.
 defmodule Noizu.Entities.MixProject do
   use Mix.Project
 

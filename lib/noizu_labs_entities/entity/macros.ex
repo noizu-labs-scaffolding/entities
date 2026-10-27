@@ -5,6 +5,8 @@
 
 defmodule Noizu.Entity.Macros do
   @moduledoc """
+  〚📦:7a1c5efd-6477-5ac0-971c-e2eea3ce601a〛 Noizu.Entity.Macros :: Entity DSL macros — def_entity, id, field, transient, pii, jason_encoder.
+
   This module provides macros for defining entities and their fields.
   """
   require Noizu.Entity.Meta.Identifier
